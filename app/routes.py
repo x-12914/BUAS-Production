@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, render_template, current_app, Response, send_from_directory, send_file
+from flask import Blueprint, request, jsonify, current_app, Response, send_from_directory, send_file
 from flask_login import login_required, current_user
 from .models import Upload, DeviceLocation, RecordingEvent, DeviceInfo, DeviceCommand, AuditLog, User, SmsMessage, CallLog, db
 from .device_utils import resolve_to_device_id, validate_identifier_format, get_android_id_for_device
@@ -2550,38 +2550,6 @@ def health_check():
         'timestamp': datetime.now().isoformat(),
         'version': '1.0.0'
     })
-
-
-# ========== OPTIONAL LEGACY ROUTES ==========
-
-@routes.route('/dashboard')
-@login_required
-@require_permission('view_dashboard')
-def dashboard():
-    return render_template('dashboard.html')
-
-
-@routes.route('/dashboard/data')
-@login_required
-@require_permission('view_dashboard')
-def dashboard_data():
-    uploads = Upload.query.order_by(Upload.timestamp.desc()).all()
-    
-    # Filter uploads based on device access for analysts
-    if current_user.role == 'analyst':
-        user_device_ids = [da.device_id for da in current_user.device_assignments]
-        uploads = [u for u in uploads if u.device_id in user_device_ids]
-    
-    data = [
-        {
-            'device_id': u.device_id,
-            'metadata_file': u.metadata_file,
-            'audio_file': u.filename,
-            'timestamp': u.timestamp.strftime("%Y-%m-%d %H:%M:%S")
-        }
-        for u in uploads
-    ]
-    return jsonify(data)
 
 
 # ========== PHONE ENDPOINTS (for dual backend architecture) ==========

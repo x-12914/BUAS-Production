@@ -1,0 +1,67 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Database files - NEVER commit these!
+*.db
+*.db-journal
+*.db.backup
+*.db.backup_*
+instance/*.db
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Uploads and user data
+uploads/
+static/uploads/
+
+# Node modules
+node_modules/
+frontend/node_modules/
+
+# Build artifacts
+frontend/build/
+*.pyc
+
+# Temporary files
+*.tmp
+*.temp
