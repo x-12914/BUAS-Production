@@ -1,0 +1,294 @@
+/* Recording Control Button Styles */
+
+.recording-control-container {
+  position: relative;
+  display: inline-block;
+}
+
+.recording-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 2px solid;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  min-width: 160px;
+  justify-content: center;
+  text-align: center;
+  outline: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.recording-btn:focus {
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+/* Idle State - Green (Ready to Start) */
+.recording-btn.idle {
+  background-color: #28a745;
+  border-color: #1e7e34;
+  color: white;
+}
+
+.recording-btn.idle:hover:not(:disabled) {
+  background-color: #218838;
+  border-color: #1c7430;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.recording-btn.idle:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Starting State - Orange (Transitioning) */
+.recording-btn.starting {
+  background-color: #fd7e14;
+  border-color: #e55100;
+  color: white;
+  cursor: not-allowed;
+}
+
+.recording-btn.starting .recording-icon {
+  animation: pulse 1.5s infinite;
+}
+
+/* Recording State - Red (Active Recording) */
+.recording-btn.recording {
+  background-color: #dc3545;
+  border-color: #b21f2d;
+  color: white;
+}
+
+.recording-btn.recording:hover:not(:disabled) {
+  background-color: #c82333;
+  border-color: #a21e2e;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.recording-btn.recording:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.recording-btn.recording .recording-icon {
+  animation: blink 1s infinite;
+}
+
+/* Stopping State - Orange (Transitioning) */
+.recording-btn.stopping {
+  background-color: #fd7e14;
+  border-color: #e55100;
+  color: white;
+  cursor: not-allowed;
+}
+
+.recording-btn.stopping .recording-icon {
+  animation: pulse 1.5s infinite;
+}
+
+/* Offline State - Gray (Device Unavailable) */
+.recording-btn.offline {
+  background-color: #6c757d;
+  border-color: #545b62;
+  color: white;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Error State - Dark Red (Retry Available) */
+.recording-btn.error {
+  background-color: #721c24;
+  border-color: #491217;
+  color: white;
+}
+
+.recording-btn.error:hover:not(:disabled) {
+  background-color: #a42834;
+  border-color: #721c24;
+}
+
+/* Disabled State */
+.recording-btn:disabled,
+.recording-btn.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Loading State */
+.recording-btn.loading {
+  position: relative;
+  color: transparent;
+}
+
+.button-spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s linear infinite;
+}
+
+/* Recording Error Message */
+.recording-error {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background-color: #f8d7da;
+  border: 1px solid #f1aeb5;
+  border-radius: 6px;
+  color: #721c24;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.recording-error .error-icon {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.recording-error .error-text {
+  flex: 1;
+  text-align: left;
+}
+
+.recording-error .error-dismiss {
+  background: none;
+  border: none;
+  color: #721c24;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.recording-error .error-dismiss:hover {
+  background-color: rgba(114, 28, 36, 0.1);
+}
+
+/* Icons */
+.recording-icon {
+  font-size: 16px;
+  display: inline-block;
+}
+
+.recording-text {
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0.3;
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .recording-btn {
+    min-width: 140px;
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+  
+  .recording-text {
+    font-size: 13px;
+  }
+  
+  .recording-icon {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .recording-btn {
+    min-width: 120px;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  
+  .recording-text {
+    font-size: 12px;
+  }
+  
+  .recording-icon {
+    font-size: 12px;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .recording-btn {
+    border-width: 3px;
+  }
+  
+  .recording-btn:focus {
+    box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.5);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .recording-btn,
+  .recording-icon,
+  .button-spinner {
+    animation: none;
+    transition: none;
+  }
+  
+  .recording-btn:hover:not(:disabled) {
+    transform: none;
+  }
+}

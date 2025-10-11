@@ -1,0 +1,311 @@
+BUAS_MULTI_AGENCY_RBAC_PLAN.md
+ 2025-08-15
+ BUAS Multi-Agency System - Implementation Plan
+ Date: August 15, 2025
+ Timeline: 1 Week Implementation
+ What We're Building
+ We're turning our current BUAS dashboard into a multi-agency system that serves 5-10 different security
+ organizations. Each agency gets their own isolated instance with custom branding, but we use the same
+ codebase for everything.
+ The Problem We're Solving
+ Right now we have one dashboard. We need to give it to multiple agencies with:
+ Complete data isolation (Agency A can't see Agency B's data)
+ Different user roles (admins, analysts, operators)
+ Custom branding per agency (logos, colors, names)
+ Same features but different access levels
+ Our Solution: Separate Instances + Central Control
+ Central Management Hub (Super Super Admin) 
+                    | 
+        ┌───────────┼───────────┐ 
+        |           |           | 
+    Agency A    Agency B    Agency C 
+   (Own Server) (Own Server) (Own Server) 
+   (Own Database) (Own Database) (Own Database) 
+   (FBI Branding) (CIA Branding) (NSA Branding) 
+Why this approach:
+ Ultimate security (physically separated)
+ Easy to maintain (same code everywhere)
+ Perfect isolation (impossible to access wrong data)
+ Custom branding per agency
+ The 4 User Roles
+ 1. Super Super Admin (Global)
+ Who: 1 person
+ Access: Can switch between any agency dashboard
+ Powers: Accesses all agencies, creates new instances
+ 1 / 9
+BUAS_MULTI_AGENCY_RBAC_PLAN.md
+ 2025-08-15
+ 2. Super User (Agency Admin)
+ Who: Agency leadership
+ Access: Full control of their agency only
+ Powers: Manage users, assign devices, control recordings, see all data
+ 3. Analyst (Intelligence)
+ Who: Intelligence analysts
+ Access: Only assigned devices
+ Powers: View data, create reports, NO recording control
+ 4. Operator (Field)
+ Who: Field operators
+ Access: All agency devices
+ Powers: Start/stop recordings ONLY, no data access
+ Technical Implementation
+ What We Currently Have
+ Our current dashboard = Super User level access
+ What We Need to Add
+ Database Changes:-- New tables
+ CREATE TABLE users (id, username, password, role, agency_id); 
+CREATE TABLE agencies (id, name, logo, colors);   
+CREATE TABLE device_assignments (user_id, device_id); -- Update existing tables
+ ALTER TABLE device_info ADD agency_id; 
+ALTER TABLE uploads ADD agency_id; -- (same for all existing tables)
+ Frontend Changes:
+ Add login screen
+ Role-based component hiding/showing
+ Dynamic branding system
+ Permission checks everywhere
+ Backend Changes:
+ Authentication system
+ Permission decorators on API routes
+ Agency filtering on all queries
+ 2 / 9
+BUAS_MULTI_AGENCY_RBAC_PLAN.md
+ 2025-08-15
+ 1-Week Implementation Plan
+ Day 1-2: Authentication Foundation
+ Add user login/logout
+ Create user management system
+ Current dashboard becomes "Super User" role
+ Result: Login screen, but same functionality
+ Day 3-4: Role System
+ Build role-based permissions
+ Create Analyst dashboard (filtered view)
+ Create Operator dashboard (controls only)
+ Result: All 4 roles working
+ Day 5-6: Multi-Agency Setup
+ Agency management system
+ Dynamic branding engine
+ Instance deployment scripts
+ Result: Template ready for agencies
+ Day 7: Deploy & Test
+ Deploy 2-3 test agency instances
+ Apply different branding
+ Security testing
+ Result: Working multi-agency system
+ Security & Isolation
+ How we ensure data separation:
+ Each agency = separate server + separate database
+ Zero shared infrastructure
+ Impossible to accidentally access wrong data
+ Each agency can be in different geographic locations
+ Risk Assessment
+ Low Risk Because:
+ ✅ Current system becomes "Super User" - no functionality lost
+ ✅ Can rollback to current system anytime
+ ✅ Gradual enhancement approach
+ ✅ Same codebase = easier maintenance
+ Biggest Challenge:
+ Time constraint
+ 3 / 9
+BUAS_MULTI_AGENCY_RBAC_PLAN.md
+ 2025-08-15
+ Database migration without downtime
+ Testing all role combinations
+ Success Metrics
+ Week 1 Goals:
+ All 4 roles functional
+ 2-3 agency instances deployed
+ Zero data leakage between agencies
+ Current users can still access everything (as Super Users)
+ Post-Implementation:
+ Easy to add new agencies (30 minutes per agency)
+ Single codebase maintenance
+ Happy agencies with custom branding
+ Next Steps
+ 1. Start Day 1 implementation immediately
+ 2. Assign roles to team members
+ 3. Set up development/testing environment
+ 4. Begin database design
+ Technical Requirements
+ 1. Current System Preservation: Existing functionality must be maintained
+ 2. Backward Compatibility: Current users experience no disruption
+ 3. Progressive Enhancement: Add roles without breaking existing workflows
+ 4. Zero Data Loss: Migration must preserve all existing data
+ Architecture
+ Core Architecture: Hybrid Multi-Instance
+ ┌─────────────────────────────────────────────────────────┐ 
+│                Central Management Hub                    │ 
+│  ┌─────────────────────────────────────────────────────┐ │ 
+│  │        Super Super Admin Portal                     │ │ 
+│  │  • Manages all agency instances                     │ │ 
+│  │  • Cross-agency user administration                │ │ 
+│  │  • Global monitoring and analytics                 │ │ 
+│  │  • Instance deployment and updates                 │ │ 
+│  └─────────────────────────────────────────────────────┘ │ 
+└─────────────────────────────────────────────────────────┘ 
+                              │ 
+                    API Connections (Secure) 
+                              │ 
+4 / 9
+BUAS_MULTI_AGENCY_RBAC_PLAN.md
+        ┌─────────────────────┼─────────────────────┐ 
+        │                     │                     │ 
+   ┌─────────┐         ┌─────────┐         ┌─────────┐ 
+   │Agency A │         │Agency B │         │Agency C │ 
+   │Instance │         │Instance │         │Instance │ 
+   │────────│         │────────│         │────────│ 
+   │• Own DB │         │• Own DB │         │• Own DB │ 
+   │• Own    │         │• Own    │         │• Own    │ 
+   │  Server │         │  Server │         │  Server │ 
+   │• Custom │         │• Custom │         │• Custom │ 
+   │  Brand  │         │  Brand  │         │  Brand  │ 
+   └─────────┘         └─────────┘         └─────────┘ 
+Component Architecture
+ 1. Shared Codebase Template
+ Single source code repository
+ Environment-based configuration system
+ Dynamic branding and theming engine
+ Standard API endpoints and features
+ 2. Agency Instance Structure
+ Dedicated server/VPS per agency
+ Isolated database per agency
+ Custom domain/subdomain per agency
+ Agency-specific branding configuration
+ 3. Central Management Hub
+ Super Super Admin portal
+ Cross-agency user management
+ Instance health monitoring
+ Deployment and update management
+ 2025-08-15
+ 👥 Role Definitions
+ 1. Super Super Admin (Global Level)
+ Description: Highest privilege level with access to all agency instances
+ Permissions:
+ ✅ Access to central management hub
+ ✅ Can switch context to any agency instance
+ ✅ Views exactly what each agency's Super User sees
+ ✅ Manages agency instances and deployments
+ ✅ Cross-agency user administration
+ ✅ Global analytics and monitoring
+ 5 / 9
+BUAS_MULTI_AGENCY_RBAC_PLAN.md
+ 2025-08-15
+ Access Scope: All agencies, all data, all functions
+ 2. Super User (Agency Level)
+ Description: Agency administrator with full control within their organization
+ Permissions:
+ ✅ Full agency dashboard access
+ ✅ All device management and monitoring
+ ✅ Recording control (start/stop all devices)
+ ✅ User management (create/remove analysts and operators)
+ ✅ Device assignment management
+ ✅ All audio and location data access
+ ✅ Export and reporting capabilities
+ Access Scope: Single agency, all agency data and functions
+ 3. Analyst (Operational Level)
+ Description: Intelligence analyst with monitoring and analysis capabilities
+ Permissions:
+ ✅ Agency dashboard access (limited view)
+ ✅ Assigned device monitoring only
+ ✅ Audio and location data for assigned devices
+ ✅ Export and reporting for assigned devices
+ ✅ Analytics and trend analysis
+ ❌ Cannot control recordings
+ ❌ Cannot manage users
+ ❌ Cannot access unassigned devices
+ Access Scope: Single agency, assigned devices only
+ 4. Operator (Tactical Level)
+ Description: Field operator with recording control capabilities
+ Permissions:
+ ✅ Basic agency dashboard access
+ ✅ View all agency devices
+ ✅ Recording control (start/stop all devices)
+ ✅ Device status monitoring
+ ❌ Cannot access audio/location data
+ ❌ Cannot manage users
+ ❌ Cannot assign devices
+ ❌ Limited analytics access
+ 6 / 9
+ Access Scope: Single agency, control functions only
+BUAS_MULTI_AGENCY_RBAC_PLAN.md
+ 2025-08-15
+ 🔄 Migration Plan
+ Current State Analysis
+ Existing System = Super User Level
+ Current BUAS dashboard has full access to all features
+ No authentication or role restrictions
+ Single-tenant architecture
+ Complete device and data access
+ Migration Strategy: Zero-Disruption Enhancement
+ Phase 1: Authentication Foundation
+ Current System (No Auth) 
+           ↓ 
+    Add Login Screen 
+           ↓ 
+Default User = Super User Role 
+           ↓ 
+Same Functionality, Now Role-Aware 
+Benefits:
+ ✅ Current users keep exact same experience
+ ✅ All existing functionality preserved
+ ✅ Foundation established for other roles
+ ✅ Zero learning curve for existing users
+ Phase 2: Role Infrastructure
+ Super User Dashboard (Current) 
+           ↓ 
+    Add User Management 
+           ↓ 
+Super User Creates Other Roles 
+           ↓ 
+Role-Based Access Implemented 
+Phase 3: Multi-Agency Deployment
+ Single Agency Instance 
+           ↓ 
+    Clone for Each Agency 
+           ↓ 
+7 / 9
+BUAS_MULTI_AGENCY_RBAC_PLAN.md
+ Apply Agency-Specific Branding 
+           ↓ 
+Deploy to Dedicated Servers 
+ 
+  Deployment Strategy
+ Instance Creation Process
+ For Each New Agency:
+ 1. Infrastructure Setup
+ Provision dedicated VPS/server
+ Set up isolated database server
+ Configure network security and firewall
+ Establish secure domain/subdomain
+ 2. Application Deployment
+ Clone core BUAS template codebase
+ Apply agency-specific configuration
+ Deploy with custom branding assets
+ Run database migrations and setup
+ 3. Initial Configuration
+ Create agency record in central hub
+ Generate initial Super User account
+ Configure agency-specific settings
+ Test all functionality and integrations
+ 4. Go-Live Process
+ User acceptance testing
+ Security verification and penetration testing
+ Staff training and documentation
+ Production deployment and monitoring
+ Central Management Hub
+ Super Super Admin Portal Features:
+ Agency Management Dashboard
+ List of all agency instances
+ Health monitoring and status
+ Quick access to each agency's dashboard
+ Global User Administration
+ 2025-08-15
+ 8 / 9
+BUAS_MULTI_AGENCY_RBAC_PLAN.md
+ 2025-08-15
+ Cross-agency user management
+ Role assignment and permissions
+ User activity monitoring
+ Instance Management
+ Deploy updates across agencies
+ Monitor system performance
+ Backup and disaster recovery coordination
+ 9 / 9

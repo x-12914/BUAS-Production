@@ -1,0 +1,192 @@
+/**
+ * Loading Spinner Styles for BUAS RBAC System
+ * Professional loading indicators following UI/UX best practices
+ */
+
+.loading-spinner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  min-height: 100px;
+}
+
+.loading-spinner-container.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  z-index: 9999;
+  backdrop-filter: blur(2px);
+}
+
+.loading-spinner-container.small {
+  padding: 1rem;
+  min-height: 60px;
+}
+
+.loading-spinner-container.large {
+  padding: 4rem;
+  min-height: 200px;
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Spinner Ring Animation */
+.loading-spinner {
+  position: relative;
+  width: 60px;
+  height: 60px;
+}
+
+.small .loading-spinner {
+  width: 40px;
+  height: 40px;
+}
+
+.large .loading-spinner {
+  width: 80px;
+  height: 80px;
+}
+
+.spinner-ring {
+  position: absolute;
+  border: 3px solid transparent;
+  border-top: 3px solid var(--accent-info, #1976d2);
+  border-radius: 50%;
+  animation: spin 1.2s linear infinite;
+}
+
+.spinner-ring:nth-child(1) {
+  width: 100%;
+  height: 100%;
+  animation-delay: 0s;
+}
+
+.spinner-ring:nth-child(2) {
+  width: 80%;
+  height: 80%;
+  top: 10%;
+  left: 10%;
+  animation-delay: -0.4s;
+  border-top-color: var(--accent-success, #4caf50);
+}
+
+.spinner-ring:nth-child(3) {
+  width: 60%;
+  height: 60%;
+  top: 20%;
+  left: 20%;
+  animation-delay: -0.8s;
+  border-top-color: var(--accent-warning, #ff9800);
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Dots Animation */
+.loading-dots {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent-info, #1976d2);
+  animation: bounce 1.4s ease-in-out infinite both;
+}
+
+.dot:nth-child(1) { animation-delay: -0.32s; }
+.dot:nth-child(2) { animation-delay: -0.16s; }
+.dot:nth-child(3) { animation-delay: 0s; }
+
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Pulse Animation */
+.loading-pulse {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--accent-info, #1976d2);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.large .loading-pulse {
+  width: 60px;
+  height: 60px;
+}
+
+.small .loading-pulse {
+  width: 30px;
+  height: 30px;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+/* Loading Message */
+.loading-message {
+  margin: 0;
+  color: var(--text-secondary, #666);
+  font-size: 0.9rem;
+  text-align: center;
+  font-weight: 500;
+}
+
+.small .loading-message {
+  font-size: 0.8rem;
+}
+
+.large .loading-message {
+  font-size: 1rem;
+}
+
+/* Dark theme support */
+@media (prefers-color-scheme: dark) {
+  .loading-spinner-container.overlay {
+    background: rgba(30, 30, 30, 0.9);
+  }
+  
+  .loading-message {
+    color: var(--text-secondary-dark, #ccc);
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .spinner-ring,
+  .dot,
+  .loading-pulse {
+    animation-duration: 2s;
+  }
+}

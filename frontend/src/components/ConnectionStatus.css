@@ -1,0 +1,138 @@
+.connection-status {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.connection-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.connection-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.connection-icon {
+  font-size: 1.25rem;
+}
+
+.connection-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.connection-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.connection-description {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.connection-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  text-align: right;
+}
+
+.last-updated,
+.polling-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.label {
+  color: var(--text-secondary);
+}
+
+.value {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.value.active {
+  color: var(--status-success);
+}
+
+.value.inactive {
+  color: var(--text-muted);
+}
+
+.error-actions {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+/* Status-specific styling */
+.connection-status.connected {
+  border-color: var(--status-success);
+  background: rgba(46, 160, 67, 0.05);
+}
+
+.connection-status.connecting {
+  border-color: var(--status-warning);
+  background: rgba(251, 133, 0, 0.05);
+}
+
+.connection-status.connecting .connection-icon {
+  animation: pulse 2s infinite;
+}
+
+.connection-status.error {
+  border-color: var(--status-danger);
+  background: rgba(218, 54, 51, 0.05);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .connection-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .connection-details {
+    align-self: stretch;
+    text-align: left;
+  }
+  
+  .last-updated,
+  .polling-status {
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 480px) {
+  .connection-status {
+    padding: 0.75rem;
+  }
+  
+  .connection-indicator {
+    gap: 0.5rem;
+  }
+  
+  .connection-title {
+    font-size: 0.9rem;
+  }
+  
+  .connection-description {
+    font-size: 0.8rem;
+  }
+}

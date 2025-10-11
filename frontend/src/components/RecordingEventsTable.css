@@ -1,0 +1,327 @@
+/* RecordingEventsTable.css */
+.recording-events-table-container {
+  width: 100%;
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 25px;
+  gap: 20px;
+}
+
+.table-title h3 {
+  margin: 0 0 8px 0;
+  color: var(--accent-primary, #4CAF50);
+  font-size: 1.4rem;
+}
+
+.table-title p {
+  margin: 0;
+  color: var(--text-secondary, #aaa);
+  font-size: 14px;
+}
+
+.table-controls {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-input {
+  background: var(--input-bg, #333);
+  border: 1px solid var(--border-color, #444);
+  border-radius: 8px;
+  padding: 10px 40px 10px 15px;
+  color: var(--text-primary, #fff);
+  font-size: 14px;
+  width: 250px;
+  transition: border-color 0.3s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--accent-primary, #4CAF50);
+}
+
+.search-input::placeholder {
+  color: var(--text-secondary, #aaa);
+}
+
+.search-icon {
+  position: absolute;
+  right: 12px;
+  color: var(--text-secondary, #aaa);
+  pointer-events: none;
+}
+
+.export-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #333);
+  margin-bottom: 20px;
+}
+
+.recording-events-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--table-bg, #1e1e1e);
+  min-width: 800px; /* Ensure table doesn't get too cramped */
+}
+
+.recording-events-table th,
+.recording-events-table td {
+  padding: 15px 20px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color, #333);
+}
+
+.recording-events-table th {
+  background: var(--table-header-bg, #2a2a2a);
+  color: var(--text-primary, #fff);
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.recording-events-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.3s ease;
+}
+
+.recording-events-table th.sortable:hover {
+  background: var(--table-header-hover, #3a3a3a);
+}
+
+.recording-events-table td {
+  color: var(--text-primary, #fff);
+  font-size: 14px;
+}
+
+.recording-events-table tr:hover {
+  background: var(--table-row-hover, #2a2a2a);
+}
+
+.recording-events-table tr:last-child td {
+  border-bottom: none;
+}
+
+.no-data {
+  text-align: center;
+  color: var(--text-secondary, #aaa);
+  font-style: italic;
+  padding: 40px 20px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.page-info {
+  color: var(--text-secondary, #aaa);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Special styling for stop columns that might be empty */
+.recording-events-table td:nth-child(4),
+.recording-events-table td:nth-child(5),
+.recording-events-table td:nth-child(6) {
+  color: var(--text-secondary, #aaa);
+  font-style: italic;
+}
+
+.recording-events-table td:nth-child(4):not(:empty),
+.recording-events-table td:nth-child(5):not(:empty),
+.recording-events-table td:nth-child(6):not(:empty) {
+  color: var(--text-primary, #fff);
+  font-style: normal;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .table-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
+  }
+  
+  .table-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  
+  .search-input {
+    width: 100%;
+  }
+  
+  .export-buttons {
+    justify-content: center;
+  }
+  
+  .recording-events-table th,
+  .recording-events-table td {
+    padding: 12px 15px;
+    font-size: 13px;
+  }
+  
+  .pagination {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .recording-events-table {
+    min-width: 600px;
+  }
+  
+  .recording-events-table th,
+  .recording-events-table td {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+  
+  .table-title h3 {
+    font-size: 1.2rem;
+  }
+}
+
+/* Delete button styles */
+.delete-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 5px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  color: #dc3545;
+}
+
+.delete-button:hover {
+  background-color: rgba(220, 53, 69, 0.1);
+  transform: scale(1.1);
+}
+
+.delete-button:active {
+  transform: scale(0.95);
+}
+
+/* Audio Controls Styling */
+.audio-controls-cell {
+  text-align: center;
+  vertical-align: middle;
+  min-width: 120px;
+}
+
+.audio-controls {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.audio-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border: 1px solid;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  min-width: 70px;
+  justify-content: center;
+}
+
+.audio-btn:hover:not(.disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.audio-btn:active:not(.disabled) {
+  transform: translateY(0);
+}
+
+.audio-btn.play-btn {
+  border-color: #2196F3;
+  color: #2196F3;
+}
+
+.audio-btn.play-btn:hover:not(.disabled) {
+  background-color: #2196F3;
+  color: white;
+}
+
+.audio-btn.download-btn {
+  border-color: var(--text-secondary);
+  color: var(--text-secondary);
+}
+
+.audio-btn.download-btn:hover:not(.disabled) {
+  background-color: var(--text-secondary);
+  color: var(--bg-primary);
+}
+
+.audio-btn.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.audio-btn .btn-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.audio-btn .btn-text {
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* Responsive adjustments for audio controls */
+@media (max-width: 768px) {
+  .audio-controls {
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .audio-btn .btn-text {
+    display: none;
+  }
+  
+  .audio-btn {
+    min-width: 32px;
+    padding: 4px 6px;
+  }
+}

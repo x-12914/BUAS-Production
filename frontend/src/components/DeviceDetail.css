@@ -1,0 +1,936 @@
+/* DeviceDetail.css */
+.device-detail-container {
+  min-height: 100vh;
+  background: var(--bg-primary, #1a1a1a);
+  color: var(--text-primary, #ffffff);
+  padding: 20px;
+}
+
+.loading-device, .error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  text-align: center;
+}
+
+.loading-device .spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--accent-primary, #4CAF50);
+  border-top: 4px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.device-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-color, #333);
+}
+
+.back-button {
+  background: var(--btn-secondary-bg, #444);
+  color: var(--text-primary, #fff);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.back-button:hover {
+  background: var(--btn-secondary-hover, #555);
+}
+
+.device-title {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.device-title h1 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.status-badge {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: bold;
+  text-transform: capitalize;
+}
+
+.status-listening {
+  background: var(--status-listening, #2196F3);
+  color: white;
+}
+
+.status-online {
+  background: var(--status-online, #4CAF50);
+  color: white;
+}
+
+.status-idle {
+  background: var(--status-idle, #FFC107);
+  color: black;
+}
+
+.status-offline {
+  background: var(--status-offline, #f44336);
+  color: white;
+}
+
+.status-unknown {
+  background: var(--text-muted, #6e7681);
+  color: white;
+}
+
+.device-summary {
+  margin-bottom: 30px;
+}
+
+.summary-card {
+  background: var(--card-bg, #2a2a2a);
+  border-radius: 12px;
+  padding: 25px;
+  border: 1px solid var(--border-color, #333);
+}
+
+.summary-card h3 {
+  margin: 0 0 20px 0;
+  color: var(--accent-primary, #4CAF50);
+}
+
+/* New 4-Column Layout */
+.summary-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.summary-row:last-child {
+  margin-bottom: 0;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.summary-actions-row .summary-item {
+  align-items: stretch;
+}
+
+.item-label {
+  font-size: 14px;
+  color: var(--text-secondary, #aaa);
+  font-weight: 500;
+}
+
+.item-value {
+  font-size: 16px;
+  color: var(--text-primary, #fff);
+  font-weight: bold;
+}
+
+/* Summary Buttons */
+.summary-btn {
+  background: var(--accent-primary, #4CAF50);
+  color: white;
+  border: none;
+  padding: 12px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  min-height: 44px;
+}
+
+.summary-btn:hover {
+  background: var(--accent-hover, #45a049);
+}
+
+.btn-contacts {
+  background: var(--accent-success, #28a745) !important;
+}
+
+.btn-contacts:hover {
+  background: var(--accent-success-hover, #218838) !important;
+}
+
+.btn-location-table {
+  background: var(--accent-secondary, #64b5f6);
+}
+
+.btn-location-table:hover {
+  background: var(--accent-primary, #58a6ff);
+}
+
+.btn-audio-table {
+  background: #ff9800;
+}
+
+.btn-audio-table:hover {
+  background: #f57c00;
+}
+
+.btn-call-logs-table {
+  background: var(--accent-danger, #ef5350) !important;
+}
+
+.btn-call-logs-table:hover {
+  background: var(--status-danger, #da3633) !important;
+}
+
+.btn-sms-table {
+  background: var(--accent-warning, #f1c40f) !important;
+}
+
+.btn-sms-table:hover {
+  background: var(--status-warning, #fb8500) !important;
+}
+
+/* Recording Controls in Device Detail */
+.summary-item .recording-control-container {
+  margin-top: 4px;
+}
+
+.summary-item .recording-btn {
+  font-size: 12px;
+  padding: 8px 12px;
+  min-width: 140px;
+}
+
+.summary-item .recording-text {
+  font-size: 12px;
+}
+
+.summary-item .recording-icon {
+  font-size: 14px;
+}
+
+/* Phone Numbers Container */
+.phone-numbers-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.active-number {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.active-indicator {
+  font-size: 12px;
+  color: var(--accent-primary, #4CAF50);
+  font-weight: 500;
+}
+
+.expand-numbers-btn {
+  background: none;
+  border: none;
+  color: var(--accent-primary, #4CAF50);
+  cursor: pointer;
+  font-size: 12px;
+  text-decoration: underline;
+  padding: 0;
+  margin: 0;
+  align-self: flex-start;
+}
+
+.expand-numbers-btn:hover {
+  color: var(--accent-hover, #45a049);
+}
+
+.additional-numbers {
+  margin-top: 8px;
+  padding-left: 15px;
+  border-left: 2px solid var(--border-color, #333);
+}
+
+.additional-number {
+  padding: 4px 0;
+  font-size: 14px;
+  color: var(--text-secondary, #aaa);
+}
+
+/* Contacts Button Styles - DEPRECATED: Now using summary-btn */
+
+.tables-container {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.table-section {
+  background: var(--card-bg, #2a2a2a);
+  border-radius: 12px;
+  padding: 25px;
+  border: 1px solid var(--border-color, #333);
+}
+
+/* Button styles */
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-secondary {
+  background: var(--btn-secondary-bg, #444);
+  color: var(--text-primary, #fff);
+}
+
+.btn-secondary:hover {
+  background: var(--btn-secondary-hover, #555);
+}
+
+.btn-export {
+  background: var(--btn-primary-bg, #4CAF50);
+  color: white;
+}
+
+.btn-export:hover {
+  background: var(--btn-primary-hover, #45a049);
+}
+
+.btn-pagination {
+  background: var(--btn-secondary-bg, #444);
+  color: var(--text-primary, #fff);
+}
+
+.btn-pagination:hover:not(:disabled) {
+  background: var(--btn-secondary-hover, #555);
+}
+
+.btn-pagination:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .device-detail-container {
+    padding: 15px;
+  }
+  
+  .device-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .device-title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .device-title h1 {
+    font-size: 1.5rem;
+  }
+  
+  /* Mobile: Stack summary items */
+  .summary-row {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  .summary-item {
+    text-align: center;
+  }
+  
+  .summary-btn {
+    width: 100%;
+    padding: 16px;
+    font-size: 16px;
+  }
+  
+  .table-section {
+    padding: 15px;
+  }
+}
+
+/* Device Info Fallback Styles */
+.device-info-notice {
+  background: var(--warning-bg, #2a2a1a);
+  border: 1px solid var(--warning-border, #ffb74d);
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 20px;
+  color: var(--warning-text, #ffb74d);
+}
+
+.device-info-notice p {
+  margin: 5px 0;
+}
+
+.device-info-notice strong {
+  color: var(--warning-text-strong, #ffc107);
+}
+
+.no-data {
+  color: var(--text-muted, #888) !important;
+  font-style: italic;
+}
+
+.sync-indicator {
+  font-size: 12px;
+  color: var(--text-muted, #888);
+  opacity: 0.8;
+}
+
+@media (max-width: 1024px) and (min-width: 769px) {
+  /* Tablet: 2 columns */
+  .summary-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+}
+
+/* Device Rename Functionality */
+.device-title-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.rename-btn {
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: var(--btn-secondary-bg, #555);
+  color: var(--text-primary, #fff);
+  border: 1px solid var(--border-color, #666);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.rename-btn:hover {
+  background: var(--btn-secondary-hover, #666);
+  border-color: var(--accent-primary, #4CAF50);
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: var(--bg-secondary, #2a2a2a);
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-color, #333);
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: var(--text-primary, #fff);
+  font-size: 18px;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-muted, #888);
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.modal-close:hover {
+  background: var(--btn-danger-bg, #e74c3c);
+  color: var(--text-primary, #fff);
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.modal-body p {
+  margin: 0 0 16px 0;
+  color: var(--text-secondary, #ccc);
+}
+
+.form-group {
+  margin: 20px 0;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text-primary, #fff);
+  font-weight: 500;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border-color, #555);
+  border-radius: 8px;
+  background: var(--bg-tertiary, #333);
+  color: var(--text-primary, #fff);
+  font-size: 14px;
+  transition: border-color 0.3s ease;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--accent-primary, #4CAF50);
+}
+
+.form-group input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error-message {
+  background: var(--error-bg, #2d1a1a);
+  color: var(--error-text, #ff6b6b);
+  padding: 12px;
+  border-radius: 8px;
+  border-left: 4px solid var(--error-text, #ff6b6b);
+  margin: 16px 0;
+  font-size: 14px;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 12px;
+  padding: 20px 24px;
+  border-top: 1px solid var(--border-color, #333);
+  justify-content: flex-end;
+}
+
+.modal-footer .btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.modal-footer .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.modal-footer .btn-secondary {
+  background: var(--btn-secondary-bg, #555);
+  color: var(--text-primary, #fff);
+}
+
+.modal-footer .btn-secondary:hover:not(:disabled) {
+  background: var(--btn-secondary-hover, #666);
+}
+
+.modal-footer .btn-warning {
+  background: var(--warning-bg, #f39c12);
+  color: var(--text-primary, #fff);
+}
+
+.modal-footer .btn-warning:hover:not(:disabled) {
+  background: var(--warning-hover, #e67e22);
+}
+
+.modal-footer .btn-primary {
+  background: var(--accent-primary, #4CAF50);
+  color: var(--text-primary, #fff);
+}
+
+.modal-footer .btn-primary:hover:not(:disabled) {
+  background: var(--accent-hover, #45a049);
+}
+
+/* Battery Indicator Styles */
+.battery-indicator {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--card-bg, #2a2a2a);
+  border: 1px solid var(--border-color, #333);
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.battery-level {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  font-size: 11px;
+}
+
+/* Battery Level Color Coding - More specific to override UserList styles */
+.battery-indicator .battery-high {
+  color: #4CAF50; /* Green for 60%+ */
+  background: none !important;
+  border: none !important;
+}
+
+.battery-indicator .battery-medium {
+  color: #FFC107; /* Yellow for 30-59% */
+  background: none !important;
+  border: none !important;
+}
+
+.battery-indicator .battery-low {
+  color: #f44336; /* Red for below 30% */
+  background: none !important;
+  border: none !important;
+}
+
+.charging-indicator {
+  color: #2196F3; /* Blue for charging */
+  font-size: 9px;
+  animation: charging-pulse 2s infinite ease-in-out;
+}
+
+/* Charging animation */
+@keyframes charging-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+}
+
+/* Battery indicator hover effect */
+.battery-indicator:hover {
+  background: var(--btn-secondary-bg, #333);
+  border-color: var(--accent-primary, #4CAF50);
+}
+
+/* Responsive battery indicator */
+@media (max-width: 768px) {
+  .battery-indicator {
+    font-size: 10px;
+    padding: 2px 4px;
+  }
+  
+  .battery-level {
+    font-size: 10px;
+  }
+  
+  .charging-indicator {
+    font-size: 8px;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .battery-indicator .battery-high {
+    color: #00FF00;
+  }
+  
+  .battery-indicator .battery-medium {
+    color: #FFFF00;
+  }
+  
+  .battery-indicator .battery-low {
+    color: #FF0000;
+  }
+}
+
+/* Dark theme adjustments */
+@media (prefers-color-scheme: dark) {
+  .battery-indicator {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .battery-indicator:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Tooltip for battery details */
+.battery-indicator[title] {
+  cursor: help;
+}
+
+/* Additional battery status indicators */
+.battery-indicator.battery-critical {
+  border-color: #f44336;
+  background: rgba(244, 67, 54, 0.1);
+}
+
+.battery-indicator.battery-charging {
+  border-color: #2196F3;
+  background: rgba(33, 150, 243, 0.1);
+}
+
+/* Export Button Styling */
+.export-btn {
+  background: var(--accent-primary, #4CAF50) !important;
+  color: white !important;
+  border: none !important;
+  margin-left: 8px;
+  font-weight: 500;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.export-btn:hover {
+  background: var(--accent-hover, #45a049) !important;
+  transform: translateY(-1px);
+}
+
+.export-btn:disabled {
+  background: #666 !important;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Export Modal Styling */
+.export-modal {
+  max-width: 500px;
+  width: 90%;
+}
+
+.export-modal .modal-header h3 {
+  color: var(--accent-primary, #4CAF50);
+  margin: 0;
+  font-size: 20px;
+}
+
+.export-modal .export-info {
+  background: var(--card-bg, #2a2a2a);
+  border: 1px solid var(--border-color, #333);
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.export-modal .export-info p {
+  margin: 5px 0;
+  font-size: 14px;
+}
+
+.export-modal .export-info strong {
+  color: var(--accent-primary, #4CAF50);
+}
+
+.export-modal .form-group {
+  margin-bottom: 15px;
+}
+
+.export-modal .form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: var(--text-primary, #fff);
+}
+
+.export-modal .form-group input[type="date"] {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--input-bg, #333);
+  border: 1px solid var(--border-color, #444);
+  border-radius: 4px;
+  color: var(--text-primary, #fff);
+  font-size: 14px;
+}
+
+.export-modal .form-group input[type="date"]:focus {
+  outline: none;
+  border-color: var(--accent-primary, #4CAF50);
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+.export-modal .help-text {
+  color: var(--text-secondary, #ccc);
+  font-size: 12px;
+  margin-top: 10px;
+  line-height: 1.4;
+}
+
+.export-modal .modal-footer {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.export-modal .btn-primary {
+  background: var(--accent-primary, #4CAF50);
+  border-color: var(--accent-primary, #4CAF50);
+  min-width: 140px;
+}
+
+.export-modal .btn-primary:hover {
+  background: var(--accent-hover, #45a049);
+  border-color: var(--accent-hover, #45a049);
+}
+
+.export-modal .btn-primary:disabled {
+  background: #666;
+  border-color: #666;
+  cursor: not-allowed;
+}
+
+/* Responsive Export Modal */
+@media (max-width: 600px) {
+  .export-modal {
+    width: 95%;
+    margin: 10px;
+  }
+  
+  .export-modal .modal-footer {
+    flex-direction: column;
+  }
+  
+  .export-modal .modal-footer .btn {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+}
+
+/* Phone Number Input and Display Styles */
+.phone-input-container, .phone-display-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.phone-input-field {
+  width: 200px;
+  padding: 6px 10px;
+  border: 1px solid var(--border-color, #444);
+  border-radius: 4px;
+  font-size: 14px;
+  background: var(--bg-secondary, #2a2a2a);
+  color: var(--text-primary, #ffffff);
+  cursor: pointer;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.phone-input-field:hover {
+  border-color: var(--accent-primary, #4CAF50);
+  background: var(--bg-tertiary, #333);
+}
+
+.phone-input-field:focus {
+  outline: none;
+  border-color: var(--accent-primary, #4CAF50);
+  background: var(--bg-tertiary, #333);
+}
+
+.phone-display {
+  width: 200px;
+  padding: 6px 10px;
+  border: 1px solid var(--border-color, #444);
+  border-radius: 4px;
+  font-size: 14px;
+  background: var(--bg-secondary, #2a2a2a);
+  color: var(--text-primary, #ffffff);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.phone-edit-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--text-secondary, #aaa);
+  padding: 4px;
+  border-radius: 4px;
+  transition: color 0.2s, background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+}
+
+.phone-edit-btn:hover {
+  color: var(--accent-primary, #4CAF50);
+  background-color: rgba(76, 175, 80, 0.1);
+}
+
+.phone-edit-btn:active {
+  transform: scale(0.95);
+}
+
+/* Responsive phone number styles */
+@media (max-width: 768px) {
+  .phone-input-field, .phone-display {
+    width: 150px;
+    font-size: 13px;
+  }
+  
+  .phone-edit-btn {
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
+  }
+}

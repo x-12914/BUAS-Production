@@ -1,0 +1,398 @@
+/**
+ * Device Assignment Modal Styles - Dark Theme
+ * BUAS RBAC Implementation - Segment 6: User Management Frontend
+ */
+
+.device-assignment-modal {
+    max-width: 700px;
+    max-height: 90vh;
+}
+
+.modal-body {
+    padding: 0 20px 20px 20px;
+    max-height: calc(90vh - 120px);
+    overflow-y: auto;
+}
+
+/* Error Message */
+.error-message {
+    background-color: rgba(239, 83, 80, 0.1);
+    color: var(--accent-danger);
+    border: 1px solid rgba(239, 83, 80, 0.3);
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin: 0 20px 20px 20px;
+}
+
+/* Loading State */
+.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 40px;
+    color: var(--text-secondary);
+}
+
+/* Assignment Summary */
+.assignment-summary {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.summary-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}
+
+.summary-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.summary-item.changes .summary-value {
+    color: var(--accent-info);
+}
+
+/* Device Controls */
+.device-controls {
+    display: flex;
+    gap: 15px;
+    align-items: end;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.search-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.device-search {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-primary);
+    border-radius: 4px;
+    font-size: 0.9rem;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.device-search:focus {
+    outline: none;
+    border-color: var(--accent-info);
+    box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+}
+
+.control-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-sm {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+}
+
+/* Device List */
+.device-list {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid var(--border-primary);
+    border-radius: 6px;
+    margin-bottom: 20px;
+    background: var(--bg-primary);
+}
+
+.no-devices {
+    padding: 40px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.device-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--border-primary);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.device-item:last-child {
+    border-bottom: none;
+}
+
+.device-item:hover {
+    background-color: var(--bg-secondary);
+}
+
+.device-item.selected {
+    background-color: rgba(33, 150, 243, 0.1);
+    border-left: 4px solid var(--accent-info);
+}
+
+.device-item.changed {
+    border-left: 4px solid var(--accent-warning);
+}
+
+.device-item.selected.changed {
+    border-left: 4px solid var(--accent-success);
+}
+
+/* Device Checkbox */
+.device-checkbox {
+    flex-shrink: 0;
+}
+
+.device-checkbox input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+/* Device Info */
+.device-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.device-id {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.android-id {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-family: monospace;
+}
+
+.phone-numbers {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.assignment-info {
+    font-size: 0.8rem;
+    color: var(--accent-warning);
+    font-style: italic;
+}
+
+/* Device Status */
+.device-status {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: end;
+    gap: 4px;
+}
+
+.change-indicator {
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+.change-indicator:contains("Added") {
+    color: var(--accent-success);
+    background-color: rgba(76, 175, 80, 0.1);
+}
+
+.change-indicator:contains("Removed") {
+    color: var(--accent-danger);
+    background-color: rgba(239, 83, 80, 0.1);
+}
+
+.current-assignment {
+    font-size: 0.8rem;
+    color: var(--accent-info);
+    font-style: italic;
+}
+
+/* Modal Actions */
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-primary);
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    min-width: 120px;
+}
+
+.btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-primary {
+    background-color: var(--accent-info);
+    color: white;
+}
+
+.btn-secondary {
+    background-color: var(--text-secondary);
+    color: white;
+}
+
+.btn-warning {
+    background-color: var(--accent-warning);
+    color: white;
+}
+
+/* Loading Spinner */
+.spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .device-assignment-modal {
+        max-width: 100%;
+        margin: 0;
+    }
+    
+    .modal-body {
+        padding: 0 15px 15px 15px;
+    }
+    
+    .assignment-summary {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .device-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .control-buttons {
+        justify-content: center;
+    }
+    
+    .device-item {
+        padding: 15px 12px;
+    }
+    
+    .device-info {
+        gap: 6px;
+    }
+    
+    .device-status {
+        align-items: start;
+        margin-left: auto;
+    }
+    
+    .modal-actions {
+        flex-direction: column-reverse;
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-body {
+        padding: 0 10px 10px 10px;
+    }
+    
+    .assignment-summary {
+        padding: 12px;
+    }
+    
+    .device-item {
+        padding: 12px 10px;
+        flex-wrap: wrap;
+    }
+    
+    .device-info {
+        min-width: 0;
+        word-break: break-word;
+    }
+    
+    .device-search {
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+    
+    .device-list {
+        max-height: 300px;
+    }
+}
+
+/* Custom scrollbar for device list */
+.device-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.device-list::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+.device-list::-webkit-scrollbar-thumb {
+    background: var(--border-primary);
+    border-radius: 3px;
+}
+
+.device-list::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}

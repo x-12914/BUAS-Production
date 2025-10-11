@@ -1,0 +1,10 @@
+flask
+flask_sqlalchemy
+flask-login
+redis
+celery
+flask-cors
+requests
+python-dotenv
+pytz
+openpyxl
