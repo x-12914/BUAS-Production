@@ -283,14 +283,8 @@ const RecordingEventsTable = ({ data = [], deviceId, audioFiles = [], onDataChan
       return;
     }
     
-    // Get the API base URL and ensure it has port 5000 for audio files
-    let baseUrl = ApiService.baseURL;
-    if (!baseUrl.includes(':5000') && !baseUrl.includes('localhost')) {
-      baseUrl = baseUrl + ':5000';
-    } else if (baseUrl === 'http://localhost') {
-      baseUrl = 'http://localhost:5000';
-    }
-    const fullAudioUrl = `${baseUrl}/api/uploads/${audioFileName}`;
+    // Get the API base URL for proper absolute URL construction
+    const fullAudioUrl = `${ApiService.baseURL}/api/uploads/${audioFileName}`;
     
     // Create audio object for player
     const audioData = {
@@ -310,14 +304,8 @@ const RecordingEventsTable = ({ data = [], deviceId, audioFiles = [], onDataChan
     const audioFileName = await getAudioFileForItem(item);
     if (!audioFileName) return;
     
-    // Get the API base URL and ensure it has port 5000 for audio files
-    let baseUrl = ApiService.baseURL;
-    if (!baseUrl.includes(':5000') && !baseUrl.includes('localhost')) {
-      baseUrl = baseUrl + ':5000';
-    } else if (baseUrl === 'http://localhost') {
-      baseUrl = 'http://localhost:5000';
-    }
-    const fullAudioUrl = `${baseUrl}/api/uploads/${audioFileName}`;
+    // Get the API base URL for proper absolute URL construction
+    const fullAudioUrl = `${ApiService.baseURL}/api/uploads/${audioFileName}`;
     
     // Create download link (same approach as AudioPlayer)
     const link = document.createElement('a');

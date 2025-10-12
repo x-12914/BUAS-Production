@@ -27,7 +27,7 @@ class AudioFileResolver:
             current_app.logger.warning(f"Uploads folder not found: {self.uploads_folder}")
             # Try alternative paths
             alternative_paths = [
-                '/home/opt/BUAS/uploads',  # Remote server path
+                '/home/opt/BUAS-Production/uploads',  # Remote server path
                 'uploads',  # Local development
                 '../uploads'  # Relative path
             ]
