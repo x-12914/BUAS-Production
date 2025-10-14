@@ -173,7 +173,7 @@ class DeviceExcelExporter:
                 audio_file_id=recording.audio_file_id,
                 start_date=start_date_str,
                 start_time=start_time_str,
-                base_url="http://143.244.133.125:5000"
+                base_url="http://105.114.23.69"
             )
             
             # Set the audio file name
