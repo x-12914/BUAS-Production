@@ -1,21 +1,15 @@
-from app import create_app
-from flask_cors import CORS
+import os
+from app import create_app, socketio
 
 # Try to import celery, but don't fail if it's not available
 try:
     from app.celery_app import make_celery
+
     CELERY_AVAILABLE = True
 except ImportError:
     CELERY_AVAILABLE = False
 
 app = create_app()
-
-# ✅ Allow frontend on 105.114.23.69 to make API requests with cookies
-CORS(app, supports_credentials=True, origins=[
-    "http://105.114.23.69",       # frontend on port 80
-    "http://105.114.23.69:5000",  # optional: backend direct access
-    "http://localhost:3000"       # optional: local dev
-])
 
 # Only initialize celery if it's available and Redis is running
 if CELERY_AVAILABLE:
@@ -32,11 +26,26 @@ else:
 if __name__ == "__main__":
     print("Starting Flask server...")
     print(f"Celery available: {CELERY_AVAILABLE}")
+    
+    # Check if streaming is enabled
+    streaming_enabled = os.environ.get('ENABLE_STREAMING', 'false').lower() == 'true'
+    print(f"Live streaming: {'✅ ENABLED' if streaming_enabled else '⏸️ DISABLED'}")
 
-    # Run Flask development server
-    app.run(
-        host='0.0.0.0',  # Bind to all interfaces for VPS access
-        port=5000,       # Flask server port
-        debug=False,
-        use_reloader=False
-    )
+    # Run server (with or without SocketIO depending on streaming flag)
+    if streaming_enabled and socketio:
+        print("Starting with SocketIO support for live streaming...")
+        socketio.run(
+            app,
+            host='0.0.0.0',
+            port=5000,
+            debug=False,
+            use_reloader=False
+        )
+    else:
+        print("Starting standard Flask server (no streaming)...")
+        app.run(
+            host='0.0.0.0',
+            port=5000,
+            debug=False,
+            use_reloader=False
+        )

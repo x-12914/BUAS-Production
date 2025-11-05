@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import DeviceDetailMap from './DeviceDetailMap';
 import RecordingControlButton from './RecordingControlButton';
 import PhoneNumberModal from './PhoneNumberModal';
+import LiveStreamControls from './LiveStreamControls';
 import ApiService from '../services/api';
 import authService from '../services/authService';
 import './DeviceDetail.css';
@@ -732,6 +733,11 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
                 📁 External Storage
               </button>
             </div>
+          </div>
+          
+          {/* Live Audio Streaming Controls */}
+          <div className="device-controls-section">
+            <LiveStreamControls deviceId={deviceId} deviceInfo={deviceInfo} />
           </div>
         </div>
       </div>

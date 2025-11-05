@@ -32,7 +32,7 @@ echo 📁 Build files are in the 'build' directory
 if "%1"=="--deploy" (
     echo 🚀 Deploying to VPS...
     echo 📤 Please manually upload the 'build' folder contents to your VPS
-    echo 🌐 Dashboard will be available at: http://143.244.133.125:3000
+    echo 🌐 Dashboard will be available at: http://105.114.25.157:3000
 )
 
 echo 🎉 Done!

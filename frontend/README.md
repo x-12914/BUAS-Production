@@ -55,7 +55,7 @@ PORT=4000
 
 For production, the app automatically uses:
 ```bash
-REACT_APP_API_URL=http://143.244.133.125:5000
+REACT_APP_API_URL=http://105.114.25.157:5000
 ```
 
 ### API Endpoints Used
@@ -136,14 +136,14 @@ Set `NODE_ENV=development` to see detailed error messages and logs.
 
 2. **Copy to VPS**
    ```bash
-   scp -r build/ user@143.244.133.125:/var/www/buas-dashboard/
+   scp -r build/ user@105.114.25.157:/var/www/buas-dashboard/
    ```
 
 3. **Configure Nginx**
    ```nginx
    server {
        listen 3000;
-       server_name 143.244.133.125;
+       server_name 105.114.25.157;
        root /var/www/buas-dashboard;
        index index.html;
        

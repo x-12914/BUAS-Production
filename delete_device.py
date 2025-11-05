@@ -18,10 +18,6 @@ import sqlite3
 import os
 from datetime import datetime
 
-# Get the absolute path to the database (same as Flask uses)
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, 'uploads.db')
-
 def delete_device_completely(device_id, delete_audio_files=True):
     """
     Completely delete a device and all associated data including:
@@ -42,11 +38,9 @@ def delete_device_completely(device_id, delete_audio_files=True):
     
     print(f"🗑️  COMPLETE DEVICE DELETION: {device_id}")
     print("=" * 50)
-    print(f"📂 Database: {DB_PATH}")
-    print("-" * 50)
     
     # Connect to database
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect('uploads.db')
     cursor = conn.cursor()
     
     try:
@@ -371,10 +365,8 @@ def list_devices_with_data():
     """List all devices with their data counts"""
     print("📱 DEVICES WITH DATA:")
     print("=" * 30)
-    print(f"📂 Database: {DB_PATH}")
-    print("-" * 30)
     
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect('uploads.db')
     cursor = conn.cursor()
     
     try:

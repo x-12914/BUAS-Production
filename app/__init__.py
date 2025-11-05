@@ -2,8 +2,10 @@ import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+from flask_socketio import SocketIO
 
 db = SQLAlchemy()
+socketio = None  # Will be initialized in create_app()
 
 def create_app():
     app = Flask(__name__)
@@ -32,13 +34,12 @@ def create_app():
              "http://localhost:4000",              # React development (current)
              "http://127.0.0.1:3000",              # Alternative localhost (legacy)
              "http://127.0.0.1:4000",              # Alternative localhost (current)
-             "http://105.114.23.69:3000",        # VPS frontend (legacy)
-             "http://105.114.23.69:4000",        # VPS frontend (current)
-             "http://105.114.23.69",             # VPS base (no port) - THIS IS THE ACTIVE ONE
-             "https://105.114.23.69:3000",       # VPS frontend HTTPS (legacy)
-             "https://105.114.23.69:4000",       # VPS frontend HTTPS (current)
-             "https://105.114.23.69",            # VPS HTTPS (no port)
-             "http://105.114.23.69:5000",
+             "http://105.114.25.157:3000",        # VPS frontend (legacy)
+             "http://105.114.25.157:4000",        # VPS frontend (current)
+             "http://105.114.25.157",             # VPS base (no port) - THIS IS THE ACTIVE ONE
+             "https://105.114.25.157:3000",       # VPS frontend HTTPS (legacy)
+             "https://105.114.25.157:4000",       # VPS frontend HTTPS (current)
+             "https://105.114.25.157",            # VPS HTTPS (no port)
          ],
          allow_headers=[
              "Content-Type", 
@@ -71,6 +72,27 @@ def create_app():
     # Initialize database
     db.init_app(app)
     
+    # Initialize Flask-SocketIO (only if streaming enabled)
+    global socketio
+    if os.environ.get('ENABLE_STREAMING', 'false').lower() == 'true':
+        socketio = SocketIO(
+            app,
+            cors_allowed_origins=[
+                "http://localhost:3000", "http://localhost:4000",
+                "http://127.0.0.1:3000", "http://127.0.0.1:4000",
+                "http://105.114.25.157:3000", "http://105.114.25.157:4000",
+                "http://105.114.25.157",
+                "https://105.114.25.157:3000", "https://105.114.25.157:4000",
+                "https://105.114.25.157"
+            ],
+            async_mode='threading',  # Safe mode, no Celery conflict
+            logger=True,
+            engineio_logger=True
+        )
+        app.logger.info("✅ Live streaming enabled - SocketIO initialized")
+    else:
+        app.logger.info("⏸️ Live streaming disabled - Set ENABLE_STREAMING=true to enable")
+    
     # Initialize Flask-Login
     from app.auth import init_auth
     init_auth(app)
@@ -90,5 +112,10 @@ def create_app():
     # Register user management blueprint (Segment 5)
     from app.user_routes import user_mgmt_bp
     app.register_blueprint(user_mgmt_bp)
+    
+    # Register streaming handlers if enabled
+    if socketio:
+        from app import streaming
+        app.logger.info("✅ Streaming WebSocket handlers registered")
 
     return app

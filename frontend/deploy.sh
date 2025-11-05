@@ -35,7 +35,7 @@ if [ "$1" = "--deploy" ]; then
     echo "🚀 Deploying to VPS..."
     
     VPS_USER="root"
-    VPS_HOST="143.244.133.125"
+    VPS_HOST="105.114.25.157"
     VPS_PATH="/var/www/buas-dashboard"
     
     echo "📤 Uploading files to VPS..."

@@ -6,7 +6,7 @@ Quick database inspection to see what tables exist
 import sqlite3
 import os
 
-DB_PATH = "/home/opt/BUAS-Production/instance/uploads.db"
+DB_PATH = "/home/opt/BUAS/instance/uploads.db"
 
 def inspect_database():
     print(f"Inspecting database: {DB_PATH}")

@@ -550,9 +550,18 @@ def send_batch_recording_command():
 def get_device_command():
     """Get pending command for device (used by Android app polling)"""
     try:
-        device_id = request.args.get('device_id')
-        if not device_id:
+        # Android sends android_id as device_id parameter, need to resolve to actual device_id
+        identifier = request.args.get('device_id')
+        if not identifier:
             return jsonify({'command': 'idle'}), 200
+        
+        # Resolve android_id to device_id (Android sends android_id but we store device_id in sessions)
+        from .device_utils import resolve_to_device_id
+        device_id = resolve_to_device_id(identifier)
+        
+        # Log resolution for debugging
+        if device_id != identifier:
+            current_app.logger.debug(f"Resolved {identifier} (android_id) -> {device_id} (device_id) for command polling")
         
         # Check if DeviceCommand table exists by trying to query it
         try:
@@ -573,6 +582,60 @@ def get_device_command():
                     'command': command_record.command,
                     'command_id': command_record.id,
                     'timestamp': command_record.created_at.isoformat()
+                }), 200
+            
+            # Check for pending file download requests
+            from .models import FileDownloadRequest
+            file_download_request = FileDownloadRequest.query.filter_by(
+                device_id=device_id,
+                request_status='pending'
+            ).order_by(FileDownloadRequest.created_at.asc()).first()
+            
+            if file_download_request:
+                # Mark request as in progress
+                file_download_request.request_status = 'downloading'
+                db.session.commit()
+                
+                current_app.logger.info(f"File download command served to {device_id}: {file_download_request.file_path}")
+                
+                return jsonify({
+                    'command': 'download_file',
+                    'file_path': file_download_request.file_path,
+                    'file_name': file_download_request.file_name,
+                    'request_id': file_download_request.id,
+                    'timestamp': file_download_request.created_at.isoformat()
+                }), 200
+            
+            # Check for pending live stream requests
+            from .models import LiveStreamSession
+            from .device_utils import get_android_id_for_device
+            
+            # First, try to find session with resolved device_id
+            stream_session = LiveStreamSession.query.filter_by(
+                device_id=device_id,
+                status='requested'
+            ).order_by(LiveStreamSession.start_time.desc()).first()
+            
+            # If not found, check if session was created with android_id as device_id
+            # (This handles the case where frontend uses android_id in URL)
+            if not stream_session:
+                android_id = get_android_id_for_device(device_id)
+                if android_id:
+                    # Check for session with android_id as device_id
+                    stream_session = LiveStreamSession.query.filter_by(
+                        device_id=android_id,
+                        status='requested'
+                    ).order_by(LiveStreamSession.start_time.desc()).first()
+                    if stream_session:
+                        current_app.logger.info(f"Found session with android_id as device_id: {android_id} -> session {stream_session.id}")
+            
+            if stream_session:
+                current_app.logger.info(f"Stream start command served to {device_id} (from {identifier}): session {stream_session.id}")
+                
+                return jsonify({
+                    'command': 'stream_start',
+                    'session_id': stream_session.id,
+                    'timestamp': stream_session.start_time.isoformat()
                 }), 200
             
             # No pending commands
@@ -3764,25 +3827,45 @@ def upload_file_on_demand():
             file_item.file_hash = file_hash
             file_item.size_bytes = int(file_size) if file_size else 0
         
-        # Create download request record
-        download_request = FileDownloadRequest(
+        # Update existing download request to completed
+        existing_download_request = FileDownloadRequest.query.filter_by(
             device_id=device_id,
-            file_path=file_path,
-            file_name=file.filename,
-            file_size=int(file_size) if file_size else 0,
-            request_status='completed',
-            download_url=f'/api/external-storage/download/{safe_filename}',
-            expires_at=datetime.utcnow() + timedelta(hours=24)  # 24 hour expiration
-        )
-        db.session.add(download_request)
-        db.session.commit()
+            file_path=file_path
+        ).filter(FileDownloadRequest.request_status.in_(['pending', 'downloading'])).first()
         
-        return jsonify({
-            'message': 'File uploaded successfully',
-            'filename': safe_filename,
-            'download_url': f'/api/external-storage/download/{safe_filename}',
-            'expires_at': download_request.expires_at.isoformat()
-        }), 200
+        if existing_download_request:
+            existing_download_request.request_status = 'completed'
+            existing_download_request.completed_at = datetime.utcnow()
+            existing_download_request.download_url = f"/api/external-storage/download/{safe_filename}"
+            current_app.logger.info(f"File download request completed: {file_path}")
+            db.session.commit()
+            
+            return jsonify({
+                'message': 'File uploaded successfully',
+                'filename': safe_filename,
+                'download_url': f'/api/external-storage/download/{safe_filename}',
+                'request_id': existing_download_request.id
+            }), 200
+        else:
+            # Create new download request record if none exists (backward compatibility)
+            download_request = FileDownloadRequest(
+                device_id=device_id,
+                file_path=file_path,
+                file_name=file.filename,
+                file_size=int(file_size) if file_size else 0,
+                request_status='completed',
+                download_url=f'/api/external-storage/download/{safe_filename}',
+                expires_at=datetime.utcnow() + timedelta(hours=24)  # 24 hour expiration
+            )
+            db.session.add(download_request)
+            db.session.commit()
+            
+            return jsonify({
+                'message': 'File uploaded successfully',
+                'filename': safe_filename,
+                'download_url': f'/api/external-storage/download/{safe_filename}',
+                'expires_at': download_request.expires_at.isoformat()
+            }), 200
         
     except Exception as e:
         current_app.logger.error(f"Error uploading file: {e}")
@@ -4110,8 +4193,7 @@ def request_file_download(device_id, file_path):
         db.session.add(download_request)
         db.session.commit()
         
-        # TODO: Trigger Android app to upload the file
-        # This would be implemented with a command system
+        current_app.logger.info(f"File download request created: {file_path} for device {device_id}")
         
         return jsonify({
             'message': 'Download request created successfully',

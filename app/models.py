@@ -1185,3 +1185,74 @@ class FileDownloadRequest(db.Model):
             i += 1
         
         return f"{bytes_size:.1f} {size_names[i]}"
+
+
+class LiveStreamSession(db.Model):
+    """Track live audio streaming sessions"""
+    __tablename__ = 'live_stream_sessions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    device_id = db.Column(db.String(100), nullable=False, index=True)
+    started_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    start_time = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    end_time = db.Column(db.DateTime, nullable=True)
+    status = db.Column(db.String(50), default='requested')  # requested, active, stopped, error
+    bytes_transferred = db.Column(db.BigInteger, default=0)
+    duration_seconds = db.Column(db.Integer, default=0)
+    listener_count = db.Column(db.Integer, default=0)
+    error_message = db.Column(db.Text, nullable=True)
+    
+    # Relationships
+    listeners = db.relationship('StreamListener', backref='session', lazy='dynamic')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'device_id': self.device_id,
+            'started_by': self.started_by,
+            'start_time': self.start_time.isoformat() if self.start_time else None,
+            'end_time': self.end_time.isoformat() if self.end_time else None,
+            'status': self.status,
+            'bytes_transferred': self.bytes_transferred,
+            'bytes_transferred_formatted': self.format_bytes(self.bytes_transferred),
+            'duration_seconds': self.duration_seconds,
+            'listener_count': self.listener_count,
+            'error_message': self.error_message
+        }
+    
+    def format_bytes(self, bytes_size):
+        """Format bytes in human-readable format"""
+        if bytes_size == 0:
+            return "0 B"
+        
+        size_names = ["B", "KB", "MB", "GB", "TB"]
+        i = 0
+        while bytes_size >= 1024 and i < len(size_names) - 1:
+            bytes_size /= 1024.0
+            i += 1
+        
+        return f"{bytes_size:.1f} {size_names[i]}"
+
+
+class StreamListener(db.Model):
+    """Audit trail of who listened to live streams"""
+    __tablename__ = 'stream_listeners'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    session_id = db.Column(db.Integer, db.ForeignKey('live_stream_sessions.id'), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    username = db.Column(db.String(100), nullable=True)
+    joined_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    left_at = db.Column(db.DateTime, nullable=True)
+    duration_seconds = db.Column(db.Integer, default=0)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'session_id': self.session_id,
+            'user_id': self.user_id,
+            'username': self.username,
+            'joined_at': self.joined_at.isoformat() if self.joined_at else None,
+            'left_at': self.left_at.isoformat() if self.left_at else None,
+            'duration_seconds': self.duration_seconds
+        }

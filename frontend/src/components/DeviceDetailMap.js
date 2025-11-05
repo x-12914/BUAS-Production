@@ -8,7 +8,7 @@ import './DeviceDetailMap.css';
 // Get the API base URL for audio links
 const getApiUrl = () => {
   if (process.env.NODE_ENV === 'production') {
-    return process.env.REACT_APP_VPS_URL || 'http://105.114.23.69:5000';
+    return process.env.REACT_APP_VPS_URL || 'http://105.114.25.157:5000';
   }
   return process.env.REACT_APP_API_URL || 'http://localhost:5000';
 };
