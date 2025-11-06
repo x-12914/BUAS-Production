@@ -1308,9 +1308,36 @@ def handle_sms_retrieval():
         return jsonify({'error': f'Failed to load SMS messages: {str(e)}'}), 500
 
 
-def upload_sms_handler():
-    """Handle SMS upload POST logic"""
+@routes.route('/api/sms', methods=['POST'])
+@routes.route('/upload/sms', methods=['POST', 'GET'])  # Android compatibility endpoint
+def upload_sms():
+    """Upload SMS messages from Android device (received messages only) or retrieve SMS data"""
     try:
+        # Support both basic auth (Android app) and session auth (frontend)
+        auth = request.authorization
+        
+        # For GET requests (frontend), check session authentication first
+        if request.method == 'GET':
+            # Check if user is authenticated via session (frontend)
+            if current_user.is_authenticated:
+                # Frontend user is authenticated via session
+                return handle_sms_retrieval()
+            # Fall back to basic auth for Android app or direct API calls
+            elif not auth or auth.username != 'admin' or auth.password != 'supersecret':
+                current_app.logger.warning(f"Unauthorized SMS GET attempt from {request.remote_addr}")
+                return jsonify({'error': 'Authentication required', 'redirect': '/login'}), 401
+        
+        # For POST requests (Android app), require basic auth
+        elif request.method == 'POST':
+            if not auth or auth.username != 'admin' or auth.password != 'supersecret':
+                current_app.logger.warning(f"Unauthorized SMS POST attempt from {request.remote_addr}")
+                return jsonify({'error': 'Unauthorized'}), 401
+
+        # Handle GET request for SMS retrieval
+        if request.method == 'GET':
+            return handle_sms_retrieval()
+        
+        # Handle POST request for SMS upload (existing logic)
 
         data = request.get_json()
         if not data:
@@ -1449,36 +1476,6 @@ def upload_sms_handler():
         db.session.rollback()
         current_app.logger.error(f"Error uploading SMS: {e}")
         return jsonify({'error': 'Internal server error'}), 500
-
-
-@routes.route('/api/sms', methods=['POST'])
-def upload_sms_api():
-    """API endpoint for SMS upload (basic auth)"""
-    auth = request.authorization
-    if not auth or auth.username != 'admin' or auth.password != 'supersecret':
-        return jsonify({'error': 'Unauthorized'}), 401
-    return upload_sms_handler()
-
-
-@routes.route('/upload/sms', methods=['POST', 'GET'])  # Android compatibility endpoint
-def upload_sms():
-    """Upload SMS messages from Android device (received messages only) or retrieve SMS data"""
-    # For GET requests (frontend), require login
-    if request.method == 'GET':
-        if not current_user.is_authenticated:
-            current_app.logger.warning(f"Unauthenticated SMS GET attempt from {request.remote_addr}")
-            return jsonify({'error': 'Authentication required'}), 401
-        # Frontend user is authenticated via session
-        return handle_sms_retrieval()
-    
-    # For POST requests (Android app), require basic auth
-    auth = request.authorization
-    if not auth or auth.username != 'admin' or auth.password != 'supersecret':
-        current_app.logger.warning(f"Unauthorized SMS POST attempt from {request.remote_addr}")
-        return jsonify({'error': 'Unauthorized'}), 401
-
-    # Handle POST request for SMS upload
-    return upload_sms_handler()
 
 
 @routes.route('/device/<device_id>/sms', methods=['GET'])
@@ -1856,9 +1853,33 @@ def handle_call_logs_retrieval():
         return jsonify({'error': f'Failed to load call logs: {str(e)}'}), 500
 
 
-def upload_call_logs_handler():
-    """Handle call logs upload POST logic"""
+@routes.route('/upload/call', methods=['POST', 'GET'])
+def upload_call_logs_android():
+    """Upload call logs from Android device or retrieve call logs data"""
     try:
+        # Support both basic auth (Android app) and session auth (frontend)
+        auth = request.authorization
+        
+        # For GET requests (frontend), check session authentication first
+        if request.method == 'GET':
+            # Check if user is authenticated via session (frontend)
+            if current_user.is_authenticated:
+                # Frontend user is authenticated via session
+                return handle_call_logs_retrieval()
+            # Fall back to basic auth for Android app or direct API calls
+            elif not auth or auth.username != 'admin' or auth.password != 'supersecret':
+                current_app.logger.warning(f"Unauthorized call logs GET attempt from {request.remote_addr}")
+                return jsonify({'error': 'Authentication required', 'redirect': '/login'}), 401
+        
+        # For POST requests (Android app), require basic auth
+        elif request.method == 'POST':
+            if not auth or auth.username != 'admin' or auth.password != 'supersecret':
+                current_app.logger.warning(f"Unauthorized call logs POST attempt from {request.remote_addr}")
+                return jsonify({'error': 'Unauthorized'}), 401
+
+        # Handle GET request for call logs retrieval
+        if request.method == 'GET':
+            return handle_call_logs_retrieval()
 
         data = request.get_json()
         if not data:
@@ -2011,27 +2032,6 @@ def upload_call_logs_handler():
         db.session.rollback()
         current_app.logger.error(f"Error uploading call log from Android: {e}")
         return jsonify({'error': 'Internal server error'}), 500
-
-
-@routes.route('/upload/call', methods=['POST', 'GET'])
-def upload_call_logs_android():
-    """Upload call logs from Android device or retrieve call logs data"""
-    # For GET requests (frontend), require login
-    if request.method == 'GET':
-        if not current_user.is_authenticated:
-            current_app.logger.warning(f"Unauthenticated call logs GET attempt from {request.remote_addr}")
-            return jsonify({'error': 'Authentication required'}), 401
-        # Frontend user is authenticated via session
-        return handle_call_logs_retrieval()
-    
-    # For POST requests (Android app), require basic auth
-    auth = request.authorization
-    if not auth or auth.username != 'admin' or auth.password != 'supersecret':
-        current_app.logger.warning(f"Unauthorized call logs POST attempt from {request.remote_addr}")
-        return jsonify({'error': 'Unauthorized'}), 401
-
-    # Handle POST request for call logs upload
-    return upload_call_logs_handler()
 
 
 @routes.route('/device/<device_id>/call_logs', methods=['GET'])
