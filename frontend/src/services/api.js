@@ -2,7 +2,7 @@
 const getApiUrl = () => {
   // For production build, use hardcoded VPS IP to avoid DNS issues
   if (process.env.NODE_ENV === 'production') {
-    return process.env.REACT_APP_VPS_URL || 'http://105.114.25.157:5000';
+    return process.env.REACT_APP_VPS_URL || 'http://105.114.25.157';
   }
   // For development, use environment variable or localhost fallback
   return process.env.REACT_APP_API_URL || 'http://localhost:5000';
