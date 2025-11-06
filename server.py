@@ -1,4 +1,13 @@
 import os
+
+# CRITICAL: Eventlet monkey patching MUST be done before any other imports
+# This is required when using Gunicorn with eventlet workers
+try:
+    import eventlet
+    eventlet.monkey_patch()
+except ImportError:
+    print("Warning: eventlet not installed. Install it for production: pip install eventlet")
+
 from app import create_app, socketio
 
 # Try to import celery, but don't fail if it's not available
