@@ -98,6 +98,21 @@ def create_app():
     # Initialize Flask-Login
     from app.auth import init_auth
     init_auth(app)
+    
+    # Android CORS fix: Allow requests without Origin header (native mobile apps)
+    # This works alongside flask-cors for browser requests
+    @app.after_request
+    def after_request_android_cors(response):
+        from flask import request
+        
+        # If no Origin header (Android/native apps), add permissive CORS
+        if not request.headers.get('Origin'):
+            response.headers['Access-Control-Allow-Origin'] = '*'
+            response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+            response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, Accept, X-Requested-With'
+            response.headers['Access-Control-Max-Age'] = '3600'
+        
+        return response
 
     # Create tables if they don't exist
     with app.app_context():
