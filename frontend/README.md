@@ -55,7 +55,7 @@ PORT=4000
 
 For production, the app automatically uses:
 ```bash
-REACT_APP_API_URL=http://105.114.25.157:5000
+REACT_APP_API_URL=http://105.114.25.157
 ```
 
 ### API Endpoints Used
