@@ -96,19 +96,24 @@ const LiveAudioPlayer = ({ deviceId, onClose }) => {
   const connectToStream = () => {
     try {
       // Connect to streaming namespace via Socket.IO
+      // In production, use the same origin (nginx will proxy to Flask)
+      // The key is: we connect to the NAMESPACE (/stream), not the path
       const socketUrl = process.env.NODE_ENV === 'production' 
-        ? window.location.origin  // Use same origin through nginx
+        ? `${window.location.protocol}//${window.location.host}`  // Use full origin with protocol
         : API_BASE_URL;  // Development: direct connection
+      
+      console.log('Connecting to Socket.IO at:', socketUrl);
       
       // Socket.IO v4: Connect to namespace
       // The namespace is specified in the URL, path is the Socket.IO endpoint
       socketRef.current = io(`${socketUrl}/stream`, {
         path: '/socket.io',
         withCredentials: true,
-        transports: ['websocket', 'polling'],
+        transports: ['polling', 'websocket'],  // Try polling first, then upgrade to websocket
         reconnection: true,
         reconnectionAttempts: 5,
-        reconnectionDelay: 1000
+        reconnectionDelay: 1000,
+        timeout: 20000
       });
       
       // Store reference for cleanup (same object)
