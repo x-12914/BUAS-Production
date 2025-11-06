@@ -85,11 +85,13 @@ def create_app():
                 "https://105.114.25.157:3000", "https://105.114.25.157:4000",
                 "https://105.114.25.157"
             ],
-            async_mode='threading',  # Safe mode, no Celery conflict
+            async_mode='eventlet',  # Must match Gunicorn worker_class
             logger=True,
-            engineio_logger=True
+            engineio_logger=True,
+            ping_timeout=60,
+            ping_interval=25
         )
-        app.logger.info("✅ Live streaming enabled - SocketIO initialized")
+        app.logger.info("✅ Live streaming enabled - SocketIO initialized with eventlet")
     else:
         app.logger.info("⏸️ Live streaming disabled - Set ENABLE_STREAMING=true to enable")
     
