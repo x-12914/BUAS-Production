@@ -86,10 +86,12 @@ def create_app():
                 "https://105.114.25.157"
             ],
             async_mode='eventlet',  # Must match Gunicorn worker_class
+            manage_session=False,  # Let Flask-Login handle sessions, not Socket.IO
             logger=True,
             engineio_logger=True,
             ping_timeout=60,
-            ping_interval=25
+            ping_interval=25,
+            cookie='io'  # Use a simple cookie name to avoid conflicts
         )
         app.logger.info("✅ Live streaming enabled - SocketIO initialized with eventlet")
     else:
