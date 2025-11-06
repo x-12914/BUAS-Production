@@ -89,10 +89,7 @@ def create_app():
             logger=True,
             engineio_logger=True,
             ping_timeout=60,
-            ping_interval=25,
-            manage_session=False,  # Let Flask handle sessions
-            cookie=None,  # Don't create Socket.IO specific cookies
-            cors_credentials=True  # Allow credentials for CORS
+            ping_interval=25
         )
         app.logger.info("✅ Live streaming enabled - SocketIO initialized with eventlet")
     else:

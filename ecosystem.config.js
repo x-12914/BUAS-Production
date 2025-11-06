@@ -1,7 +1,7 @@
 module.exports = {
   apps: [{
     name: 'flask-server',
-    script: '/home/opt/venv/bin/gunicorn',
+    script: '/home/opt/BUAS-Production/venv/bin/gunicorn',
     args: '-c gunicorn_config.py server:app',
     cwd: '/home/opt/BUAS-Production',
     interpreter: 'none',
