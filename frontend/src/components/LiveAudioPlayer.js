@@ -18,7 +18,7 @@ const API_BASE_URL = process.env.NODE_ENV === 'production'
   ? window.location.origin
   : (process.env.REACT_APP_API_URL || 'http://localhost:5000');
 
-const LiveAudioPlayer = ({ deviceId, onClose }) => {
+const LiveAudioPlayer = ({ deviceId, onClose, variant = 'full', onStatusChange }) => {
   const [status, setStatus] = useState('connecting'); // connecting, waiting, active, error, stopped
   const [error, setError] = useState(null);
   const [listenerCount, setListenerCount] = useState(0);
@@ -42,6 +42,13 @@ const LiveAudioPlayer = ({ deviceId, onClose }) => {
   const accumulatedPagesRef = useRef([]); // Accumulate audio pages for batch decoding
   const MAX_AUDIO_QUEUE_SIZE = 20; // Sufficient for Ogg Opus frames
   const BATCH_SIZE = 1; // Decode immediately (Android sends 1 page per chunk at 40ms intervals)
+
+  // Notify parent components about status changes
+  useEffect(() => {
+    if (onStatusChange) {
+      onStatusChange(status);
+    }
+  }, [status, onStatusChange]);
 
   useEffect(() => {
     initializeAudioContext();
@@ -734,6 +741,74 @@ const LiveAudioPlayer = ({ deviceId, onClose }) => {
         return 'Unknown';
     }
   };
+
+  if (variant === 'compact') {
+    const isActive = status === 'active';
+    const isWaiting = status === 'waiting';
+    const isConnecting = status === 'connecting';
+    const listenersLabel = listenerCount === 1 ? '1 listener' : `${listenerCount} listeners`;
+    const dataLabel = formatBytes(bytesReceived);
+
+    return (
+      <div className="live-audio-player compact">
+        <div className="compact-header">
+          <div className="compact-status">
+            <span className={`compact-status-dot ${status}`}></span>
+            <span className="compact-status-text">{getStatusText()}</span>
+            {isActive && (
+              <span className="compact-duration">{formatDuration(duration)}</span>
+            )}
+          </div>
+          <button
+            className="compact-stop-button"
+            onClick={handleStop}
+            disabled={status === 'stopped'}
+            title="Stop listening"
+          >
+            Stop Listening
+          </button>
+        </div>
+
+        {error && (
+          <div className="compact-error">
+            {error}
+          </div>
+        )}
+
+        <div className="compact-body">
+          {(isConnecting || isWaiting) && !error && (
+            <div className="compact-hint">
+              {isConnecting ? 'Connecting to streaming server…' : 'Waiting for device to respond…'}
+            </div>
+          )}
+
+          {!error && (
+            <>
+              <div className="compact-meta">
+                <span className="compact-meta-item">{listenersLabel}</span>
+                <span className="compact-meta-item">{dataLabel}</span>
+                {latency > 0 && (
+                  <span className="compact-meta-item">{latency} ms</span>
+                )}
+              </div>
+
+              {isActive && (
+                <div className="compact-meter">
+                  <div className="compact-meter-bar">
+                    <div
+                      className="compact-meter-fill"
+                      style={{ width: `${audioLevel}%` }}
+                    ></div>
+                  </div>
+                  <span className="compact-meter-value">{audioLevel}% audio level</span>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="live-audio-player">

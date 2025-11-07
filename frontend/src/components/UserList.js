@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import RecordingControlButton from './RecordingControlButton';
+import DeviceCardListenControl from './DeviceCardListenControl';
 import './UserList.css';
 
 const UserList = ({ 
@@ -302,6 +303,12 @@ const UserList = ({
                       disabled={loading}
                     />
                   )}
+
+                  <DeviceCardListenControl
+                    deviceId={user.android_id || user.user_id}
+                    deviceName={user.display_name || user.user_id}
+                    disabled={loading}
+                  />
                   
                   {/* Role-based restrictions notice - removed redundant text */}
                   
