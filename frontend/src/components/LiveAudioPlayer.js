@@ -768,6 +768,12 @@ const LiveAudioPlayer = ({ deviceId, onClose, variant = 'full', onStatusChange }
 
     const controlLabel = getControlLabel();
     const controlDisabled = status === 'stopping';
+    const showControl =
+      status !== 'idle' ||
+      status === 'error' ||
+      isConnecting ||
+      isWaiting ||
+      isActive;
 
     return (
       <div className="live-audio-player compact">
@@ -779,14 +785,6 @@ const LiveAudioPlayer = ({ deviceId, onClose, variant = 'full', onStatusChange }
               <span className="compact-duration">{formatDuration(duration)}</span>
             )}
           </div>
-          <button
-            className="compact-stop-button"
-            onClick={handleStop}
-            disabled={controlDisabled}
-            title={controlLabel}
-          >
-            {controlLabel}
-          </button>
         </div>
 
         {error && (
@@ -826,6 +824,19 @@ const LiveAudioPlayer = ({ deviceId, onClose, variant = 'full', onStatusChange }
             </>
           )}
         </div>
+
+        {showControl && (
+          <div className="compact-footer">
+            <button
+              className="compact-stop-button"
+              onClick={handleStop}
+              disabled={controlDisabled}
+              title={controlLabel}
+            >
+              {controlLabel}
+            </button>
+          </div>
+        )}
       </div>
     );
   }

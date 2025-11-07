@@ -17,7 +17,7 @@ const DeviceCardListenControl = ({ deviceId, deviceName, disabled = false }) => 
     const cardRect = card.getBoundingClientRect();
     const header = card.querySelector('.user-header');
     const headerRect = header ? header.getBoundingClientRect() : cardRect;
-    const topOffset = Math.max(headerRect.bottom - cardRect.top, 0);
+    const topOffset = Math.max(headerRect.bottom - cardRect.top - 12, 0);
     const padding = 16;
     const width = Math.max(cardRect.width - padding * 2, 220);
 
@@ -165,7 +165,7 @@ const DeviceCardListenControl = ({ deviceId, deviceName, disabled = false }) => 
     <div className="listen-live-control" ref={containerRef} onClick={(event) => event.stopPropagation()}>
       <button
         type="button"
-        className={`listen-live-btn ${isListening ? 'active' : ''} ${isBusy ? 'busy' : ''}`}
+        className={`listen-live-btn ${isListening ? 'hidden' : ''} ${isBusy ? 'busy' : ''}`}
         onClick={handleToggle}
         disabled={disabled || isOpen}
         title={disabled ? 'Action disabled while dashboard is loading' : buttonLabel}

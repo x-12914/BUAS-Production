@@ -34,6 +34,10 @@
   background: #c1282d;
 }
 
+.listen-live-btn.hidden {
+  visibility: hidden;
+}
+
 .listen-live-icon {
   font-size: 1rem;
   line-height: 1;
