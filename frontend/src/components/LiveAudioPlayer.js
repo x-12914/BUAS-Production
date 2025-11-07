@@ -39,7 +39,9 @@ const LiveAudioPlayer = ({ deviceId, onClose }) => {
   const timeoutRef = useRef(null); // Track timeout for cleanup
   const durationIntervalRef = useRef(null); // Track duration interval
   const nextPlayTimeRef = useRef(0); // Track scheduled playback time for smooth continuous audio
+  const accumulatedPagesRef = useRef([]); // Accumulate audio pages for batch decoding
   const MAX_AUDIO_QUEUE_SIZE = 20; // Sufficient for Ogg Opus frames
+  const BATCH_SIZE = 5; // Decode every 5 audio pages (~200ms of audio)
 
   useEffect(() => {
     initializeAudioContext();
@@ -387,60 +389,53 @@ const LiveAudioPlayer = ({ deviceId, onClose }) => {
   const oggBuffer = audioQueueRef.current.shift();
 
     try {
-      // Decode Ogg Opus using Web Audio API (native browser support!)
-      let decodeBuffer = oggBuffer;
-
-      // If we haven't captured the header prefix (OpusHead + OpusTags), try to parse it
+      // Parse incoming Ogg pages
+      const pages = parseOggPages(oggBuffer);
+      
+      // If we haven't captured the header prefix (OpusHead + OpusTags), look for it
       if (!headerPrefixRef.current) {
-        const pages = parseOggPages(oggBuffer);
-        if (pages.length >= 3) {
-          // First two pages are headers (OpusHead + OpusTags), store them
-          const headerPrefix = new Uint8Array(pages[0].length + pages[1].length);
-          headerPrefix.set(pages[0], 0);
-          headerPrefix.set(pages[1], pages[0].length);
-          headerPrefixRef.current = headerPrefix.buffer;
-
-          // Use headerPrefix + first audio page for decoding
-          const firstAudio = pages[2];
-          const combined = new Uint8Array(headerPrefix.byteLength + firstAudio.length);
-          combined.set(new Uint8Array(headerPrefix), 0);
-          combined.set(firstAudio, headerPrefix.byteLength);
-          decodeBuffer = combined.buffer;
-        } else if (pages.length === 2) {
-          // Received header-only packet (OpusHead + OpusTags, no audio)
-          // This happens when a new listener joins and device resends headers
-          const headerPrefix = new Uint8Array(pages[0].length + pages[1].length);
-          headerPrefix.set(pages[0], 0);
-          headerPrefix.set(pages[1], pages[0].length);
-          headerPrefixRef.current = headerPrefix.buffer;
-          console.log('Received Ogg header packet, stored for decoding');
+        if (pages.length >= 2) {
+          // Check if first two pages are headers (OpusHead starts with "OpusHead")
+          const firstPageData = pages[0];
+          const isOpusHead = firstPageData.length > 30 && 
+            firstPageData[28] === 0x4f && firstPageData[29] === 0x70 && 
+            firstPageData[30] === 0x75 && firstPageData[31] === 0x73 &&
+            firstPageData[32] === 0x48 && firstPageData[33] === 0x65 &&
+            firstPageData[34] === 0x61 && firstPageData[35] === 0x64;
           
-          // Skip this packet, wait for audio
-          if (audioQueueRef.current.length > 0) {
-            playNextChunk();
-          } else {
-            isPlayingRef.current = false;
-          }
-          return;
-        } else {
-          // Not enough pages in this buffer to extract headers; try prepending header if we already have it
-          if (headerPrefixRef.current) {
-            const combined = new Uint8Array(headerPrefixRef.current.byteLength + oggBuffer.byteLength);
-            combined.set(new Uint8Array(headerPrefixRef.current), 0);
-            combined.set(new Uint8Array(oggBuffer), headerPrefixRef.current.byteLength);
-            decodeBuffer = combined.buffer;
-          } else {
-            // Can't decode yet; re-queue the buffer at the end and try again later
-            audioQueueRef.current.push(oggBuffer);
-            isPlayingRef.current = false;
-            return;
+          if (isOpusHead) {
+            // Store headers (first two pages)
+            const headerPrefix = new Uint8Array(pages[0].length + pages[1].length);
+            headerPrefix.set(pages[0], 0);
+            headerPrefix.set(pages[1], pages[0].length);
+            headerPrefixRef.current = headerPrefix.buffer;
+            console.log('Captured Ogg headers (OpusHead + OpusTags)');
+            
+            // If there are audio pages after headers, accumulate them
+            if (pages.length > 2) {
+              for (let i = 2; i < pages.length; i++) {
+                accumulatedPagesRef.current.push(pages[i]);
+              }
+            }
           }
         }
-      } else {
-        // We have header prefix: check if this is a header-only packet (for new joiners)
-        const pages = parseOggPages(oggBuffer);
-        if (pages.length === 2) {
-          // This is a header resend for a new listener, skip it
+        
+        // Need more data or wait for proper headers
+        if (audioQueueRef.current.length > 0) {
+          playNextChunk();
+        } else {
+          isPlayingRef.current = false;
+        }
+        return;
+      }
+      
+      // We have headers - check if this is a header-only resend
+      if (pages.length === 2) {
+        const firstPageData = pages[0];
+        const isOpusHead = firstPageData.length > 30 && 
+          firstPageData[28] === 0x4f && firstPageData[29] === 0x70;
+        
+        if (isOpusHead) {
           console.log('Skipping header-only packet (already have headers)');
           if (audioQueueRef.current.length > 0) {
             playNextChunk();
@@ -449,66 +444,89 @@ const LiveAudioPlayer = ({ deviceId, onClose }) => {
           }
           return;
         }
+      }
+      
+      // Accumulate audio pages
+      for (let i = 0; i < pages.length; i++) {
+        accumulatedPagesRef.current.push(pages[i]);
+      }
+      
+      // Decode when we have enough pages (batch decoding for better performance)
+      if (accumulatedPagesRef.current.length >= BATCH_SIZE) {
+        // Calculate total size needed
+        let totalAudioSize = 0;
+        for (const page of accumulatedPagesRef.current) {
+          totalAudioSize += page.length;
+        }
         
-        // Normal audio page: prepend header so decodeAudioData gets a full container
-        const combined = new Uint8Array(headerPrefixRef.current.byteLength + oggBuffer.byteLength);
-        combined.set(new Uint8Array(headerPrefixRef.current), 0);
-        combined.set(new Uint8Array(oggBuffer), headerPrefixRef.current.byteLength);
-        decodeBuffer = combined.buffer;
+        // Build complete Ogg stream: headers + accumulated audio pages
+        const headerPrefix = new Uint8Array(headerPrefixRef.current);
+        const completeStream = new Uint8Array(headerPrefix.length + totalAudioSize);
+        completeStream.set(headerPrefix, 0);
+        
+        let offset = headerPrefix.length;
+        for (const page of accumulatedPagesRef.current) {
+          completeStream.set(page, offset);
+          offset += page.length;
+        }
+        
+        // Clear accumulated pages
+        accumulatedPagesRef.current = [];
+        
+        // Decode the complete stream
+        const audioBuffer = await audioContextRef.current.decodeAudioData(completeStream.buffer);
+      
+        // Verify decoded buffer has valid data
+        if (!audioBuffer || audioBuffer.length === 0 || audioBuffer.duration === 0) {
+          throw new Error('Decoded buffer is empty or invalid');
+        }
+        
+        // Ensure analyser exists
+        if (!analyserRef.current && audioContextRef.current) {
+          analyserRef.current = audioContextRef.current.createAnalyser();
+          analyserRef.current.fftSize = 256;
+          analyserRef.current.connect(audioContextRef.current.destination);
+        }
+        
+        // Create source and connect to analyser
+        const source = audioContextRef.current.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(analyserRef.current);
+        
+        // Update audio level visualization
+        updateAudioLevel();
+        
+        // Schedule audio precisely for continuous playback without gaps/cracks
+        const currentTime = audioContextRef.current.currentTime;
+        
+        // If we're behind schedule or just starting, play ASAP but with small buffer
+        if (nextPlayTimeRef.current < currentTime) {
+          nextPlayTimeRef.current = currentTime + 0.05; // 50ms buffer to prevent underruns
+        }
+        
+        // Start playback at scheduled time
+        source.start(nextPlayTimeRef.current);
+        
+        // Schedule next chunk to start right when this one ends
+        nextPlayTimeRef.current += audioBuffer.duration;
+        
+        // Also handle onended as fallback
+        source.onended = () => {
+          // If queue accumulated more chunks while playing, restart
+          if (!isPlayingRef.current && audioQueueRef.current.length >= 2 && audioContextRef.current) {
+            isPlayingRef.current = true;
+            playNextChunk();
+          }
+        };
       }
-
-      const audioBuffer = await audioContextRef.current.decodeAudioData(decodeBuffer);
       
-      // Verify decoded buffer has valid data
-      if (!audioBuffer || audioBuffer.length === 0 || audioBuffer.duration === 0) {
-        throw new Error('Decoded buffer is empty or invalid');
-      }
-      
-      // Ensure analyser exists
-      if (!analyserRef.current && audioContextRef.current) {
-        analyserRef.current = audioContextRef.current.createAnalyser();
-        analyserRef.current.fftSize = 256;
-        analyserRef.current.connect(audioContextRef.current.destination);
-      }
-      
-      // Create source and connect to analyser
-      const source = audioContextRef.current.createBufferSource();
-      source.buffer = audioBuffer;
-      source.connect(analyserRef.current);
-      
-      // Update audio level visualization
-      updateAudioLevel();
-      
-      // Schedule audio precisely for continuous playback without gaps/cracks
-      const currentTime = audioContextRef.current.currentTime;
-      
-      // If we're behind schedule or just starting, play ASAP but with small buffer
-      if (nextPlayTimeRef.current < currentTime) {
-        nextPlayTimeRef.current = currentTime + 0.05; // 50ms buffer to prevent underruns
-      }
-      
-      // Start playback at scheduled time
-      source.start(nextPlayTimeRef.current);
-      
-      // Schedule next chunk to start right when this one ends
-      nextPlayTimeRef.current += audioBuffer.duration;
-      
-      // Queue next chunk immediately (don't wait for onended - reduces gaps)
+      // Continue processing queue
       if (audioQueueRef.current.length > 0 && audioContextRef.current) {
         // Use small delay to avoid blocking
         setTimeout(() => playNextChunk(), 0);
-      } else {
+      } else if (accumulatedPagesRef.current.length === 0) {
         isPlayingRef.current = false;
       }
-      
-      // Also handle onended as fallback
-      source.onended = () => {
-        // If queue accumulated more chunks while playing, restart
-        if (!isPlayingRef.current && audioQueueRef.current.length >= 2 && audioContextRef.current) {
-          isPlayingRef.current = true;
-          playNextChunk();
-        }
-      };
       
     } catch (err) {
       console.error('Ogg Opus decode error:', err);
@@ -605,6 +623,7 @@ const LiveAudioPlayer = ({ deviceId, onClose }) => {
     }
     
     audioQueueRef.current = [];
+    accumulatedPagesRef.current = []; // Clear accumulated audio pages
     nextPlayTimeRef.current = 0; // Reset timeline
     headerPrefixRef.current = null; // Reset header cache
   };
