@@ -38,6 +38,7 @@ const LiveAudioPlayer = ({ deviceId, onClose }) => {
   const analyserRef = useRef(null);
   const timeoutRef = useRef(null); // Track timeout for cleanup
   const durationIntervalRef = useRef(null); // Track duration interval
+  const nextPlayTimeRef = useRef(0); // Track scheduled playback time for smooth continuous audio
   const MAX_AUDIO_QUEUE_SIZE = 20; // Sufficient for Ogg Opus frames
 
   useEffect(() => {
@@ -312,8 +313,8 @@ const LiveAudioPlayer = ({ deviceId, onClose }) => {
       // Queue Ogg Opus data for decoding
   audioQueueRef.current.push(oggBytes.buffer);
       
-      // Start decoding if not already processing
-      if (!isPlayingRef.current && audioQueueRef.current.length >= 2) {
+      // Start decoding if not already processing - wait for small buffer to reduce initial latency
+      if (!isPlayingRef.current && audioQueueRef.current.length >= 3) {
         isPlayingRef.current = true;
         playNextChunk();
       }
@@ -352,6 +353,8 @@ const LiveAudioPlayer = ({ deviceId, onClose }) => {
     if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
       audioContextRef.current.resume();
     }
+    // Initialize playback timeline
+    nextPlayTimeRef.current = audioContextRef.current?.currentTime || 0;
   };
 
   const playNextChunk = async () => {
@@ -434,15 +437,34 @@ const LiveAudioPlayer = ({ deviceId, onClose }) => {
       // Update audio level visualization
       updateAudioLevel();
       
-      // Play immediately
-      source.start(0);
+      // Schedule audio precisely for continuous playback without gaps/cracks
+      const currentTime = audioContextRef.current.currentTime;
       
-      // When this chunk ends, play next
+      // If we're behind schedule or just starting, play ASAP but with small buffer
+      if (nextPlayTimeRef.current < currentTime) {
+        nextPlayTimeRef.current = currentTime + 0.05; // 50ms buffer to prevent underruns
+      }
+      
+      // Start playback at scheduled time
+      source.start(nextPlayTimeRef.current);
+      
+      // Schedule next chunk to start right when this one ends
+      nextPlayTimeRef.current += audioBuffer.duration;
+      
+      // Queue next chunk immediately (don't wait for onended - reduces gaps)
+      if (audioQueueRef.current.length > 0 && audioContextRef.current) {
+        // Use small delay to avoid blocking
+        setTimeout(() => playNextChunk(), 0);
+      } else {
+        isPlayingRef.current = false;
+      }
+      
+      // Also handle onended as fallback
       source.onended = () => {
-        if (audioQueueRef.current.length > 0 && audioContextRef.current) {
+        // If queue accumulated more chunks while playing, restart
+        if (!isPlayingRef.current && audioQueueRef.current.length >= 2 && audioContextRef.current) {
+          isPlayingRef.current = true;
           playNextChunk();
-        } else {
-          isPlayingRef.current = false;
         }
       };
       
@@ -541,6 +563,8 @@ const LiveAudioPlayer = ({ deviceId, onClose }) => {
     }
     
     audioQueueRef.current = [];
+    nextPlayTimeRef.current = 0; // Reset timeline
+    headerPrefixRef.current = null; // Reset header cache
   };
 
   const startDurationCounter = () => {
