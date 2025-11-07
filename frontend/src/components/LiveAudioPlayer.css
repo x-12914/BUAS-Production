@@ -320,6 +320,7 @@
   flex-direction: column;
   gap: 10px;
   min-height: 80px;
+  flex: 1;
 }
 
 .compact-hint {
@@ -389,7 +390,7 @@
 }
 
 .compact-footer {
-  margin-top: 12px;
+  margin-top: auto;
   display: flex;
   justify-content: flex-start;
 }

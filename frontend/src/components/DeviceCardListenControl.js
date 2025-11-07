@@ -19,11 +19,16 @@ const DeviceCardListenControl = ({ deviceId, deviceName, disabled = false }) => 
     const headerRect = header ? header.getBoundingClientRect() : cardRect;
     const topOffset = Math.max(headerRect.bottom - cardRect.top - 12, 0);
     const padding = 16;
-    const width = Math.max(cardRect.width - padding * 2, 220);
+    const minWidth = 220;
+    const maxWidth = 280;
+    const availableWidth = cardRect.width - padding * 2;
+    const width = Math.max(Math.min(availableWidth, maxWidth), minWidth);
+    const left = Math.max((cardRect.width - width) / 2, padding);
 
     setPopoverStyles({
       top: topOffset + 8,
       width,
+      left,
     });
 
     if (overlayRef.current) {
@@ -179,7 +184,7 @@ const DeviceCardListenControl = ({ deviceId, deviceName, disabled = false }) => 
         <div
           className="listen-live-popover floating"
           role="dialog"
-          style={{ top: popoverStyles.top, width: popoverStyles.width }}
+          style={{ top: popoverStyles.top, width: popoverStyles.width, left: popoverStyles.left }}
           onClick={(event) => event.stopPropagation()}
         >
           <LiveAudioPlayer
