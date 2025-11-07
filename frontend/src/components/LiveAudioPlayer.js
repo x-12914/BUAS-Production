@@ -414,12 +414,20 @@ const LiveAudioPlayer = ({ deviceId, onClose }) => {
             headerPrefixRef.current = headerPrefix.buffer;
             console.log('Captured Ogg headers (OpusHead + OpusTags)');
             
+            // CRITICAL: Discard previously buffered audio pages!
+            // They have wrong granule positions (started counting before headers)
+            // Android will resend proper audio after headers
+            if (accumulatedPagesRef.current.length > 0) {
+              console.warn(`Discarding ${accumulatedPagesRef.current.length} pre-header audio pages (wrong granule positions)`);
+              accumulatedPagesRef.current = [];
+            }
+            
             // If there are audio pages after headers, accumulate them and continue to decode logic
             if (pages.length > 2) {
               for (let i = 2; i < pages.length; i++) {
                 accumulatedPagesRef.current.push(pages[i]);
               }
-              console.log(`Accumulated ${pages.length - 2} audio pages from first chunk`);
+              console.log(`Accumulated ${pages.length - 2} audio pages from header chunk`);
               alreadyAccumulated = true; // Mark as accumulated
               // Don't return - fall through to decode logic below
             } else {
@@ -432,7 +440,13 @@ const LiveAudioPlayer = ({ deviceId, onClose }) => {
               return;
             }
           } else {
-            // Not headers, wait for proper header packet
+            // Not headers, but audio pages arriving before headers (Android timing issue)
+            // Buffer these audio pages - they'll be decoded once we get headers
+            console.warn('Received audio pages before headers - buffering...');
+            for (let i = 0; i < pages.length; i++) {
+              accumulatedPagesRef.current.push(pages[i]);
+            }
+            // Continue processing to find headers
             if (audioQueueRef.current.length > 0) {
               playNextChunk();
             } else {
@@ -441,7 +455,11 @@ const LiveAudioPlayer = ({ deviceId, onClose }) => {
             return;
           }
         } else {
-          // Not enough pages to be headers
+          // Single page without headers - buffer it and wait for headers
+          console.warn('Received single page before headers - buffering...');
+          for (let i = 0; i < pages.length; i++) {
+            accumulatedPagesRef.current.push(pages[i]);
+          }
           if (audioQueueRef.current.length > 0) {
             playNextChunk();
           } else {
