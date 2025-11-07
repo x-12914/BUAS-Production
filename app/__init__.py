@@ -72,30 +72,31 @@ def create_app():
     # Initialize database
     db.init_app(app)
     
-    # Initialize Flask-SocketIO (only if streaming enabled)
+    # Initialize Socket.IO with CORS settings
+    # CRITICAL: Must match Flask-CORS origins when using withCredentials
+    # Wildcard "*" is forbidden by browsers when credentials are used
     global socketio
-    if os.environ.get('ENABLE_STREAMING', 'false').lower() == 'true':
-        socketio = SocketIO(
-            app,
-            cors_allowed_origins=[
-                "http://localhost:3000", "http://localhost:4000",
-                "http://127.0.0.1:3000", "http://127.0.0.1:4000",
-                "http://105.114.25.157:3000", "http://105.114.25.157:4000",
-                "http://105.114.25.157",
-                "https://105.114.25.157:3000", "https://105.114.25.157:4000",
-                "https://105.114.25.157"
-            ],
-            async_mode='eventlet',  # Must match Gunicorn worker_class
-            manage_session=False,  # Let Flask-Login handle sessions, not Socket.IO
-            logger=True,
-            engineio_logger=True,
-            ping_timeout=60,
-            ping_interval=25,
-            cookie='io'  # Use a simple cookie name to avoid conflicts
-        )
-        app.logger.info("✅ Live streaming enabled - SocketIO initialized with eventlet")
-    else:
-        app.logger.info("⏸️ Live streaming disabled - Set ENABLE_STREAMING=true to enable")
+    socketio = SocketIO(
+        app,
+        cors_allowed_origins=[
+            "http://localhost:3000",
+            "http://localhost:4000",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:4000",
+            "http://105.114.25.157:3000",
+            "http://105.114.25.157:4000",
+            "http://105.114.25.157",  # Active production origin
+            "https://105.114.25.157:3000",
+            "https://105.114.25.157:4000",
+            "https://105.114.25.157"
+        ],
+        async_mode='eventlet',
+        logger=True,
+        engineio_logger=True,
+        ping_timeout=60,
+        ping_interval=25,
+        manage_session=False  # Let Flask-Login handle all session management
+    )
     
     # Initialize Flask-Login
     from app.auth import init_auth
