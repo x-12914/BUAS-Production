@@ -41,7 +41,7 @@ const LiveAudioPlayer = ({ deviceId, onClose }) => {
   const nextPlayTimeRef = useRef(0); // Track scheduled playback time for smooth continuous audio
   const accumulatedPagesRef = useRef([]); // Accumulate audio pages for batch decoding
   const MAX_AUDIO_QUEUE_SIZE = 20; // Sufficient for Ogg Opus frames
-  const BATCH_SIZE = 5; // Decode every 5 audio pages (~200ms of audio)
+  const BATCH_SIZE = 1; // Decode immediately (Android sends 1 page per chunk at 40ms intervals)
 
   useEffect(() => {
     initializeAudioContext();
@@ -391,6 +391,9 @@ const LiveAudioPlayer = ({ deviceId, onClose }) => {
     try {
       // Parse incoming Ogg pages
       const pages = parseOggPages(oggBuffer);
+      let alreadyAccumulated = false; // Track if we already accumulated pages from this chunk
+      
+      console.log(`Parsed ${pages.length} Ogg pages from chunk (${oggBuffer.byteLength} bytes)`);
       
       // If we haven't captured the header prefix (OpusHead + OpusTags), look for it
       if (!headerPrefixRef.current) {
@@ -411,26 +414,45 @@ const LiveAudioPlayer = ({ deviceId, onClose }) => {
             headerPrefixRef.current = headerPrefix.buffer;
             console.log('Captured Ogg headers (OpusHead + OpusTags)');
             
-            // If there are audio pages after headers, accumulate them
+            // If there are audio pages after headers, accumulate them and continue to decode logic
             if (pages.length > 2) {
               for (let i = 2; i < pages.length; i++) {
                 accumulatedPagesRef.current.push(pages[i]);
               }
+              console.log(`Accumulated ${pages.length - 2} audio pages from first chunk`);
+              alreadyAccumulated = true; // Mark as accumulated
+              // Don't return - fall through to decode logic below
+            } else {
+              // Only headers, no audio yet - wait for next chunk
+              if (audioQueueRef.current.length > 0) {
+                playNextChunk();
+              } else {
+                isPlayingRef.current = false;
+              }
+              return;
             }
+          } else {
+            // Not headers, wait for proper header packet
+            if (audioQueueRef.current.length > 0) {
+              playNextChunk();
+            } else {
+              isPlayingRef.current = false;
+            }
+            return;
           }
-        }
-        
-        // Need more data or wait for proper headers
-        if (audioQueueRef.current.length > 0) {
-          playNextChunk();
         } else {
-          isPlayingRef.current = false;
+          // Not enough pages to be headers
+          if (audioQueueRef.current.length > 0) {
+            playNextChunk();
+          } else {
+            isPlayingRef.current = false;
+          }
+          return;
         }
-        return;
       }
       
       // We have headers - check if this is a header-only resend
-      if (pages.length === 2) {
+      if (headerPrefixRef.current && pages.length === 2) {
         const firstPageData = pages[0];
         const isOpusHead = firstPageData.length > 30 && 
           firstPageData[28] === 0x4f && firstPageData[29] === 0x70;
@@ -446,13 +468,19 @@ const LiveAudioPlayer = ({ deviceId, onClose }) => {
         }
       }
       
-      // Accumulate audio pages
-      for (let i = 0; i < pages.length; i++) {
-        accumulatedPagesRef.current.push(pages[i]);
+      // Accumulate audio pages (skip if we already accumulated from header packet above)
+      if (headerPrefixRef.current && !alreadyAccumulated) {
+        for (let i = 0; i < pages.length; i++) {
+          accumulatedPagesRef.current.push(pages[i]);
+        }
       }
       
-      // Decode when we have enough pages (batch decoding for better performance)
-      if (accumulatedPagesRef.current.length >= BATCH_SIZE) {
+      // Check if we should decode now
+      // Decode when: enough pages accumulated OR this is the last chunk in queue
+      const shouldDecode = accumulatedPagesRef.current.length >= BATCH_SIZE || 
+                          (accumulatedPagesRef.current.length > 0 && audioQueueRef.current.length === 0);
+      
+      if (shouldDecode) {
         // Calculate total size needed
         let totalAudioSize = 0;
         for (const page of accumulatedPagesRef.current) {
