@@ -388,7 +388,8 @@ def handle_stream_ready(data):
         socketio.emit('stream_started', {
             'session_id': session_id,
             'device_id': device_id,
-            'status': 'active'
+            'status': 'active',
+            'listener_count': session.listener_count
         }, room=f'listeners_{device_id}', namespace='/stream')
         
         logger.info(f"Stream {session_id} for device {device_id} is now active")
