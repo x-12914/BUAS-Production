@@ -41,7 +41,24 @@ except Exception as e:
 active_sessions = {}  # {device_id: session_id}
 device_sockets = {}  # {device_id: socket_id}
 listener_counts = {}  # {device_id: count}
-redis_subscribers = {}  # {device_id: thread} - Track active Redis subscribers
+redis_subscribers = {}  # {device_id: greenlet} - Track active Redis subscriber greenlets
+stream_stats = {}  # {device_id: {'bytes': 0, 'chunks': 0, 'last_flush': datetime}} - In-memory stats
+
+# Background stats flush greenlet
+stats_flush_greenlet = None
+_flask_app = None  # Store Flask app reference for background tasks
+
+
+def init_streaming(app):
+    """Initialize streaming module - start background tasks"""
+    import eventlet
+    global stats_flush_greenlet, _flask_app
+    
+    _flask_app = app  # Store app reference for application context
+    
+    if stats_flush_greenlet is None:
+        stats_flush_greenlet = eventlet.spawn(flush_stream_stats)
+        logger.info("✅ Background stats flush task started")
 
 
 @socketio.on('connect', namespace='/stream')
@@ -465,15 +482,22 @@ def handle_audio_chunk(data):
         else:
             logger.warning(f"Redis not available, cannot publish audio chunk for {device_id}")
         
-        # Update bytes transferred (estimate from base64)
+        # Update bytes transferred IN MEMORY (no DB commit on hot path!)
         if device_id in active_sessions:
-            session_id = active_sessions[device_id]
-            session = LiveStreamSession.query.get(session_id)
-            if session:
-                # Base64 decoding: 4 chars = 3 bytes
-                chunk_bytes = len(chunk_data) * 3 // 4
-                session.bytes_transferred += chunk_bytes
-                db.session.commit()
+            # Initialize stats dict if needed
+            if device_id not in stream_stats:
+                stream_stats[device_id] = {
+                    'bytes': 0,
+                    'chunks': 0,
+                    'last_flush': datetime.utcnow()
+                }
+            
+            # Base64 decoding: 4 chars = 3 bytes
+            chunk_bytes = len(chunk_data) * 3 // 4
+            stream_stats[device_id]['bytes'] += chunk_bytes
+            stream_stats[device_id]['chunks'] += 1
+            
+            # No db.session.commit() here! Background task handles it.
         
     except Exception as e:
         logger.error(f"Error handling audio chunk: {e}", exc_info=True)
@@ -548,8 +572,8 @@ def handle_leave_stream(data):
 
 
 def start_redis_subscriber(device_id):
-    """Start Redis subscriber thread to forward audio chunks to WebSocket clients"""
-    import threading
+    """Start Redis subscriber greenlet to forward audio chunks to WebSocket clients"""
+    import eventlet
     
     if not redis_client:
         logger.error(f"Cannot start Redis subscriber for {device_id}: Redis not available")
@@ -597,14 +621,67 @@ def start_redis_subscriber(device_id):
                     pubsub.close()
                 except:
                     pass
-            # Remove from tracking when thread exits
-            if device_id in redis_subscribers:
-                del redis_subscribers[device_id]
+            # Remove from tracking when greenlet exits (defensive check)
+            try:
+                if device_id in redis_subscribers:
+                    del redis_subscribers[device_id]
+            except KeyError:
+                pass  # Already cleaned up by stop_stream_session
             logger.info(f"Redis subscriber stopped for device {device_id}")
     
-    thread = threading.Thread(target=subscriber_thread, daemon=True)
-    thread.start()
-    redis_subscribers[device_id] = thread
+    # Spawn as eventlet green thread (cooperative multitasking)
+    greenlet = eventlet.spawn(subscriber_thread)
+    redis_subscribers[device_id] = greenlet
+
+
+def flush_stream_stats():
+    """Background task to flush in-memory stream stats to database every 5 seconds"""
+    import eventlet
+    
+    logger.info("📊 Stream stats flush task started")
+    
+    while True:
+        try:
+            eventlet.sleep(5)  # Flush every 5 seconds
+            
+            if not stream_stats:
+                continue
+            
+            # CRITICAL: Use Flask application context for database access
+            if not _flask_app:
+                logger.error("Flask app not initialized, cannot flush stats")
+                continue
+            
+            with _flask_app.app_context():
+                # Copy stats to avoid modification during iteration
+                stats_snapshot = dict(stream_stats)
+                
+                for device_id, stats in stats_snapshot.items():
+                    try:
+                        if device_id in active_sessions:
+                            session_id = active_sessions[device_id]
+                            session = LiveStreamSession.query.get(session_id)
+                            
+                            if session:
+                                # Update bytes transferred from in-memory stats
+                                session.bytes_transferred = stats['bytes']
+                                db.session.commit()
+                                
+                                # Update last flush time
+                                stream_stats[device_id]['last_flush'] = datetime.utcnow()
+                                
+                                logger.debug(f"Flushed stats for {device_id}: {stats['bytes']} bytes, {stats['chunks']} chunks")
+                        else:
+                            # Session no longer active, clean up stats
+                            if device_id in stream_stats:
+                                del stream_stats[device_id]
+                                
+                    except Exception as e:
+                        logger.error(f"Error flushing stats for {device_id}: {e}")
+                    
+        except Exception as e:
+            logger.error(f"Error in stats flush task: {e}", exc_info=True)
+            eventlet.sleep(5)  # Continue even on error
 
 
 def stop_stream_session(session_id, reason='manual'):
@@ -613,6 +690,20 @@ def stop_stream_session(session_id, reason='manual'):
         session = LiveStreamSession.query.get(session_id)
         if not session:
             return
+        
+        device_id = session.device_id
+        
+        # CRITICAL: Remove from active_sessions FIRST to stop new audio chunks
+        # This prevents race condition with handle_audio_chunk() updating stream_stats
+        # while we're reading final values
+        if device_id in active_sessions:
+            del active_sessions[device_id]
+        
+        # Now flush final stats (no new chunks can arrive after this point)
+        if device_id in stream_stats:
+            final_bytes = stream_stats[device_id]['bytes']
+            session.bytes_transferred = final_bytes
+            logger.info(f"Final stats flush for {device_id}: {final_bytes} bytes")
         
         session.status = 'stopped'
         session.end_time = datetime.utcnow()
@@ -630,21 +721,21 @@ def stop_stream_session(session_id, reason='manual'):
         
         db.session.commit()
         
-        # Clean up tracking
-        if session.device_id in active_sessions:
-            del active_sessions[session.device_id]
-        if session.device_id in listener_counts:
-            del listener_counts[session.device_id]
-        if session.device_id in redis_subscribers:
+        # Clean up remaining tracking dicts
+        if device_id in listener_counts:
+            del listener_counts[device_id]
+        if device_id in redis_subscribers:
             # Subscriber thread will clean itself up when it sees active_sessions is empty
             # But we remove the tracking reference
-            del redis_subscribers[session.device_id]
+            del redis_subscribers[device_id]
+        if device_id in stream_stats:
+            del stream_stats[device_id]
         
         log_audit(
             action='LIVE_STREAM_STOPPED',
             success=True,
             resource_type='device',
-            resource_id=session.device_id,
+            resource_id=device_id,
             new_value={'session_id': session_id, 'reason': reason}
         )
         

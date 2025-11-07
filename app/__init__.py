@@ -160,6 +160,7 @@ def create_app():
     # Register streaming handlers if enabled
     if socketio:
         from app import streaming
+        streaming.init_streaming(app)  # Pass app for Flask context
         app.logger.info("✅ Streaming WebSocket handlers registered")
 
     return app
