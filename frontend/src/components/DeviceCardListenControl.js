@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import LiveAudioPlayer from './LiveAudioPlayer';
 import './DeviceCardListenControl.css';
 
@@ -8,6 +9,8 @@ const DeviceCardListenControl = ({ deviceId, deviceName, disabled = false }) => 
   const [isOpen, setIsOpen] = useState(false);
   const [status, setStatus] = useState('idle');
   const containerRef = useRef(null);
+  const placeholderRef = useRef(null);
+  const [cardElement, setCardElement] = useState(null);
 
   const isListening = isOpen;
   const isBusy = status === 'connecting' || status === 'waiting';
@@ -72,6 +75,36 @@ const DeviceCardListenControl = ({ deviceId, deviceName, disabled = false }) => 
     };
   }, [deviceId]);
 
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const card = containerRef.current.closest('.user-card');
+    if (!card) return;
+
+    setCardElement(card);
+
+    if (!placeholderRef.current) {
+      placeholderRef.current = document.createElement('div');
+      placeholderRef.current.className = 'listen-live-inline-region';
+    }
+
+    const detailsSection = card.querySelector('.user-details');
+    const placeholder = placeholderRef.current;
+
+    if (placeholder.parentNode !== card) {
+      if (detailsSection) {
+        card.insertBefore(placeholder, detailsSection);
+      } else {
+        card.appendChild(placeholder);
+      }
+    }
+
+    return () => {
+      if (placeholder.parentNode) {
+        placeholder.parentNode.removeChild(placeholder);
+      }
+    };
+  }, [deviceId]);
+
   const getButtonLabel = () => {
     if (!isListening) {
       return 'Listen Live';
@@ -100,6 +133,12 @@ const DeviceCardListenControl = ({ deviceId, deviceName, disabled = false }) => 
     }
   }, [status, isOpen, closePopover]);
 
+  useEffect(() => {
+    if (placeholderRef.current) {
+      placeholderRef.current.style.display = isOpen ? 'block' : 'none';
+    }
+  }, [isOpen]);
+
   return (
     <div className="listen-live-control" ref={containerRef} onClick={(event) => event.stopPropagation()}>
       <button
@@ -114,8 +153,8 @@ const DeviceCardListenControl = ({ deviceId, deviceName, disabled = false }) => 
         {isBusy && <span className="listen-live-spinner" aria-hidden="true"></span>}
       </button>
 
-      {isOpen && (
-        <div className="listen-live-popover" role="dialog">
+      {isOpen && cardElement && placeholderRef.current && createPortal(
+        <div className="listen-live-popover inline" role="dialog" onClick={(event) => event.stopPropagation()}>
           <div className="listen-live-popover-header">
             <span className="popover-icon">🎧</span>
             <div className="popover-title">{deviceName || deviceId}</div>
@@ -126,7 +165,8 @@ const DeviceCardListenControl = ({ deviceId, deviceName, disabled = false }) => 
             onClose={closePopover}
             onStatusChange={setStatus}
           />
-        </div>
+        </div>,
+        placeholderRef.current
       )}
     </div>
   );
