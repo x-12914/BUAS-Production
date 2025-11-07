@@ -5,11 +5,13 @@ import './LiveAudioPlayer.css';
 /**
  * LiveAudioPlayer - Real-time Opus audio streaming component
  * 
- * Audio Format: Opus 48kHz mono @ 48kbps (High Quality Balanced mode)
+ * Audio Format: Ogg Opus 48kHz mono @ 48kbps (High Quality Balanced mode)
  * - Better voice quality than previous AAC 128kbps
  * - 62% less bandwidth usage
  * - ~60% lower latency (150-200ms vs 300-500ms)
- * - Native browser Opus decoder (no ADTS headers needed!)
+ * - Works in ALL modern browsers (Chrome, Firefox, Safari, Edge)
+ * 
+ * Uses Web Audio API to decode Ogg Opus containers (universal browser support)
  */
 
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
@@ -35,7 +37,7 @@ const LiveAudioPlayer = ({ deviceId, onClose }) => {
   const analyserRef = useRef(null);
   const timeoutRef = useRef(null); // Track timeout for cleanup
   const durationIntervalRef = useRef(null); // Track duration interval
-  const MAX_AUDIO_QUEUE_SIZE = 20; // Reduced for Opus (smaller frames, faster decoding)
+  const MAX_AUDIO_QUEUE_SIZE = 20; // Sufficient for Ogg Opus frames
 
   useEffect(() => {
     initializeAudioContext();
@@ -103,15 +105,12 @@ const LiveAudioPlayer = ({ deviceId, onClose }) => {
       analyserRef.current.fftSize = 256;
       analyserRef.current.connect(audioContextRef.current.destination);
       
-      console.log('Audio context initialized');
+      console.log('Audio context initialized for Ogg Opus streaming');
     } catch (err) {
       console.error('Failed to initialize audio context:', err);
-      setError('Audio not supported in this browser');
-      setStatus('error');
+      setError('Audio initialization failed');
     }
-  };
-
-  const connectToStream = () => {
+  };  const connectToStream = () => {
     try {
       // Connect to streaming namespace via Socket.IO
       // In production, use the same origin (nginx will proxy to Flask)
@@ -278,7 +277,7 @@ const LiveAudioPlayer = ({ deviceId, onClose }) => {
 
   /**
    * Handle incoming audio chunk from server
-   * Audio is now Opus-encoded (48kHz, 48kbps) - much simpler than AAC!
+   * Audio is now Ogg Opus-encoded (48kHz, 48kbps) - works in all browsers!
    */
   const handleAudioChunk = (data) => {
     try {
@@ -294,26 +293,27 @@ const LiveAudioPlayer = ({ deviceId, onClose }) => {
       // Update sequence tracking
       sequenceRef.current = sequence;
       
-      // Decode base64 audio data (Opus frames from MediaCodec)
+      // Decode base64 audio data (Ogg Opus container from Android)
       const binaryString = atob(chunk);
-      const opusBytes = new Uint8Array(binaryString.length);
+      const oggBytes = new Uint8Array(binaryString.length);
       for (let i = 0; i < binaryString.length; i++) {
-        opusBytes[i] = binaryString.charCodeAt(i);
+        oggBytes[i] = binaryString.charCodeAt(i);
       }
       
-      setBytesReceived(prev => prev + opusBytes.length);
+      setBytesReceived(prev => prev + oggBytes.length);
       
-      // Opus is much simpler - no need for ADTS headers or frame filtering!
-      // Just queue the raw Opus data
+      // Check queue size
       if (audioQueueRef.current.length >= MAX_AUDIO_QUEUE_SIZE) {
         console.warn(`Audio queue full (${audioQueueRef.current.length}), dropping oldest chunk`);
         audioQueueRef.current.shift();
       }
       
-      audioQueueRef.current.push(opusBytes.buffer);
+      // Queue Ogg Opus data for decoding
+      audioQueueRef.current.push(oggBytes.buffer);
       
-      // Start playback with minimal buffer (2 frames for smooth playback)
+      // Start decoding if not already processing
       if (!isPlayingRef.current && audioQueueRef.current.length >= 2) {
+        isPlayingRef.current = true;
         playNextChunk();
       }
       
@@ -341,12 +341,12 @@ const LiveAudioPlayer = ({ deviceId, onClose }) => {
 
     isPlayingRef.current = true;
     
-    // Get next Opus frame from queue (single frame, no concatenation needed!)
-    const opusBuffer = audioQueueRef.current.shift();
+    // Get next Ogg Opus chunk from queue
+    const oggBuffer = audioQueueRef.current.shift();
 
     try {
-      // Decode Opus using Web Audio API (native support!)
-      const audioBuffer = await audioContextRef.current.decodeAudioData(opusBuffer);
+      // Decode Ogg Opus using Web Audio API (native browser support!)
+      const audioBuffer = await audioContextRef.current.decodeAudioData(oggBuffer);
       
       // Verify decoded buffer has valid data
       if (!audioBuffer || audioBuffer.length === 0 || audioBuffer.duration === 0) {
@@ -381,8 +381,7 @@ const LiveAudioPlayer = ({ deviceId, onClose }) => {
       };
       
     } catch (err) {
-      // Opus decode error - log and continue
-      console.error('Opus decode error:', err);
+      console.error('Ogg Opus decode error:', err);
       // Continue with next chunk
       if (audioQueueRef.current.length > 0 && audioContextRef.current) {
         playNextChunk();
