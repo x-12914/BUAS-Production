@@ -84,18 +84,20 @@ class AudioFileResolver:
                 else:
                     return matching_files[0]  # Return first match
         
-        # Method 3: Broader pattern matching by device_id
-        if device_id:
-            # Look for any files containing device_id
+        # Method 3: Broader pattern matching by device_id (ONLY if we have date/time context)
+        # This prevents playing wrong audio for incomplete uploads
+        if device_id and start_date and start_time:
+            # Look for any files containing device_id with specific date
             device_pattern = f"{device_id}_"
-            matching_files = [f for f in files if f.startswith(device_pattern)]
+            date_str = start_date.replace('-', '')
+            matching_files = [f for f in files if f.startswith(device_pattern) and date_str in f]
             
             if matching_files:
-                # Sort by modification time (newest first)
-                matching_files.sort(key=lambda f: os.path.getmtime(
-                    os.path.join(self.uploads_folder, f)
-                ), reverse=True)
-                return matching_files[0]
+                # If multiple matches, try to find the best one by time
+                if len(matching_files) > 1:
+                    return self._find_best_time_match(matching_files, start_time)
+                else:
+                    return matching_files[0]  # Return single match
         
         # Method 4: Search by partial device_id match (DISABLED to prevent wrong audio)
         # This method was causing the issue where recent uploads would play previous audio

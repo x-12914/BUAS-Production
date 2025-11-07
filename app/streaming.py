@@ -93,17 +93,26 @@ def handle_user_disconnect():
                 session.listener_count = max(0, session.listener_count - 1)
                 listener_counts[session.device_id] = session.listener_count
                 
-                # If no more listeners, stop the stream
-                if session.listener_count == 0:
-                    logger.info(f"No more listeners for {session.device_id}, stopping stream")
-                    socketio.emit('stream_stop', {
-                        'session_id': session.id,
-                        'reason': 'no_listeners'
-                    }, room=device_sockets.get(session.device_id), namespace='/device')
-                    
-                    stop_stream_session(session.id, 'no_listeners')
+                # Broadcast updated listener count to remaining listeners
+                socketio.emit('listener_count_update', {
+                    'session_id': session.id,
+                    'device_id': session.device_id,
+                    'listener_count': session.listener_count
+                }, room=f'listeners_{session.device_id}', namespace='/stream')
         
         db.session.commit()
+        
+        # After commit, stop sessions with no listeners
+        for listener in active_listeners:
+            session = LiveStreamSession.query.get(listener.session_id)
+            if session and session.listener_count == 0:
+                logger.info(f"No more listeners for {session.device_id}, stopping stream")
+                socketio.emit('stream_stop', {
+                    'session_id': session.id,
+                    'reason': 'no_listeners'
+                }, room=device_sockets.get(session.device_id), namespace='/device')
+                
+                stop_stream_session(session.id, 'no_listeners')
         logger.info(f"User {current_user.username} disconnected from streaming - cleaned up {len(active_listeners)} listeners")
         
     except Exception as e:
@@ -539,14 +548,19 @@ def handle_leave_stream(data):
                     session.listener_count = max(0, session.listener_count - 1)
                     listener_counts[device_id] = session.listener_count
                     
-                    db.session.commit()
-                    
                     # Broadcast updated listener count to all remaining listeners
                     socketio.emit('listener_count_update', {
                         'session_id': session_id,
                         'device_id': device_id,
                         'listener_count': session.listener_count
                     }, room=f'listeners_{device_id}', namespace='/stream')
+                    
+                    # Commit the listener leave (don't block on this!)
+                    try:
+                        db.session.commit()
+                    except Exception as commit_err:
+                        logger.error(f"Error committing listener leave: {commit_err}")
+                        db.session.rollback()
                     
                     # If no more listeners, stop the stream
                     if session.listener_count == 0:

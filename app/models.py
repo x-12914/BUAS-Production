@@ -319,6 +319,10 @@ class DeviceInfo(db.Model):
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Last heartbeat timestamp and reason (kept on DeviceInfo for fast lookup)
+    last_heartbeat = db.Column(db.DateTime, nullable=True, index=True)
+    last_heartbeat_reason = db.Column(db.String(100), nullable=True)
 
     def __init__(self, device_id=None, android_id=None, display_name=None, phone_numbers=None, contacts=None, **kwargs):
         self.device_id = device_id
@@ -1256,3 +1260,20 @@ class StreamListener(db.Model):
             'left_at': self.left_at.isoformat() if self.left_at else None,
             'duration_seconds': self.duration_seconds
         }
+
+
+class DeviceHeartbeat(db.Model):
+    """Lightweight heartbeat signal when GPS location is unavailable"""
+    __tablename__ = 'device_heartbeats'
+    
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    device_id = db.Column(db.String(100), nullable=False, index=True)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
+    reason = db.Column(db.String(100), nullable=True)  # e.g., "gps_unavailable", "no_permission"
+    battery_percentage = db.Column(db.Integer, nullable=True)
+    battery_charging = db.Column(db.Boolean, nullable=True)
+    battery_status = db.Column(db.String(50), nullable=True)
+    charging_method = db.Column(db.String(50), nullable=True)
+    
+    def __repr__(self):
+        return f'<DeviceHeartbeat {self.device_id} at {self.timestamp}>'

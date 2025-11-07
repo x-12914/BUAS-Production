@@ -226,29 +226,16 @@ const RecordingEventsTable = ({ data = [], deviceId, audioFiles = [], onDataChan
 
   // Audio control functions
   const hasAudioFile = (item) => {
-    // Primary check: does the item have an audio_file_id?
-    if (item.audio_file_id && item.audio_file_id.trim() !== '') {
-      return true;
-    }
-
-    // For recent uploads, be more strict - don't show play button unless we have specific file ID
-    // This prevents the issue where recent uploads would play previous audio
-    const recordingDate = new Date(item.start_timestamp || `${item.start_date} ${item.start_time}`);
-    const now = new Date();
-    const timeDiff = now - recordingDate;
-    const isRecent = timeDiff < 5 * 60 * 1000; // Less than 5 minutes ago
+    // CRITICAL FIX: ALWAYS require audio_file_id to be present
+    // This prevents playing wrong/cached audio for incomplete uploads
+    // Previous issue: System would fall back to "any audio file" and play previous recordings
     
-    if (isRecent) {
-      // For recent recordings, only show play button if we have specific audio_file_id
+    if (!item.audio_file_id || item.audio_file_id.trim() === '') {
       return false;
     }
-
-    // Fallback check: are there any audio files for this device? (only for older recordings)
-    if (audioFiles && audioFiles.length > 0) {
-      return true;
-    }
-
-    return false;
+    
+    // File must be explicitly linked to this recording event
+    return true;
   };
 
   const getAudioFileForItem = async (item) => {
@@ -284,7 +271,9 @@ const RecordingEventsTable = ({ data = [], deviceId, audioFiles = [], onDataChan
     }
     
     // Get the API base URL for proper absolute URL construction
-    const fullAudioUrl = `${ApiService.baseURL}/api/uploads/${audioFileName}`;
+    // Add cache-busting parameter to prevent browser from serving cached old audio
+    const cacheBuster = Date.now();
+    const fullAudioUrl = `${ApiService.baseURL}/api/uploads/${audioFileName}?t=${cacheBuster}`;
     
     // Create audio object for player
     const audioData = {
@@ -305,7 +294,9 @@ const RecordingEventsTable = ({ data = [], deviceId, audioFiles = [], onDataChan
     if (!audioFileName) return;
     
     // Get the API base URL for proper absolute URL construction
-    const fullAudioUrl = `${ApiService.baseURL}/api/uploads/${audioFileName}`;
+    // Add cache-busting parameter to ensure fresh download
+    const cacheBuster = Date.now();
+    const fullAudioUrl = `${ApiService.baseURL}/api/uploads/${audioFileName}?t=${cacheBuster}`;
     
     // Create download link (same approach as AudioPlayer)
     const link = document.createElement('a');

@@ -494,7 +494,7 @@ const DeviceDetailMap = ({ deviceId }) => {
           color: '#3b82f6',
           marginBottom: '4px' 
         }}>
-          <a href={`${API_BASE_URL}/api/uploads/${event.audio_file_id}`} target="_blank" rel="noopener noreferrer">
+          <a href={`${API_BASE_URL}/api/uploads/${event.audio_file_id}?t=${Date.now()}`} target="_blank" rel="noopener noreferrer">
             🎵 Play Audio
           </a>
         </div>
@@ -570,7 +570,7 @@ const DeviceDetailMap = ({ deviceId }) => {
                   )}
                   {event.audio_file_id && (
                     <div style={{ fontSize: '11px' }}>
-                      <a href={`${API_BASE_URL}/api/uploads/${event.audio_file_id}`} target="_blank" rel="noopener noreferrer">
+                      <a href={`${API_BASE_URL}/api/uploads/${event.audio_file_id}?t=${Date.now()}`} target="_blank" rel="noopener noreferrer">
                         🎵 Play Audio
                       </a>
                     </div>
