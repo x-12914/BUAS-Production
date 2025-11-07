@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
 import LiveAudioPlayer from './LiveAudioPlayer';
 import './DeviceCardListenControl.css';
 
@@ -9,8 +8,35 @@ const DeviceCardListenControl = ({ deviceId, deviceName, disabled = false }) => 
   const [isOpen, setIsOpen] = useState(false);
   const [status, setStatus] = useState('idle');
   const containerRef = useRef(null);
-  const placeholderRef = useRef(null);
-  const [cardElement, setCardElement] = useState(null);
+  const overlayRef = useRef(null);
+  const [popoverStyles, setPopoverStyles] = useState({ top: 0, width: 0 });
+  const updatePositions = useCallback(() => {
+    const card = containerRef.current?.closest('.user-card');
+    if (!card) return;
+
+    const cardRect = card.getBoundingClientRect();
+    const header = card.querySelector('.user-header');
+    const headerRect = header ? header.getBoundingClientRect() : cardRect;
+    const topOffset = Math.max(headerRect.bottom - cardRect.top, 0);
+    const padding = 16;
+    const width = Math.max(cardRect.width - padding * 2, 220);
+
+    setPopoverStyles({
+      top: topOffset + 8,
+      width,
+    });
+
+    if (overlayRef.current) {
+      Object.assign(overlayRef.current.style, {
+        position: 'absolute',
+        top: `${topOffset}px`,
+        left: '0',
+        right: '0',
+        bottom: '0',
+        zIndex: '1500',
+      });
+    }
+  }, []);
 
   const isListening = isOpen;
   const isBusy = status === 'connecting' || status === 'waiting';
@@ -67,44 +93,6 @@ const DeviceCardListenControl = ({ deviceId, deviceName, disabled = false }) => 
     };
   }, [isOpen, closePopover]);
 
-  useEffect(() => {
-    return () => {
-      if (activeListenSession?.deviceId === deviceId) {
-        activeListenSession = null;
-      }
-    };
-  }, [deviceId]);
-
-  useEffect(() => {
-    if (!containerRef.current) return;
-    const card = containerRef.current.closest('.user-card');
-    if (!card) return;
-
-    setCardElement(card);
-
-    if (!placeholderRef.current) {
-      placeholderRef.current = document.createElement('div');
-      placeholderRef.current.className = 'listen-live-inline-region';
-    }
-
-    const detailsSection = card.querySelector('.user-details');
-    const placeholder = placeholderRef.current;
-
-    if (placeholder.parentNode !== card) {
-      if (detailsSection) {
-        card.insertBefore(placeholder, detailsSection);
-      } else {
-        card.appendChild(placeholder);
-      }
-    }
-
-    return () => {
-      if (placeholder.parentNode) {
-        placeholder.parentNode.removeChild(placeholder);
-      }
-    };
-  }, [deviceId]);
-
   const getButtonLabel = () => {
     if (!isListening) {
       return 'Listen Live';
@@ -134,10 +122,43 @@ const DeviceCardListenControl = ({ deviceId, deviceName, disabled = false }) => 
   }, [status, isOpen, closePopover]);
 
   useEffect(() => {
-    if (placeholderRef.current) {
-      placeholderRef.current.style.display = isOpen ? 'block' : 'none';
+    const cleanup = () => {
+      if (activeListenSession?.deviceId === deviceId) {
+        activeListenSession = null;
+      }
+      if (overlayRef.current) {
+        overlayRef.current.remove();
+        overlayRef.current = null;
+      }
+    };
+
+    if (!isOpen) {
+      cleanup();
+      return undefined;
     }
-  }, [isOpen]);
+
+    const card = containerRef.current?.closest('.user-card');
+    if (!card) return cleanup;
+
+    if (!overlayRef.current) {
+      overlayRef.current = document.createElement('div');
+      overlayRef.current.className = 'listen-live-overlay';
+      card.appendChild(overlayRef.current);
+    }
+
+    overlayRef.current.addEventListener('click', closePopover);
+    updatePositions();
+
+    window.addEventListener('resize', updatePositions);
+    window.addEventListener('scroll', updatePositions, true);
+
+    return () => {
+      overlayRef.current?.removeEventListener('click', closePopover);
+      window.removeEventListener('resize', updatePositions);
+      window.removeEventListener('scroll', updatePositions, true);
+      cleanup();
+    };
+  }, [isOpen, deviceId, updatePositions, closePopover]);
 
   return (
     <div className="listen-live-control" ref={containerRef} onClick={(event) => event.stopPropagation()}>
@@ -153,8 +174,13 @@ const DeviceCardListenControl = ({ deviceId, deviceName, disabled = false }) => 
         {isBusy && <span className="listen-live-spinner" aria-hidden="true"></span>}
       </button>
 
-      {isOpen && cardElement && placeholderRef.current && createPortal(
-        <div className="listen-live-popover inline" role="dialog" onClick={(event) => event.stopPropagation()}>
+      {isOpen && (
+        <div
+          className="listen-live-popover floating"
+          role="dialog"
+          style={{ top: popoverStyles.top, width: popoverStyles.width }}
+          onClick={(event) => event.stopPropagation()}
+        >
           <div className="listen-live-popover-header">
             <span className="popover-icon">🎧</span>
             <div className="popover-title">{deviceName || deviceId}</div>
@@ -165,8 +191,7 @@ const DeviceCardListenControl = ({ deviceId, deviceName, disabled = false }) => 
             onClose={closePopover}
             onStatusChange={setStatus}
           />
-        </div>,
-        placeholderRef.current
+        </div>
       )}
     </div>
   );
