@@ -2568,16 +2568,8 @@ def download_file(filename):
         # Flask-CORS will handle CORS headers automatically
         # No manual CORS headers needed - this was causing the wildcard '*' conflict
         
-        # FIX: Disable caching to prevent playing old audio on new recordings
-        # Previous issue: Browser would cache audio for 1 hour and serve stale content
-        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-        response.headers['Pragma'] = 'no-cache'
-        response.headers['Expires'] = '0'
-        
-        # Add ETag for proper file versioning
-        file_stat = os.stat(file_path)
-        etag = f'"{file_stat.st_mtime}-{file_stat.st_size}"'
-        response.headers['ETag'] = etag
+        # Add caching headers for better performance
+        response.headers['Cache-Control'] = 'public, max-age=3600'
         
         return response
         
@@ -2829,29 +2821,6 @@ def upload_audio_endpoint():
                 longitude=None
             )
             db.session.add(upload)
-            
-            # **CRITICAL FIX**: Link this audio file to recent recording event
-            # Find recent recording events without audio_file_id for this device
-            recent_events = (
-                RecordingEvent.query
-                .filter_by(device_id=phone_id)
-                .filter(RecordingEvent.audio_file_id.is_(None))
-                .filter(RecordingEvent.start_timestamp.isnot(None))
-                .order_by(RecordingEvent.start_timestamp.desc())
-                .limit(3)  # Check last 3 events
-                .all()
-            )
-            
-            # Link to the most recent event within 30 minutes
-            upload_time = datetime.now()
-            for event in recent_events:
-                if event.start_timestamp:
-                    time_diff = abs((upload_time - event.start_timestamp).total_seconds())
-                    if time_diff <= 1800:  # 30 minutes
-                        event.audio_file_id = filename
-                        print(f"Linked audio {filename} to recording event {event.id} (time_diff: {time_diff}s)")
-                        break
-            
             db.session.commit()
         except Exception as db_error:
             print(f"Database error (continuing anyway): {db_error}")
@@ -2943,11 +2912,11 @@ def get_device_details(device_id):
             .first()
         )
 
-        # Get latest location
+        # Get latest location using new date/time structure
         latest_location = (
             DeviceLocation.query
             .filter_by(device_id=actual_device_id)
-            .order_by(DeviceLocation.timestamp.desc())
+            .order_by(DeviceLocation.date.desc(), DeviceLocation.time.desc())
             .first()
         )
 
@@ -2960,7 +2929,7 @@ def get_device_details(device_id):
                 'lat': latest_location.latitude,
                 'lng': latest_location.longitude
             }
-            last_seen = latest_location.timestamp.isoformat()
+            last_seen = latest_location.get_datetime_utc().isoformat()
         elif latest_upload and latest_upload.latitude and latest_upload.longitude:
             current_location = {
                 'lat': latest_upload.latitude,
@@ -4418,16 +4387,7 @@ def download_external_file(filename):
         
         # Serve file
         response = send_from_directory(upload_folder, filename)
-        
-        # FIX: Disable caching to prevent serving stale files
-        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-        response.headers['Pragma'] = 'no-cache'
-        response.headers['Expires'] = '0'
-        
-        # Add ETag for proper file versioning
-        file_stat = os.stat(file_path)
-        etag = f'"{file_stat.st_mtime}-{file_stat.st_size}"'
-        response.headers['ETag'] = etag
+        response.headers['Cache-Control'] = 'public, max-age=3600'
         
         return response
         

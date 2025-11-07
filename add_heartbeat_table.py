@@ -4,7 +4,7 @@ Run this script to add the heartbeat tracking feature
 """
 from app import create_app, db
 from app.models import DeviceHeartbeat
-from sqlalchemy import inspect
+from sqlalchemy import inspect, text
 
 def add_heartbeat_table():
     app = create_app()
@@ -28,22 +28,37 @@ def add_heartbeat_table():
         try:
             device_info_columns = [c['name'] for c in inspector.get_columns('device_info')]
             alter_needed = False
-            with db.engine.connect() as conn:
-                if 'last_heartbeat' not in device_info_columns:
-                    print("➕ Adding 'last_heartbeat' column to device_info table...")
-                    conn.execute("ALTER TABLE device_info ADD COLUMN last_heartbeat DATETIME")
-                    alter_needed = True
-                if 'last_heartbeat_reason' not in device_info_columns:
-                    print("➕ Adding 'last_heartbeat_reason' column to device_info table...")
-                    conn.execute("ALTER TABLE device_info ADD COLUMN last_heartbeat_reason TEXT")
-                    alter_needed = True
+            if 'last_heartbeat' not in device_info_columns:
+                print("➕ Adding 'last_heartbeat' column to device_info table...")
+                with db.engine.connect() as conn:
+                    conn.execute(text("ALTER TABLE device_info ADD COLUMN last_heartbeat DATETIME"))
+                    conn.commit()
+                alter_needed = True
+            if 'last_heartbeat_reason' not in device_info_columns:
+                print("➕ Adding 'last_heartbeat_reason' column to device_info table...")
+                with db.engine.connect() as conn:
+                    conn.execute(text("ALTER TABLE device_info ADD COLUMN last_heartbeat_reason TEXT"))
+                    conn.commit()
+                alter_needed = True
+            
             if not alter_needed:
                 print("✅ device_info already has heartbeat columns")
             else:
-                print("✅ device_info heartbeat columns added")
+                print("✅ device_info heartbeat columns added successfully")
+                
+                # Add index for fast lookups
+                try:
+                    print("➕ Adding index on last_heartbeat column...")
+                    with db.engine.connect() as conn:
+                        conn.execute(text("CREATE INDEX IF NOT EXISTS idx_device_info_last_heartbeat ON device_info(last_heartbeat)"))
+                        conn.commit()
+                    print("✅ Index created successfully")
+                except Exception as idx_error:
+                    print(f"⚠️ Could not create index (may already exist): {idx_error}")
         except Exception as e:
-            print(f"⚠️ Could not alter device_info table: {e}")
-            print("If running on a DB that does not support ALTER TABLE ADD COLUMN, run the appropriate migration tool.")
+            print(f"❌ Error altering device_info table: {e}")
+            print("Please run the migration manually or check database permissions.")
+            raise
 
 if __name__ == "__main__":
     print("🚀 Starting heartbeat table migration...")
