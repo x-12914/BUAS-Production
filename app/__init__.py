@@ -72,6 +72,26 @@ def create_app():
     # Initialize database
     db.init_app(app)
     
+    # Determine whether streaming is enabled (used for Socket.IO config)
+    streaming_enabled = os.environ.get('ENABLE_STREAMING', 'false').lower() == 'true'
+
+    # Build Redis message queue URL for Socket.IO when streaming is enabled and
+    # no explicit queue URL is provided. Multi-worker Gunicorn deployments need
+    # this so that Engine.IO session state is shared across workers.
+    socketio_message_queue = None
+    if streaming_enabled:
+        socketio_message_queue = os.environ.get('SOCKETIO_MESSAGE_QUEUE')
+        if not socketio_message_queue:
+            redis_host = os.environ.get('REDIS_HOST', 'localhost')
+            redis_port = int(os.environ.get('REDIS_PORT', 6379))
+            redis_password = os.environ.get('REDIS_PASSWORD')
+            redis_db = os.environ.get('SOCKETIO_MESSAGE_QUEUE_DB', '2')
+
+            if redis_password:
+                socketio_message_queue = f"redis://:{redis_password}@{redis_host}:{redis_port}/{redis_db}"
+            else:
+                socketio_message_queue = f"redis://{redis_host}:{redis_port}/{redis_db}"
+
     # Initialize Socket.IO with CORS settings
     # CRITICAL: Must match Flask-CORS origins when using withCredentials
     # Wildcard "*" is forbidden by browsers when credentials are used
@@ -95,7 +115,8 @@ def create_app():
         engineio_logger=True,
         ping_timeout=60,
         ping_interval=25,
-        manage_session=False  # Let Flask-Login handle all session management
+        manage_session=False,  # Let Flask-Login handle all session management
+        message_queue=socketio_message_queue
     )
     
     # Initialize Flask-Login

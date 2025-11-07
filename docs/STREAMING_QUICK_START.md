@@ -266,6 +266,21 @@ redis-server
 
 ---
 
+### Problem: 400 BAD REQUEST on `/socket.io/`
+
+**Cause:** Gunicorn is running multiple workers but Socket.IO message queue is not configured, so Engine.IO sessions are not shared between workers.
+
+**Solution:**
+
+1. Ensure Redis is running and reachable from the Flask server.
+2. Set `ENABLE_STREAMING=true`.
+3. Set `SOCKETIO_MESSAGE_QUEUE` (full `redis://` URL) **or** ensure `REDIS_HOST`, `REDIS_PORT`, and `SOCKETIO_MESSAGE_QUEUE_DB` are exported (defaults: host `localhost`, port `6379`, DB `2`).
+4. Restart Gunicorn/PM2 so all workers pick up the environment variables.
+
+When the queue is correctly configured, Socket.IO handshakes are shared and the 400 error disappears.
+
+---
+
 ### Problem: No audio heard
 
 **Check:**
@@ -299,6 +314,8 @@ export ENABLE_STREAMING=true
 # Optional (with defaults)
 export REDIS_HOST=localhost     # Redis server host
 export REDIS_PORT=6379          # Redis server port
+export SOCKETIO_MESSAGE_QUEUE_DB=2  # Redis DB used for Socket.IO session sharing
+# Set SOCKETIO_MESSAGE_QUEUE to an explicit redis:// URL if Redis runs elsewhere
 ```
 
 ### Server URLs

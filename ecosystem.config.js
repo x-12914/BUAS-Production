@@ -12,6 +12,7 @@ module.exports = {
     env: {
       ENABLE_STREAMING: 'true',
       FLASK_ENV: 'production',
+      SOCKETIO_MESSAGE_QUEUE_DB: '2',
       PYTHONPATH: '/home/opt/BUAS-Production',
       PATH: '/home/opt/venv/bin:' + process.env.PATH
     },
