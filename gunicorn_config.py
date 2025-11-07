@@ -1,4 +1,5 @@
 # Gunicorn configuration for BUAS Production
+import os
 import multiprocessing
 
 # Server socket
@@ -6,7 +7,8 @@ bind = '127.0.0.1:5000'
 backlog = 2048
 
 # Worker processes
-workers = multiprocessing.cpu_count() * 2 + 1
+# Default to a single worker for Socket.IO stability unless explicitly overridden.
+workers = int(os.environ.get('GUNICORN_WORKERS', '1'))
 worker_class = 'eventlet'  # Required for SocketIO
 worker_connections = 1000
 timeout = 300
