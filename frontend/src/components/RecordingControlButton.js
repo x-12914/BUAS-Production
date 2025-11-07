@@ -37,6 +37,13 @@ const RecordingControlButton = ({ deviceId, initialStatus, onStatusChange, disab
     }
   }, [initialStatus]);
 
+  // Fetch recording status on mount if already recording
+  useEffect(() => {
+    if (initialStatus === 'recording') {
+      fetchRecordingStatus();
+    }
+  }, []); // Run once on mount
+
   const fetchRecordingStatus = async () => {
     try {
       const response = await ApiService.getRecordingStatus(deviceId);

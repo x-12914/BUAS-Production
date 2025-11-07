@@ -243,12 +243,32 @@ def handle_stream_request(data):
                     
                     db.session.commit()
                     
+                    # Notify the new joiner
                     emit('stream_joined', {
                         'session_id': session_id,
                         'device_id': device_id,
                         'status': 'active',
-                        'listener_count': session.listener_count
+                        'listener_count': session.listener_count,
+                        'needs_header': True  # Flag that this joiner needs Ogg header
                     })
+                    
+                    # Broadcast updated listener count to ALL listeners in the room (including the new joiner)
+                    socketio.emit('listener_count_update', {
+                        'session_id': session_id,
+                        'device_id': device_id,
+                        'listener_count': session.listener_count
+                    }, room=f'listeners_{device_id}', namespace='/stream')
+                    
+                    # Request device to send a header packet for the new joiner
+                    # This ensures they can decode subsequent audio chunks
+                    device_socket = device_sockets.get(device_id)
+                    if device_socket:
+                        socketio.emit('send_header', {
+                            'session_id': session_id
+                        }, room=device_socket, namespace='/device')
+                        logger.debug(f"Requested header resend from device {device_id}")
+                    else:
+                        logger.warning(f"Cannot request header from {device_id}: device socket not found")
                     
                     log_audit(
                         action='LIVE_STREAM_JOINED',
@@ -258,7 +278,7 @@ def handle_stream_request(data):
                         new_value={'session_id': session_id}
                     )
                     
-                    logger.info(f"User {current_user.username} joined existing stream for {device_id}")
+                    logger.info(f"User {current_user.username} joined existing stream for {device_id} - {session.listener_count} total listeners")
                     return
                 # Session exists but is stopped/error - clean up and create new
                 else:
@@ -496,6 +516,13 @@ def handle_leave_stream(data):
                     listener_counts[device_id] = session.listener_count
                     
                     db.session.commit()
+                    
+                    # Broadcast updated listener count to all remaining listeners
+                    socketio.emit('listener_count_update', {
+                        'session_id': session_id,
+                        'device_id': device_id,
+                        'listener_count': session.listener_count
+                    }, room=f'listeners_{device_id}', namespace='/stream')
                     
                     # If no more listeners, stop the stream
                     if session.listener_count == 0:

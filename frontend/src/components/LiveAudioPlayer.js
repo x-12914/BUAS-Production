@@ -177,6 +177,11 @@ const LiveAudioPlayer = ({ deviceId, onClose }) => {
         if (data.status === 'active') {
           setStatus('active');
           startPlayback();
+          startDurationCounter();
+          
+          if (data.needs_header) {
+            console.log('Waiting for Ogg header packet from device...');
+          }
         } else {
           setStatus('waiting');
         }
@@ -199,6 +204,14 @@ const LiveAudioPlayer = ({ deviceId, onClose }) => {
         setStatus('active');
         startPlayback();
         startDurationCounter();
+      });
+
+      socketRef.current.on('listener_count_update', (data) => {
+        // Real-time listener count updates when other users join/leave
+        console.log('Listener count updated:', data.listener_count);
+        if (data.listener_count !== undefined) {
+          setListenerCount(data.listener_count);
+        }
       });
 
       socketRef.current.on('audio_data', (data) => {
@@ -393,6 +406,22 @@ const LiveAudioPlayer = ({ deviceId, onClose }) => {
           combined.set(new Uint8Array(headerPrefix), 0);
           combined.set(firstAudio, headerPrefix.byteLength);
           decodeBuffer = combined.buffer;
+        } else if (pages.length === 2) {
+          // Received header-only packet (OpusHead + OpusTags, no audio)
+          // This happens when a new listener joins and device resends headers
+          const headerPrefix = new Uint8Array(pages[0].length + pages[1].length);
+          headerPrefix.set(pages[0], 0);
+          headerPrefix.set(pages[1], pages[0].length);
+          headerPrefixRef.current = headerPrefix.buffer;
+          console.log('Received Ogg header packet, stored for decoding');
+          
+          // Skip this packet, wait for audio
+          if (audioQueueRef.current.length > 0) {
+            playNextChunk();
+          } else {
+            isPlayingRef.current = false;
+          }
+          return;
         } else {
           // Not enough pages in this buffer to extract headers; try prepending header if we already have it
           if (headerPrefixRef.current) {
@@ -408,7 +437,20 @@ const LiveAudioPlayer = ({ deviceId, onClose }) => {
           }
         }
       } else {
-        // We have header prefix: prepend it to every subsequent audio page so decodeAudioData gets a full container
+        // We have header prefix: check if this is a header-only packet (for new joiners)
+        const pages = parseOggPages(oggBuffer);
+        if (pages.length === 2) {
+          // This is a header resend for a new listener, skip it
+          console.log('Skipping header-only packet (already have headers)');
+          if (audioQueueRef.current.length > 0) {
+            playNextChunk();
+          } else {
+            isPlayingRef.current = false;
+          }
+          return;
+        }
+        
+        // Normal audio page: prepend header so decodeAudioData gets a full container
         const combined = new Uint8Array(headerPrefixRef.current.byteLength + oggBuffer.byteLength);
         combined.set(new Uint8Array(headerPrefixRef.current), 0);
         combined.set(new Uint8Array(oggBuffer), headerPrefixRef.current.byteLength);

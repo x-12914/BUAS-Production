@@ -41,13 +41,8 @@ const StatusBar = ({ data, connectionStatus, lastUpdated, error }) => {
         {data && (
           <>
             <div className="status-item">
-              <span className="status-label">Users:</span>
+              <span className="status-label">Connected Users:</span>
               <span className="status-value">{data.total_users || 0}</span>
-            </div>
-            
-            <div className="status-item">
-              <span className="status-label">Active Sessions:</span>
-              <span className="status-value">{data.active_sessions_count || 0}</span>
             </div>
             
             <div className="status-item">

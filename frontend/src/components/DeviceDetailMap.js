@@ -484,7 +484,7 @@ const DeviceDetailMap = ({ deviceId }) => {
           color: '#6b7280',
           marginBottom: '4px' 
         }}>
-          Duration: {event.duration < 1 ? `${Math.round(event.duration * 60)} seconds` : `${event.duration} minutes`}
+          Duration: {event.duration < 1 ? `${Math.round(event.duration * 60)} seconds` : `${Math.floor(event.duration)} minutes`}
         </div>
       )}
       
@@ -565,7 +565,7 @@ const DeviceDetailMap = ({ deviceId }) => {
                   )}
                   {event.duration !== null && event.duration !== undefined && (
                     <div style={{ fontSize: '11px', color: '#6b7280' }}>
-                      Duration: {event.duration < 1 ? `${Math.round(event.duration * 60)} seconds` : `${event.duration} minutes`}
+                      Duration: {event.duration < 1 ? `${Math.round(event.duration * 60)} seconds` : `${Math.floor(event.duration)} minutes`}
                     </div>
                   )}
                   {event.audio_file_id && (
@@ -583,7 +583,7 @@ const DeviceDetailMap = ({ deviceId }) => {
                     ⏹️ Recording Stopped
                   </div>
                   <div style={{ fontSize: '11px', color: '#6b7280' }}>
-                    Duration: {event.duration} minutes
+                    Duration: {event.duration < 1 ? `${Math.round(event.duration * 60)} seconds` : `${Math.floor(event.duration)} minutes`}
                   </div>
                 </div>
               )}
