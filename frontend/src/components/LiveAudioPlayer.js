@@ -414,31 +414,27 @@ const LiveAudioPlayer = ({ deviceId, onClose }) => {
             headerPrefixRef.current = headerPrefix.buffer;
             console.log('Captured Ogg headers (OpusHead + OpusTags)');
             
-            // CRITICAL: Discard previously buffered audio pages!
-            // They have wrong granule positions (started counting before headers)
-            // Android will resend proper audio after headers
+            // CRITICAL: Discard ALL pre-header audio pages (including ones in header chunk)!
+            // They have wrong granule positions (started counting before headers were sent)
+            // Only decode audio that arrives in SUBSEQUENT chunks after headers
             if (accumulatedPagesRef.current.length > 0) {
               console.warn(`Discarding ${accumulatedPagesRef.current.length} pre-header audio pages (wrong granule positions)`);
               accumulatedPagesRef.current = [];
             }
             
-            // If there are audio pages after headers, accumulate them and continue to decode logic
+            // ALSO discard any audio pages that arrived WITH the headers in the same chunk
+            // These are part of the same invalid sequence (Android timing bug)
             if (pages.length > 2) {
-              for (let i = 2; i < pages.length; i++) {
-                accumulatedPagesRef.current.push(pages[i]);
-              }
-              console.log(`Accumulated ${pages.length - 2} audio pages from header chunk`);
-              alreadyAccumulated = true; // Mark as accumulated
-              // Don't return - fall through to decode logic below
-            } else {
-              // Only headers, no audio yet - wait for next chunk
-              if (audioQueueRef.current.length > 0) {
-                playNextChunk();
-              } else {
-                isPlayingRef.current = false;
-              }
-              return;
+              console.warn(`Discarding ${pages.length - 2} audio pages from header chunk (also wrong granule positions)`);
             }
+            
+            // Wait for next chunk with fresh audio (correct granule positions)
+            if (audioQueueRef.current.length > 0) {
+              playNextChunk();
+            } else {
+              isPlayingRef.current = false;
+            }
+            return;
           } else {
             // Not headers, but audio pages arriving before headers (Android timing issue)
             // Buffer these audio pages - they'll be decoded once we get headers
