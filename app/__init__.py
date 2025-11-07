@@ -115,7 +115,10 @@ def create_app():
         engineio_logger=True,
         ping_timeout=60,
         ping_interval=25,
-        manage_session=False,  # Let Flask-Login handle all session management
+        # REMOVED: manage_session=False
+        # Socket.IO MUST manage its own connection sessions (sid tracking)
+        # Flask-Login manages user authentication separately - no conflict
+        cors_credentials=True,  # Explicitly enable credentials for cookies
         message_queue=socketio_message_queue
     )
     
