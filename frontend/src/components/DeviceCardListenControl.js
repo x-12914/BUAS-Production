@@ -51,7 +51,7 @@ const DeviceCardListenControl = ({ deviceId, deviceName, disabled = false }) => 
 
   const handleToggle = (event) => {
     event.stopPropagation();
-    if (disabled) return;
+    if (disabled || isOpen) return;
 
     if (isOpen) {
       closePopover();
@@ -98,18 +98,19 @@ const DeviceCardListenControl = ({ deviceId, deviceName, disabled = false }) => 
       return 'Listen Live';
     }
 
-    switch (status) {
-      case 'connecting':
-        return 'Cancel Connection';
-      case 'waiting':
-        return 'Cancel Request';
-      case 'active':
-        return 'Stop Listening';
-      case 'error':
-        return 'Close Player';
-      default:
-        return 'Stop Listening';
+    if (status === 'active') {
+      return 'Listening...';
     }
+
+    if (status === 'connecting' || status === 'waiting') {
+      return 'Connecting...';
+    }
+
+    if (status === 'error') {
+      return 'Stream Error';
+    }
+
+    return 'Listen Live';
   };
 
   const buttonLabel = getButtonLabel();
@@ -166,7 +167,7 @@ const DeviceCardListenControl = ({ deviceId, deviceName, disabled = false }) => 
         type="button"
         className={`listen-live-btn ${isListening ? 'active' : ''} ${isBusy ? 'busy' : ''}`}
         onClick={handleToggle}
-        disabled={disabled}
+        disabled={disabled || isOpen}
         title={disabled ? 'Action disabled while dashboard is loading' : buttonLabel}
       >
         <span className="listen-live-icon">🎧</span>
@@ -181,10 +182,6 @@ const DeviceCardListenControl = ({ deviceId, deviceName, disabled = false }) => 
           style={{ top: popoverStyles.top, width: popoverStyles.width }}
           onClick={(event) => event.stopPropagation()}
         >
-          <div className="listen-live-popover-header">
-            <span className="popover-icon">🎧</span>
-            <div className="popover-title">{deviceName || deviceId}</div>
-          </div>
           <LiveAudioPlayer
             deviceId={deviceId}
             variant="compact"

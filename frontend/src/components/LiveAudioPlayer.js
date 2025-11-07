@@ -749,6 +749,26 @@ const LiveAudioPlayer = ({ deviceId, onClose, variant = 'full', onStatusChange }
     const listenersLabel = listenerCount === 1 ? '1 listener' : `${listenerCount} listeners`;
     const dataLabel = formatBytes(bytesReceived);
 
+    const getControlLabel = () => {
+      switch (status) {
+        case 'connecting':
+          return 'Cancel Connection';
+        case 'waiting':
+          return 'Cancel Request';
+        case 'active':
+          return 'Stop Listening';
+        case 'error':
+          return 'Close Player';
+        case 'stopped':
+          return 'Close';
+        default:
+          return status === 'idle' ? 'Close' : 'Stop Listening';
+      }
+    };
+
+    const controlLabel = getControlLabel();
+    const controlDisabled = status === 'stopping';
+
     return (
       <div className="live-audio-player compact">
         <div className="compact-header">
@@ -762,10 +782,10 @@ const LiveAudioPlayer = ({ deviceId, onClose, variant = 'full', onStatusChange }
           <button
             className="compact-stop-button"
             onClick={handleStop}
-            disabled={status === 'stopped'}
-            title="Stop listening"
+            disabled={controlDisabled}
+            title={controlLabel}
           >
-            Stop Listening
+            {controlLabel}
           </button>
         </div>
 
