@@ -191,9 +191,13 @@ const UserList = ({
   const renderPlatformBadge = (user) => {
     const platform = (user.platform || 'android').toLowerCase();
     if (platform === 'ios') {
-      return <span className="platform-badge platform-ios"> iPhone</span>;
+      return (
+        <div className="platform-row">
+          <span className="platform-badge platform-ios"> iPhone</span>
+        </div>
+      );
     }
-    return <span className="platform-badge platform-android">🤖 Android</span>;
+    return null;
   };
 
   const getIdentifierLabel = (user) => (user.platform === 'ios' ? 'UUID' : 'Android ID');
@@ -278,9 +282,7 @@ const UserList = ({
                   {user.android_id && (
                     <p className="android-id">{getIdentifierLabel(user)}: {user.android_id}</p>
                   )}
-                  <div className="platform-row">
-                    {renderPlatformBadge(user)}
-                  </div>
+                  {renderPlatformBadge(user)}
                   <p className="user-location">
                     📍 {(user.location?.lat || 0).toFixed(4)}, {(user.location?.lng || 0).toFixed(4)}
                   </p>

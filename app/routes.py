@@ -2683,7 +2683,7 @@ def register_phone():
         device_info = DeviceInfo.query.filter_by(device_id=phone_id).first()
 
         if device_info:
-            if android_id and not device_info.android_id:
+            if android_id and device_info.android_id != android_id:
                 device_info.android_id = android_id
             if device_name:
                 device_info.display_name = device_name
