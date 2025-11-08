@@ -60,6 +60,33 @@
   gap: 15px;
 }
 
+.device-platform-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary, #ccc);
+}
+
+.device-platform-badge.ios {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.device-platform-badge.android {
+  border-color: rgba(76, 175, 80, 0.4);
+  background: rgba(76, 175, 80, 0.2);
+  color: #b9f6ca;
+}
+
 .device-title h1 {
   margin: 0;
   font-size: 2rem;

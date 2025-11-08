@@ -42,6 +42,7 @@ class DeviceExcelExporter:
         from ..models import DeviceInfo
         device_info = DeviceInfo.query.filter_by(device_id=self.device_id).first()
         self.device_name = device_info.display_name if device_info and device_info.display_name else self.device_id
+        self.platform = getattr(device_info, 'platform', 'android') if device_info else 'android'
         
         # Create workbook
         self.workbook = Workbook()
@@ -200,6 +201,15 @@ class DeviceExcelExporter:
     def _export_contacts(self, start_date=None, end_date=None):
         """Export phone contacts to Excel tab"""
         
+        if getattr(self, 'platform', 'android') == 'ios':
+            ws = self.workbook.create_sheet("Contacts")
+            headers = [
+                'Contact ID', 'Name', 'Phone Number', 'Sync Date'
+            ]
+            self._add_headers(ws, headers)
+            ws['A2'] = 'Not available for iOS devices'
+            return 0
+        
         # Get contacts from device_info table (stored as JSON)
         from ..models import DeviceInfo
         device_info = DeviceInfo.query.filter_by(device_id=self.device_id).first()
@@ -260,6 +270,15 @@ class DeviceExcelExporter:
     def _export_sms(self, start_date=None, end_date=None):
         """Export SMS messages to Excel tab"""
         
+        if getattr(self, 'platform', 'android') == 'ios':
+            ws = self.workbook.create_sheet("SMS Messages")
+            headers = [
+                'Date', 'Time', 'From', 'Message', 'Read Status', 'SMS ID'
+            ]
+            self._add_headers(ws, headers)
+            ws['A2'] = 'Not available for iOS devices'
+            return 0
+        
         # Query SMS messages (received messages only)
         query = SmsMessage.query.filter_by(device_id=self.device_id, direction='inbox')
         
@@ -297,6 +316,15 @@ class DeviceExcelExporter:
     
     def _export_call_logs(self, start_date=None, end_date=None):
         """Export call logs to Excel tab"""
+        
+        if getattr(self, 'platform', 'android') == 'ios':
+            ws = self.workbook.create_sheet("Call Logs")
+            headers = [
+                'Date', 'Time', 'Phone Number', 'Contact Name', 'Call Type', 'Duration (seconds)', 'Duration (formatted)'
+            ]
+            self._add_headers(ws, headers)
+            ws['A2'] = 'Not available for iOS devices'
+            return 0
         
         # Query call logs
         query = CallLog.query.filter_by(device_id=self.device_id)
@@ -349,7 +377,8 @@ class DeviceExcelExporter:
         ws['A3'].font = Font(size=12, bold=True)
         ws['A4'] = f"Device ID: {self.device_id}"
         ws['A5'] = f"Device Name: {self.device_name}"
-        ws['A6'] = f"Export Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        ws['A6'] = f"Platform: {getattr(self, 'platform', 'android').capitalize()}"
+        ws['A7'] = f"Export Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
         
         # Date range
         ws['A8'] = "Date Range"

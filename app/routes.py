@@ -678,6 +678,21 @@ def upload_audio(device_id):
         if not file.filename:
             return jsonify({'error': 'No filename provided'}), 400
 
+        platform = request.form.get('platform')
+        if platform:
+            try:
+                device_info = DeviceInfo.query.filter_by(device_id=device_id).first()
+                if device_info and hasattr(device_info, 'platform'):
+                    device_info.platform = platform
+                    device_info.updated_at = datetime.utcnow()
+                    db.session.commit()
+            except Exception as platform_error:
+                current_app.logger.warning(f"Could not update platform for {device_id}: {platform_error}")
+                try:
+                    db.session.rollback()
+                except Exception:
+                    pass
+
         # Ensure upload directory exists
         upload_folder = current_app.config['UPLOAD_FOLDER']
         os.makedirs(upload_folder, exist_ok=True)
@@ -827,9 +842,11 @@ def upload_device_info(device_id):
         # Validate required fields
         if not data:
             return jsonify({'error': 'No data provided'}), 400
+        platform = data.get('platform')
             
         # Extract device information
         android_id = data.get('android_id')
+        platform = data.get('platform')
         phone_numbers = data.get('phone_numbers', [])
         contacts = data.get('contacts', [])
         
@@ -872,6 +889,8 @@ def upload_device_info(device_id):
             device_info.android_id = android_id
             device_info.phone_numbers = json.dumps(phone_numbers) if phone_numbers else None
             device_info.contacts = json.dumps(validated_contacts) if validated_contacts else None
+            if platform and hasattr(device_info, 'platform'):
+                device_info.platform = platform
             
             # Update battery information if provided
             if battery_level is not None:
@@ -902,7 +921,8 @@ def upload_device_info(device_id):
                 battery_health=battery_health,
                 battery_temperature=battery_temperature,
                 battery_voltage=battery_voltage,
-                battery_updated_at=datetime.utcnow() if battery_level is not None else None
+                battery_updated_at=datetime.utcnow() if battery_level is not None else None,
+                platform=platform or 'android'
             )
             db.session.add(device_info)
         
@@ -988,6 +1008,8 @@ def upload_battery_status(device_id):
                 battery_temperature=battery_temperature,
                 battery_voltage=battery_voltage
             )
+            if platform and hasattr(device_info, 'platform'):
+                device_info.platform = platform
         else:
             # Create new record with only battery info
             device_info = DeviceInfo(
@@ -997,7 +1019,8 @@ def upload_battery_status(device_id):
                 charging_method=charging_method,
                 battery_health=battery_health,
                 battery_temperature=battery_temperature,
-                battery_voltage=battery_voltage
+                battery_voltage=battery_voltage,
+                platform=platform or 'android'
             )
             device_info.battery_updated_at = datetime.utcnow()
             db.session.add(device_info)
@@ -1051,6 +1074,7 @@ def get_device_extended_info(device_id):
                 'device_id': actual_device_id,
                 'requested_identifier': device_id,
                 'android_id': None,
+                'platform': 'android',
                 'phone_numbers': [],
                 'contacts': [],
                 'battery': {
@@ -1084,6 +1108,8 @@ def get_device_extended_info(device_id):
                 'status': 'Charging' if battery_data.get('is_charging') else 'Not Charging' if battery_data.get('battery_level') is not None else 'Unknown'
             }
             del response_data['battery_status']  # Remove old format
+        
+        response_data['platform'] = getattr(device_info, 'platform', 'android')
         
         return jsonify(response_data), 200
         
@@ -2428,6 +2454,7 @@ def api_dashboard_data():
                 device_info = DeviceInfo.query.filter_by(device_id=device_id).first()
                 device_map[device_id]['android_id'] = device_info.android_id if device_info else None
                 device_map[device_id]['display_name'] = device_info.get_display_name() if device_info else device_id
+                device_map[device_id]['platform'] = getattr(device_info, 'platform', 'android') if device_info else 'android'
                 
                 # Add battery information
                 if device_info:
@@ -2446,6 +2473,7 @@ def api_dashboard_data():
                 print(f"DeviceInfo query error for {device_id}: {info_error}")
                 device_map[device_id]['android_id'] = None
                 device_map[device_id]['display_name'] = device_id
+                device_map[device_id]['platform'] = 'android'
                 device_map[device_id]['battery'] = None
 
         # Clean up temporary timestamp field
@@ -2647,6 +2675,37 @@ def register_phone():
         },
         success=True
     )
+
+    platform = data.get('platform', 'android')
+    android_id = data.get('android_id') or data.get('uuid') or phone_id
+
+    try:
+        device_info = DeviceInfo.query.filter_by(device_id=phone_id).first()
+
+        if device_info:
+            if android_id and not device_info.android_id:
+                device_info.android_id = android_id
+            if device_name:
+                device_info.display_name = device_name
+            if hasattr(device_info, 'platform'):
+                device_info.platform = platform or 'android'
+            device_info.updated_at = datetime.utcnow()
+        else:
+            device_info = DeviceInfo(
+                device_id=phone_id,
+                android_id=android_id,
+                display_name=device_name,
+                platform=platform or 'android'
+            )
+            db.session.add(device_info)
+
+        db.session.commit()
+    except Exception as db_error:
+        current_app.logger.error(f"Device registration save failed for {phone_id}: {db_error}")
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
     
     # For now, just acknowledge registration
     # In a full implementation, you'd store device info in database
@@ -2666,6 +2725,7 @@ def update_location():
     
     # Support both formats: direct fields and nested location object
     phone_id = data.get('phone_id') or data.get('device_id')
+    platform = data.get('platform')
     
     # Handle both flat structure and nested location object
     if 'location' in data:
@@ -2743,6 +2803,8 @@ def update_location():
                 if battery_voltage is not None:
                     device_info.battery_voltage = battery_voltage
                 device_info.updated_at = datetime.utcnow()
+                if platform and hasattr(device_info, 'platform'):
+                    device_info.platform = platform
             else:
                 # Create new record with battery info
                 device_info = DeviceInfo(
@@ -2753,7 +2815,8 @@ def update_location():
                     battery_health=battery_health,
                     battery_temperature=battery_temperature,
                     battery_voltage=battery_voltage,
-                    battery_updated_at=datetime.utcnow()
+                    battery_updated_at=datetime.utcnow(),
+                    platform=platform or 'android'
                 )
                 db.session.add(device_info)
         
@@ -2940,11 +3003,17 @@ def get_device_details(device_id):
             current_location = {'lat': 0.0, 'lng': 0.0}  # Default location
             last_seen = latest_upload.timestamp.isoformat() if latest_upload else None
 
+        device_info_record = DeviceInfo.query.filter_by(device_id=actual_device_id).first()
+        device_display_name = device_info_record.get_display_name() if device_info_record else actual_device_id
+        device_android_id = get_android_id_for_device(actual_device_id)
+        device_platform = getattr(device_info_record, 'platform', 'android') if device_info_record else 'android'
+
         return jsonify({
             'data': {
                 'device_id': actual_device_id,
-                'android_id': get_android_id_for_device(actual_device_id),
-                'display_name': DeviceInfo.query.filter_by(device_id=actual_device_id).first().get_display_name() if DeviceInfo.query.filter_by(device_id=actual_device_id).first() else actual_device_id,
+                'android_id': device_android_id,
+                'platform': device_platform,
+                'display_name': device_display_name,
                 'requested_identifier': device_id,
                 'status': 'idle',  # You can enhance this based on your logic
                 'location': current_location,

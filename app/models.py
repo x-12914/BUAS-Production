@@ -304,6 +304,7 @@ class DeviceInfo(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     device_id = db.Column(db.String(100), nullable=False, unique=True, index=True)
     android_id = db.Column(db.String(200), nullable=True, unique=True, index=True)  # Made unique for global uniqueness
+    platform = db.Column(db.String(20), nullable=False, default='android', index=True)
     display_name = db.Column(db.String(200), nullable=True, index=True)  # Device display name for UI
     phone_numbers = db.Column(db.Text, nullable=True)  # JSON string
     contacts = db.Column(db.Text, nullable=True)       # JSON string
@@ -327,6 +328,7 @@ class DeviceInfo(db.Model):
     def __init__(self, device_id=None, android_id=None, display_name=None, phone_numbers=None, contacts=None, **kwargs):
         self.device_id = device_id
         self.android_id = android_id
+        self.platform = kwargs.get('platform', 'android')
         self.display_name = display_name
         self.phone_numbers = json.dumps(phone_numbers) if phone_numbers else None
         self.contacts = json.dumps(contacts) if contacts else None
@@ -399,6 +401,7 @@ class DeviceInfo(db.Model):
             'device_id': self.device_id,
             'display_name': self.get_display_name(),
             'android_id': self.android_id,
+            'platform': getattr(self, 'platform', 'android'),
             'phone_numbers': self.get_phone_numbers(),
             'contacts': self.get_contacts(),
             'battery_status': self.get_battery_status(),

