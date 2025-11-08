@@ -165,9 +165,9 @@
 }
 
 .platform-badge.platform-ios {
-  border-color: rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.06);
-  color: #ffffff;
+  border-color: rgba(76, 175, 80, 0.4);
+  background: rgba(76, 175, 80, 0.15);
+  color: #b9f6ca;
 }
 
 .platform-badge.platform-android {

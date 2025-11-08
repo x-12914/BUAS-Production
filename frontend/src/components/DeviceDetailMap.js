@@ -619,9 +619,6 @@ const DeviceDetailMap = ({ deviceId }) => {
                   <div style={{ fontSize: '11px', color: '#6b7280' }}>
                     {formatTimestamp(event.timestamp)}
                   </div>
-                  <div style={{ fontSize: '11px', color: '#6b7280' }}>
-                    Stay Duration: {formatDuration(event.stayDurationMs)}
-                  </div>
                   {event.distanceFromPreviousMeters !== null && event.distanceFromPreviousMeters !== undefined && (
                     <div style={{ fontSize: '11px', color: '#6b7280' }}>
                       Distance from Previous: {formatDistance(event.distanceFromPreviousMeters)}

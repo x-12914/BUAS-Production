@@ -843,10 +843,9 @@ def upload_device_info(device_id):
         if not data:
             return jsonify({'error': 'No data provided'}), 400
         platform = data.get('platform')
-            
+
         # Extract device information
         android_id = data.get('android_id')
-        platform = data.get('platform')
         phone_numbers = data.get('phone_numbers', [])
         contacts = data.get('contacts', [])
         
@@ -968,6 +967,8 @@ def upload_battery_status(device_id):
         # Validate required fields
         if not data:
             return jsonify({'error': 'No data provided'}), 400
+        
+        platform = data.get('platform')
             
         # Extract battery information
         battery_level = data.get('battery_level')
@@ -2683,12 +2684,12 @@ def register_phone():
         device_info = DeviceInfo.query.filter_by(device_id=phone_id).first()
 
         if device_info:
-            if android_id and device_info.android_id != android_id:
+            if android_id:
                 device_info.android_id = android_id
             if device_name:
                 device_info.display_name = device_name
-            if hasattr(device_info, 'platform'):
-                device_info.platform = platform or 'android'
+            if platform and hasattr(device_info, 'platform'):
+                device_info.platform = platform
             device_info.updated_at = datetime.utcnow()
         else:
             device_info = DeviceInfo(

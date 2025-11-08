@@ -146,6 +146,11 @@ const UserList = ({
     return true; // Default behavior
   };
 
+  const shouldShowLiveListen = (user) => {
+    const platform = (user.platform || 'android').toLowerCase();
+    return platform !== 'ios';
+  };
+
   const getBatteryColorClass = (batteryLevel) => {
     if (batteryLevel >= 75) return 'battery-high';
     if (batteryLevel >= 25) return 'battery-medium';
@@ -319,11 +324,13 @@ const UserList = ({
                     />
                   )}
 
-                  <DeviceCardListenControl
-                    deviceId={user.android_id || user.user_id}
-                    deviceName={user.display_name || user.user_id}
-                    disabled={loading}
-                  />
+                  {shouldShowLiveListen(user) && (
+                    <DeviceCardListenControl
+                      deviceId={user.android_id || user.user_id}
+                      deviceName={user.display_name || user.user_id}
+                      disabled={loading}
+                    />
+                  )}
                   
                   {/* Role-based restrictions notice - removed redundant text */}
                   
