@@ -417,9 +417,11 @@ const DeviceDetail = ({ user }) => {
         </button>
         <div className="device-title">
           <h1>📱 {deviceInfo?.display_name || deviceId}</h1>
-          <div className={`device-platform-badge ${isIOS ? 'ios' : 'android'}`}>
-            {isIOS ? ' iPhone' : '🤖 Android'}
-          </div>
+          {isIOS && (
+            <div className="device-platform-badge ios">
+               iPhone
+            </div>
+          )}
           
           {/* Battery Indicator */}
           {deviceExtendedInfo?.battery?.level !== null && deviceExtendedInfo?.battery?.level !== undefined && (

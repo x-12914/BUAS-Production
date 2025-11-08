@@ -76,12 +76,6 @@
 }
 
 .device-platform-badge.ios {
-  border-color: rgba(255, 255, 255, 0.4);
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-}
-
-.device-platform-badge.android {
   border-color: rgba(76, 175, 80, 0.4);
   background: rgba(76, 175, 80, 0.2);
   color: #b9f6ca;
