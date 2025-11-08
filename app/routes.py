@@ -555,9 +555,57 @@ def send_batch_recording_command():
         return jsonify({'error': 'Internal server error'}), 500
 
 
+@routes.route('/api/command/<path:device_id>', methods=['GET'])
+def get_device_command_ios(device_id):
+    """Get pending command for device (used by iOS app polling with path parameter)"""
+    try:
+        # Resolve device_id (could be UUID or android_id)
+        from .device_utils import resolve_to_device_id
+        actual_device_id = resolve_to_device_id(device_id)
+        
+        # Log resolution for debugging
+        if actual_device_id != device_id:
+            current_app.logger.debug(f"iOS polling - Resolved {device_id} -> {actual_device_id}")
+        
+        # Check if DeviceCommand table exists by trying to query it
+        try:
+            # Get the latest pending command
+            command_record = DeviceCommand.query.filter_by(device_id=actual_device_id)\
+                .filter(DeviceCommand.status == 'pending')\
+                .order_by(DeviceCommand.created_at.desc()).first()
+            
+            if command_record:
+                # Mark command as sent
+                command_record.status = 'sent'
+                command_record.sent_at = datetime.utcnow()
+                db.session.commit()
+                
+                current_app.logger.info(f"iOS Command served to {actual_device_id}: {command_record.command}")
+                
+                # Return iOS-compatible format with hasCommand and action
+                return jsonify({
+                    'hasCommand': True,
+                    'action': command_record.command,  # 'start' or 'stop'
+                    'command_id': command_record.id,
+                    'durationSeconds': 30,  # Default duration
+                    'timestamp': command_record.created_at.isoformat()
+                }), 200
+            
+            # No command - return iOS format
+            return jsonify({'hasCommand': False, 'action': None}), 200
+            
+        except Exception as db_error:
+            current_app.logger.warning(f"DeviceCommand table issue for iOS: {db_error}")
+            return jsonify({'hasCommand': False, 'action': None}), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Error getting iOS command for device {device_id}: {e}")
+        return jsonify({'hasCommand': False, 'action': None}), 200
+
+
 @routes.route('/api/command', methods=['GET'])
 def get_device_command():
-    """Get pending command for device (used by Android app polling)"""
+    """Get pending command for device (used by Android app polling with query parameter)"""
     try:
         # Android sends android_id as device_id parameter, need to resolve to actual device_id
         identifier = request.args.get('device_id')
