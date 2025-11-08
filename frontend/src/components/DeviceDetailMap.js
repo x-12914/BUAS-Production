@@ -822,16 +822,6 @@ const DeviceDetailMap = ({ deviceId }) => {
                           Location: {lat.toFixed(6)}, {lng.toFixed(6)}
                         </div>
 
-                        {event.stayDurationMs !== null && event.stayDurationMs !== undefined && (
-                          <div style={{ 
-                            fontSize: '11px', 
-                            color: '#6b7280',
-                            marginTop: '6px'
-                          }}>
-                            Stay Duration: {formatDuration(event.stayDurationMs)}
-                          </div>
-                        )}
-
                         {event.distanceFromPreviousMeters !== null && event.distanceFromPreviousMeters !== undefined && (
                           <div style={{ 
                             fontSize: '11px', 

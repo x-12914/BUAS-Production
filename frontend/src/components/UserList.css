@@ -157,23 +157,11 @@
   font-weight: 600;
   padding: 0.2rem 0.6rem;
   border-radius: 999px;
-  border: 1px solid var(--border-color);
-  background: var(--bg-tertiary);
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.platform-badge.platform-ios {
-  border-color: rgba(76, 175, 80, 0.4);
+  border: 1px solid rgba(76, 175, 80, 0.4);
   background: rgba(76, 175, 80, 0.15);
   color: #b9f6ca;
-}
-
-.platform-badge.platform-android {
-  border-color: rgba(76, 175, 80, 0.4);
-  background: rgba(76, 175, 80, 0.15);
-  color: #81c784;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .user-location {
