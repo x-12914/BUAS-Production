@@ -315,7 +315,42 @@ const DeviceDetailMap = ({ deviceId }) => {
             }
           }
 
-          setLocationHistory(significantMovements.reverse()); // Most recent first
+          const chronologicalMovements = [...significantMovements].reverse();
+
+          const enhancedHistory = chronologicalMovements.map((location, index, arr) => {
+            const previous = index > 0 ? arr[index - 1] : null;
+            const next = index < arr.length - 1 ? arr[index + 1] : null;
+
+            let distanceFromPreviousMeters = null;
+            if (previous) {
+              const distanceKm = calculateDistance(
+                previous.location.lat, previous.location.lng,
+                location.location.lat, location.location.lng
+              );
+              distanceFromPreviousMeters = distanceKm * 1000;
+            }
+
+            let stayDurationMs = null;
+            if (location.timestamp) {
+              const currentTimestamp = new Date(location.timestamp);
+              if (next && next.timestamp) {
+                stayDurationMs = new Date(next.timestamp) - currentTimestamp;
+              } else {
+                stayDurationMs = Date.now() - currentTimestamp.getTime();
+              }
+              if (stayDurationMs < 0) {
+                stayDurationMs = 0;
+              }
+            }
+
+            return {
+              ...location,
+              distanceFromPreviousMeters,
+              stayDurationMs
+            };
+          });
+
+          setLocationHistory(enhancedHistory);
         } else {
           setLocationHistory([]);
         }
@@ -369,6 +404,42 @@ const DeviceDetailMap = ({ deviceId }) => {
   // Format timestamp for display
   const formatTimestamp = (timestamp) => {
     return new Date(timestamp).toLocaleString();
+  };
+
+  const formatDuration = (durationMs) => {
+    if (durationMs === null || durationMs === undefined || Number.isNaN(durationMs)) {
+      return 'N/A';
+    }
+
+    const totalSeconds = Math.floor(durationMs / 1000);
+    if (totalSeconds <= 0) {
+      return '< 1s';
+    }
+
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    const parts = [];
+    if (days) parts.push(`${days}d`);
+    if (hours) parts.push(`${hours}h`);
+    if (minutes) parts.push(`${minutes}m`);
+    if (!days && !hours && !minutes) parts.push(`${seconds}s`);
+
+    return parts.join(' ');
+  };
+
+  const formatDistance = (meters) => {
+    if (meters === null || meters === undefined || Number.isNaN(meters)) {
+      return 'N/A';
+    }
+
+    if (meters >= 1000) {
+      return `${(meters / 1000).toFixed(2)} km`;
+    }
+
+    return `${Math.round(meters)} m`;
   };
 
   // Group events by location (with small tolerance for GPS drift)
@@ -548,6 +619,14 @@ const DeviceDetailMap = ({ deviceId }) => {
                   <div style={{ fontSize: '11px', color: '#6b7280' }}>
                     {formatTimestamp(event.timestamp)}
                   </div>
+                  <div style={{ fontSize: '11px', color: '#6b7280' }}>
+                    Stay Duration: {formatDuration(event.stayDurationMs)}
+                  </div>
+                  {event.distanceFromPreviousMeters !== null && event.distanceFromPreviousMeters !== undefined && (
+                    <div style={{ fontSize: '11px', color: '#6b7280' }}>
+                      Distance from Previous: {formatDistance(event.distanceFromPreviousMeters)}
+                    </div>
+                  )}
                 </div>
               )}
               {event.type === 'recording' && (
@@ -745,6 +824,25 @@ const DeviceDetailMap = ({ deviceId }) => {
                         }}>
                           Location: {lat.toFixed(6)}, {lng.toFixed(6)}
                         </div>
+
+                        {event.stayDurationMs !== null && event.stayDurationMs !== undefined && (
+                          <div style={{ 
+                            fontSize: '11px', 
+                            color: '#6b7280',
+                            marginTop: '6px'
+                          }}>
+                            Stay Duration: {formatDuration(event.stayDurationMs)}
+                          </div>
+                        )}
+
+                        {event.distanceFromPreviousMeters !== null && event.distanceFromPreviousMeters !== undefined && (
+                          <div style={{ 
+                            fontSize: '11px', 
+                            color: '#6b7280'
+                          }}>
+                            Distance from Previous: {formatDistance(event.distanceFromPreviousMeters)}
+                          </div>
+                        )}
                       </div>
                     </Popup>
                   </Marker>
