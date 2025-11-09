@@ -75,7 +75,7 @@ class DeviceLocation(db.Model):
                 'date': nigerian_time.strftime('%Y-%m-%d'),  # WAT date
                 'time': nigerian_time.strftime('%H:%M:%S'),  # WAT time
                 'timezone': 'WAT',
-                'timestamp': nigerian_time.isoformat(),  # For backward compatibility
+                'timestamp': nigerian_time.strftime('%Y-%m-%d %H:%M:%S') + ' (WAT)',  # Formatted with timezone
                 'location': {
                     'lat': self.latitude,
                     'lng': self.longitude
@@ -188,7 +188,7 @@ class RecordingEvent(db.Model):
                 'start_time': start_nigerian.strftime('%H:%M:%S'),
                 'start_latitude': self.start_latitude,
                 'start_longitude': self.start_longitude,
-                'start_timestamp': start_nigerian.isoformat(),  # For backward compatibility
+                'start_timestamp': start_nigerian.strftime('%Y-%m-%d %H:%M:%S') + ' (WAT)',  # Formatted with timezone
                 'start_location': {
                     'lat': self.start_latitude,
                     'lng': self.start_longitude
@@ -205,7 +205,7 @@ class RecordingEvent(db.Model):
                     'stop_time': stop_nigerian.strftime('%H:%M:%S'),
                     'stop_latitude': self.stop_latitude,
                     'stop_longitude': self.stop_longitude,
-                    'stop_timestamp': stop_nigerian.isoformat(),
+                    'stop_timestamp': stop_nigerian.strftime('%Y-%m-%d %H:%M:%S') + ' (WAT)',  # Formatted with timezone
                     'stop_location': {
                         'lat': self.stop_latitude,
                         'lng': self.stop_longitude

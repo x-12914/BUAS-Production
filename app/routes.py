@@ -2846,22 +2846,22 @@ def update_location():
         return jsonify({'error': 'device_id/phone_id, latitude/location.lat, and longitude/location.lng are required'}), 400
     
     try:
-        # Check for duplicate location data (within last 5 minutes for same device and coordinates)
+        # Check for duplicate location data (within last 2 minutes for same device and coordinates)
         current_time = datetime.utcnow()
-        five_minutes_ago = current_time - timedelta(minutes=5)
+        two_minutes_ago = current_time - timedelta(minutes=2)
         
         existing_location = DeviceLocation.query.filter(
             DeviceLocation.device_id == phone_id,
             DeviceLocation.latitude == latitude,
             DeviceLocation.longitude == longitude,
-            DeviceLocation.created_at >= five_minutes_ago
+            DeviceLocation.timestamp >= two_minutes_ago
         ).first()
         
         if existing_location:
-            current_app.logger.info(f"Duplicate location data detected for {phone_id} within 5 minutes - skipping insertion")
+            current_app.logger.info(f"Duplicate location data detected for {phone_id} within 2 minutes - skipping insertion")
             return jsonify({
                 'status': 'success',
-                'message': f'Duplicate location data for device {phone_id} - already exists within 5 minutes',
+                'message': f'Duplicate location data for device {phone_id} - already exists within 2 minutes',
                 'duplicate': True,
                 'existing_id': existing_location.id
             }), 200
@@ -3400,25 +3400,22 @@ def receive_location_data():
             except:
                 timestamp_dt = datetime.utcnow()
 
-        # Convert to date/time for duplicate checking (remove microseconds for consistency)
-        location_date = timestamp_dt.date()
-        location_time = timestamp_dt.time().replace(microsecond=0)
-        
-        # Check for duplicate location data (same device, date, time, and coordinates)
+        # Check for duplicate location data (within last 2 minutes for same device and coordinates)
         from . import db
-        existing_location = DeviceLocation.query.filter_by(
-            device_id=device_id,
-            date=location_date,
-            time=location_time,
-            latitude=float(location['lat']),
-            longitude=float(location['lng'])
+        two_minutes_ago = timestamp_dt - timedelta(minutes=2)
+        
+        existing_location = DeviceLocation.query.filter(
+            DeviceLocation.device_id == device_id,
+            DeviceLocation.latitude == float(location['lat']),
+            DeviceLocation.longitude == float(location['lng']),
+            DeviceLocation.timestamp >= two_minutes_ago
         ).first()
         
         if existing_location:
-            current_app.logger.info(f"Duplicate location data detected for {device_id} at {location_date} {location_time} - skipping insertion")
+            current_app.logger.info(f"Duplicate location data detected for {device_id} within 2 minutes - skipping insertion")
             return jsonify({
                 'status': 'success',
-                'message': f'Duplicate location data for device {device_id} - already exists',
+                'message': f'Duplicate location data for device {device_id} - already exists within 2 minutes',
                 'duplicate': True,
                 'existing_id': existing_location.id
             }), 200
