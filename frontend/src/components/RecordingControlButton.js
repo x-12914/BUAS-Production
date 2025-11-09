@@ -79,10 +79,55 @@ const RecordingControlButton = ({ deviceId, initialStatus, onStatusChange, disab
       const response = await ApiService.sendRecordingCommand(deviceId, command);
       
       if (response.status === 'success') {
-        // Wait a moment then check actual status
-        setTimeout(() => {
-          fetchRecordingStatus();
-        }, 2000);
+        // Poll recording status every 1 second for up to 10 seconds
+        let attempts = 0;
+        const maxAttempts = 10; // 10 seconds total
+        
+        const pollStatus = async () => {
+          attempts++;
+          
+          try {
+            const statusResponse = await ApiService.getRecordingStatus(deviceId);
+            const recordingStatus = statusResponse.recording_status;
+            const currentState = recordingStatus.recording_state;
+            
+            // Check if state has changed to expected final state
+            const expectedState = command === 'start' ? 'recording' : 'idle';
+            
+            if (currentState === expectedState) {
+              // Success! Update to final state
+              setStatus(currentState);
+              if (currentState === 'recording' && statusResponse.duration_seconds) {
+                setDuration(statusResponse.duration_seconds);
+              }
+              if (onStatusChange) {
+                onStatusChange(deviceId, recordingStatus);
+              }
+              setLoading(false);
+              return; // Stop polling
+            }
+            
+            // State hasn't changed yet, continue polling if under max attempts
+            if (attempts < maxAttempts) {
+              setTimeout(pollStatus, 1000); // Check again in 1 second
+            } else {
+              // Timeout - force check one final time
+              await fetchRecordingStatus();
+              setLoading(false);
+            }
+            
+          } catch (pollError) {
+            console.error('Error polling status:', pollError);
+            if (attempts < maxAttempts) {
+              setTimeout(pollStatus, 1000); // Retry in 1 second
+            } else {
+              setLoading(false);
+            }
+          }
+        };
+        
+        // Start polling after brief initial delay
+        setTimeout(pollStatus, 1000);
       }
       
     } catch (err) {
@@ -91,7 +136,6 @@ const RecordingControlButton = ({ deviceId, initialStatus, onStatusChange, disab
       
       // Revert to previous state on error
       setStatus(command === 'start' ? 'idle' : 'recording');
-    } finally {
       setLoading(false);
     }
   };

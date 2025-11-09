@@ -605,6 +605,49 @@ def get_device_command_ios(device_id):
         return jsonify({'hasCommand': False, 'action': None}), 200
 
 
+@routes.route('/api/command/<int:command_id>/complete', methods=['POST'])
+def complete_device_command(command_id):
+    """Mark a command as completed (used by iOS app after executing command)"""
+    try:
+        data = request.get_json() or {}
+        device_id = data.get('device_id')
+        
+        current_app.logger.info(f"📋 Command completion request - ID: {command_id}, Device: {device_id}")
+        
+        # Get the command
+        command_record = DeviceCommand.query.get(command_id)
+        
+        if not command_record:
+            current_app.logger.warning(f"❌ Command {command_id} not found")
+            return jsonify({'success': False, 'error': 'Command not found'}), 404
+        
+        # Verify device_id matches if provided
+        if device_id:
+            from .device_utils import resolve_to_device_id
+            actual_device_id = resolve_to_device_id(device_id)
+            if command_record.device_id != actual_device_id:
+                current_app.logger.warning(f"❌ Device ID mismatch - Command: {command_record.device_id}, Provided: {actual_device_id}")
+                return jsonify({'success': False, 'error': 'Device ID mismatch'}), 403
+        
+        # Mark command as executed/completed
+        command_record.status = 'executed'
+        command_record.executed_at = datetime.utcnow()
+        db.session.commit()
+        
+        current_app.logger.info(f"✅ Command {command_id} marked as executed for device {command_record.device_id}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Command marked as completed',
+            'command_id': command_id
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"❌ Error completing command {command_id}: {e}")
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @routes.route('/api/command', methods=['GET'])
 def get_device_command():
     """Get pending command for device (used by Android app polling with query parameter)"""
@@ -3588,6 +3631,38 @@ def receive_recording_event():
         from . import db
 
         if event_type == 'recording_start':
+            # iOS DUPLICATE FIX: Check if same device sent recording_start in last 3 seconds
+            # This prevents duplicate entries when iOS sends recording_start twice
+            recent_cutoff = datetime.utcnow() - timedelta(seconds=3)
+            recent_start = RecordingEvent.query.filter(
+                RecordingEvent.device_id == actual_device_id,
+                RecordingEvent.start_timestamp >= recent_cutoff
+            ).order_by(RecordingEvent.start_timestamp.desc()).first()
+            
+            if recent_start:
+                # Found recent recording_start within 3 seconds
+                # If new event has audio_file_id but old one doesn't, UPDATE the existing one
+                if audio_file_id and not recent_start.audio_file_id:
+                    current_app.logger.info(f"📝 Updating existing recording event {recent_start.id} with audio_file_id: {audio_file_id}")
+                    recent_start.audio_file_id = audio_file_id
+                    db.session.commit()
+                    
+                    return jsonify({
+                        'status': 'success',
+                        'message': f'Updated existing recording event with audio_file_id',
+                        'event_id': recent_start.id,
+                        'audio_file_id': audio_file_id,
+                        'note': 'Duplicate recording_start prevented - updated existing event'
+                    }), 200
+                else:
+                    # Duplicate with no new information - reject
+                    current_app.logger.warning(f"⚠️  Duplicate recording_start ignored for {actual_device_id} (within 3 seconds)")
+                    return jsonify({
+                        'status': 'success',
+                        'message': 'Duplicate recording_start event ignored',
+                        'note': 'Recording already started within last 3 seconds'
+                    }), 200
+            
             # Create new recording event - model will convert timestamp to date/time
             recording_event = RecordingEvent(
                 device_id=actual_device_id,
