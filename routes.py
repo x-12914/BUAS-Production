@@ -583,11 +583,13 @@ def get_device_command_ios(device_id):
                 current_app.logger.info(f"iOS Command served to {actual_device_id}: {command_record.command}")
                 
                 # Return iOS-compatible format with hasCommand and action
+                # Note: durationSeconds is included for backward compatibility but iOS now uses
+                # continuous recording mode (no auto-stop). Recording continues until 'stop' command.
                 return jsonify({
                     'hasCommand': True,
                     'action': command_record.command,  # 'start' or 'stop'
                     'command_id': command_record.id,
-                    'durationSeconds': 30,  # Default duration
+                    'durationSeconds': None,  # Not used - iOS uses continuous recording (stops on 'stop' command)
                     'timestamp': command_record.created_at.isoformat()
                 }), 200
             
