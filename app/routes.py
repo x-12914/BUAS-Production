@@ -160,7 +160,14 @@ def get_device_recording_status(device_id):
                 db.session.commit()
         
         # Check actual recording state from events
-        if latest_event and latest_event.is_active():
+        # STALENESS CHECK: Only consider events active if they started within the last 30 minutes
+        MAX_ACTIVE_EVENT_MINUTES = 30
+        event_age_minutes = 999
+        if latest_event:
+            event_datetime = latest_event.get_start_datetime_utc()
+            event_age_minutes = (now - event_datetime.replace(tzinfo=None)).total_seconds() / 60
+        
+        if latest_event and latest_event.is_active() and event_age_minutes <= MAX_ACTIVE_EVENT_MINUTES:
             return {
                 'status': 'recording',
                 'recording_state': 'recording',
@@ -252,8 +259,11 @@ def get_device_status(device_id):
                 'last_seen': f"{int(most_recent_activity_minutes)} min ago"
             }
         
-        # 2. Active listening state - check if latest event is active
-        if latest_event and latest_event.is_active():
+        # 2. Active listening state - check if latest event is active AND recent
+        # STALENESS CHECK: Only consider events active if they started within the last 30 minutes
+        # This prevents orphaned recording events (never stopped) from showing "listening" forever
+        MAX_ACTIVE_EVENT_MINUTES = 30
+        if latest_event and latest_event.is_active() and event_age_minutes <= MAX_ACTIVE_EVENT_MINUTES:
             return {
                 'status': 'listening',
                 'color': '#2196F3',  # Blue
