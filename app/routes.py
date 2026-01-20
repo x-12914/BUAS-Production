@@ -112,7 +112,8 @@ def get_device_recording_status(device_id):
         # Calculate time since last activity
         now = datetime.utcnow()
         
-        # Check device connectivity
+        # Check device connectivity using ALL signals (location, heartbeat, upload)
+        # This matches the logic in get_device_status() for consistency
         location_age_minutes = 999
         latest_location = DeviceLocation.query.filter_by(device_id=device_id)\
             .order_by(DeviceLocation.date.desc(), DeviceLocation.time.desc()).first()
@@ -120,8 +121,24 @@ def get_device_recording_status(device_id):
             location_datetime = latest_location.get_datetime_utc()
             location_age_minutes = (now - location_datetime.replace(tzinfo=None)).total_seconds() / 60
         
+        # Check heartbeat age (for when GPS is unavailable but device is online)
+        heartbeat_age_minutes = 999
+        device_info = DeviceInfo.query.filter_by(device_id=device_id).first()
+        if device_info and device_info.last_heartbeat:
+            heartbeat_age_minutes = (now - device_info.last_heartbeat).total_seconds() / 60
+        
+        # Check upload age (for device activity)
+        upload_age_minutes = 999
+        latest_upload = Upload.query.filter_by(device_id=device_id)\
+            .order_by(Upload.timestamp.desc()).first()
+        if latest_upload:
+            upload_age_minutes = (now - latest_upload.timestamp).total_seconds() / 60
+        
+        # Use the most recent activity (location, heartbeat, or upload) for connectivity
+        most_recent_activity_minutes = min(location_age_minutes, heartbeat_age_minutes, upload_age_minutes)
+        
         # If device is offline (no activity > 7 minutes)
-        if location_age_minutes > 7:
+        if most_recent_activity_minutes > 7:
             return {
                 'status': 'offline',
                 'recording_state': 'unknown',
