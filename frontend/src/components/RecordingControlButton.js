@@ -27,6 +27,10 @@ const RecordingControlButton = ({ deviceId, initialStatus, onStatusChange, disab
 
   // Update status when prop changes
   useEffect(() => {
+    // Don't override status while a command is being processed
+    // This prevents Dashboard polling from resetting the button during transitions
+    if (loading) return;
+    
     if (initialStatus && initialStatus !== status) {
       setStatus(initialStatus);
       
@@ -35,7 +39,7 @@ const RecordingControlButton = ({ deviceId, initialStatus, onStatusChange, disab
         fetchRecordingStatus();
       }
     }
-  }, [initialStatus]);
+  }, [initialStatus, loading]);
 
   // Fetch recording status on mount if already recording
   useEffect(() => {
