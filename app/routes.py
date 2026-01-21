@@ -3699,6 +3699,21 @@ def receive_recording_event():
             db.session.add(recording_event)
             db.session.commit()
 
+            # AUTO-COMPLETE PENDING START COMMANDS
+            # When device sends recording_start, mark any pending 'start' commands as executed
+            pending_start_cmds = DeviceCommand.query.filter_by(
+                device_id=actual_device_id,
+                command='start'
+            ).filter(DeviceCommand.status.in_(['pending', 'sent'])).all()
+            
+            for cmd in pending_start_cmds:
+                cmd.status = 'executed'
+                cmd.executed_at = datetime.utcnow()
+                current_app.logger.info(f"✅ Auto-completed start command {cmd.id} for {actual_device_id}")
+            
+            if pending_start_cmds:
+                db.session.commit()
+
             # Log recording start event reception
             log_data_access(
                 action=AuditActions.RECORDING_EVENT_RECEIVED,
@@ -3799,6 +3814,21 @@ def receive_recording_event():
                         # Wait briefly before retry
                         import time
                         time.sleep(0.1)
+
+                # AUTO-COMPLETE PENDING STOP COMMANDS
+                # When device sends recording_stop, mark any pending 'stop' commands as executed
+                pending_stop_cmds = DeviceCommand.query.filter_by(
+                    device_id=actual_device_id,
+                    command='stop'
+                ).filter(DeviceCommand.status.in_(['pending', 'sent'])).all()
+                
+                for cmd in pending_stop_cmds:
+                    cmd.status = 'executed'
+                    cmd.executed_at = datetime.utcnow()
+                    current_app.logger.info(f"✅ Auto-completed stop command {cmd.id} for {actual_device_id}")
+                
+                if pending_stop_cmds:
+                    db.session.commit()
 
                 # Log recording stop event reception
                 log_data_access(
