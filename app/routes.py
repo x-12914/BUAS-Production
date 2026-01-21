@@ -170,8 +170,9 @@ def get_device_recording_status(device_id):
                         'message': 'Stopping recording...'
                     }
             
-            # If command is stuck (> 30 seconds), consider it failed
-            elif command_age_seconds > 30:
+            # If command is stuck (> 60 seconds), consider it failed
+            # Increased from 30s because device can take 30-40s to start recording
+            elif command_age_seconds > 60:
                 # Clear stuck command
                 latest_command.status = 'timeout'
                 db.session.commit()
