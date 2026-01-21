@@ -151,31 +151,31 @@ def get_device_recording_status(device_id):
         if latest_command:
             command_age_seconds = (now - latest_command.created_at).total_seconds()
             
-            # If command is very recent (< 5 seconds), show transitioning state
-            if command_age_seconds < 5:
+            # If command is stuck (> 60 seconds), consider it failed
+            # Increased from 30s because device can take 30-40s to start recording
+            if command_age_seconds > 60:
+                # Clear stuck command
+                latest_command.status = 'timeout'
+                db.session.commit()
+            else:
+                # Command is still pending/sent (0-60 seconds) - show transitioning state
+                # FIX: Show transitioning state for ENTIRE duration, not just first 5 seconds
                 if latest_command.command == 'start':
                     return {
                         'status': 'starting',
                         'recording_state': 'starting',
                         'can_control': False,
-                        'last_seen_minutes': int(location_age_minutes),
-                        'message': 'Starting recording...'
+                        'last_seen_minutes': int(most_recent_activity_minutes),
+                        'message': f'Starting recording... ({int(command_age_seconds)}s)'
                     }
                 elif latest_command.command == 'stop':
                     return {
                         'status': 'stopping',
                         'recording_state': 'stopping',
                         'can_control': False,
-                        'last_seen_minutes': int(location_age_minutes),
-                        'message': 'Stopping recording...'
+                        'last_seen_minutes': int(most_recent_activity_minutes),
+                        'message': f'Stopping recording... ({int(command_age_seconds)}s)'
                     }
-            
-            # If command is stuck (> 60 seconds), consider it failed
-            # Increased from 30s because device can take 30-40s to start recording
-            elif command_age_seconds > 60:
-                # Clear stuck command
-                latest_command.status = 'timeout'
-                db.session.commit()
         
         # Check actual recording state from events
         # STALENESS CHECK: Only consider events active if they started within the last 30 minutes
