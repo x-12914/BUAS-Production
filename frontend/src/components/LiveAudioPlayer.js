@@ -406,12 +406,28 @@ const LiveAudioPlayer = ({ deviceId, onClose, variant = 'full', onStatusChange }
       if (!headerPrefixRef.current) {
         if (pages.length >= 2) {
           // Check if first two pages are headers (OpusHead starts with "OpusHead")
+          // CRITICAL FIX: Don't assume fixed offset 28! Calculate based on segment count.
           const firstPageData = pages[0];
-          const isOpusHead = firstPageData.length > 30 && 
-            firstPageData[28] === 0x4f && firstPageData[29] === 0x70 && 
-            firstPageData[30] === 0x75 && firstPageData[31] === 0x73 &&
-            firstPageData[32] === 0x48 && firstPageData[33] === 0x65 &&
-            firstPageData[34] === 0x61 && firstPageData[35] === 0x64;
+          
+          // Ogg page structure:
+          // Byte 26: Number of segments (N)
+          // Bytes 27 to 27+N: Segment table
+          // Payload starts at 27 + N
+          let payloadOffset = 28; // Default if 1 segment
+          if (firstPageData.length > 27) {
+            const numSegments = firstPageData[26];
+            payloadOffset = 27 + numSegments;
+          }
+          
+          const isOpusHead = firstPageData.length > payloadOffset + 8 && 
+            firstPageData[payloadOffset] === 0x4f &&      // O
+            firstPageData[payloadOffset+1] === 0x70 &&    // p
+            firstPageData[payloadOffset+2] === 0x75 &&    // u
+            firstPageData[payloadOffset+3] === 0x73 &&    // s
+            firstPageData[payloadOffset+4] === 0x48 &&    // H
+            firstPageData[payloadOffset+5] === 0x65 &&    // e
+            firstPageData[payloadOffset+6] === 0x61 &&    // a
+            firstPageData[payloadOffset+7] === 0x64;      // d
           
           if (isOpusHead) {
             // Store headers (first two pages)
@@ -475,8 +491,16 @@ const LiveAudioPlayer = ({ deviceId, onClose, variant = 'full', onStatusChange }
       // We have headers - check if this is a header-only resend
       if (headerPrefixRef.current && pages.length === 2) {
         const firstPageData = pages[0];
-        const isOpusHead = firstPageData.length > 30 && 
-          firstPageData[28] === 0x4f && firstPageData[29] === 0x70;
+        
+        let payloadOffset = 28;
+        if (firstPageData.length > 27) {
+          const numSegments = firstPageData[26];
+          payloadOffset = 27 + numSegments;
+        }
+        
+        const isOpusHead = firstPageData.length > payloadOffset + 8 && 
+          firstPageData[payloadOffset] === 0x4f && 
+          firstPageData[payloadOffset+1] === 0x70;
         
         if (isOpusHead) {
           console.log('Skipping header-only packet (already have headers)');
