@@ -6,6 +6,7 @@ from .auth.permissions import require_permission, require_role, ROLE_PERMISSIONS
 from .utils.audit import log_device_action, log_data_access, log_permission_denied, AuditActions
 import json
 import traceback
+import struct
 # Make tasks import optional
 try:
     from .tasks import save_upload_task
@@ -2711,6 +2712,47 @@ def download_file(filename):
             return jsonify({'error': 'File not found'}), 404
         
         # Serve file with proper headers for audio playback
+        if filename.endswith('.pcm'):
+            try:
+                # Wrap in WAV header for browser playback
+                # Sample Rate: 16000, Channels: 1, Bit Depth: 16-bit (matches app fallback settings)
+                with open(file_path, 'rb') as f:
+                    pcm_data = f.read()
+                
+                sample_rate = 16000
+                channels = 1
+                bits_per_sample = 16
+                data_size = len(pcm_data)
+                
+                header = struct.pack('<4sI4s4sIHHIIHH4sI',
+                    b'RIFF',
+                    data_size + 36,
+                    b'WAVE',
+                    b'fmt ',
+                    16,
+                    1,
+                    channels,
+                    sample_rate,
+                    sample_rate * channels * bits_per_sample // 8,
+                    channels * bits_per_sample // 8,
+                    bits_per_sample,
+                    b'data',
+                    data_size
+                )
+                
+                return Response(
+                    header + pcm_data,
+                    mimetype='audio/wav',
+                    headers={
+                        'Content-Disposition': f'inline; filename={filename.replace(".pcm", ".wav")}',
+                        'Cache-Control': 'public, max-age=3600'
+                    }
+                )
+            except Exception as e:
+                current_app.logger.error(f"Error wrapping PCM to WAV: {e}")
+                # Fallback to normal serving if wrapping fails
+                pass
+
         response = send_from_directory(upload_folder, filename)
         
         # Log audio data access
