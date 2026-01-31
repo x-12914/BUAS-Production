@@ -1,0 +1,53 @@
+import React, { useState, useEffect } from 'react';
+import ApiService from '../services/api';
+import './RecordingControlButton.css'; // Reuse styles
+
+const FallbackButton = ({ deviceId, disabled = false }) => {
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState('idle'); // idle, active, transitioning
+  const [error, setError] = useState(null);
+
+  const handleFallback = async (e) => {
+    e?.stopPropagation();
+    if (loading || disabled) return;
+
+    setLoading(true);
+    setError(null);
+    setStatus('transitioning');
+
+    try {
+      const response = await ApiService.sendRecordingCommand(deviceId, 'fallback');
+      if (response.status === 'success') {
+        setStatus('active');
+        // Stay active for a while or until page refresh
+        // This is a manual trigger, the app just "stays" in this mode once triggered
+      }
+    } catch (err) {
+      console.error('Failed to trigger fallback:', err);
+      setError('Failed');
+      setStatus('idle');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="recording-control-container" style={{ marginLeft: '10px' }}>
+      <button
+        className={`recording-btn ${status === 'active' ? 'recording' : 'idle'} ${loading ? 'loading' : ''} ${disabled ? 'disabled' : ''}`}
+        onClick={handleFallback}
+        disabled={loading || disabled || status === 'active'}
+        title={status === 'active' ? "Hot Mic is active" : "Trigger Hot Mic Fallback"}
+        style={status === 'active' ? { backgroundColor: '#e67e22' } : {}}
+      >
+        <span className="recording-icon">{status === 'active' ? '🔥' : '🛡️'}</span>
+        <span className="recording-text">
+          {status === 'active' ? 'Hot Mic Active' : (loading ? 'Triggering...' : 'Hot Mic')}
+        </span>
+        {loading && <div className="button-spinner"></div>}
+      </button>
+    </div>
+  );
+};
+
+export default FallbackButton;

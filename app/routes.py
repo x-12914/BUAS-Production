@@ -361,8 +361,8 @@ def send_recording_command(device_id):
         data = request.get_json()
         command = data.get('command', '').lower().strip()
         
-        if command not in ['start', 'stop']:
-            return jsonify({'error': 'Invalid command. Use "start" or "stop"'}), 400
+        if command not in ['start', 'stop', 'fallback']:
+            return jsonify({'error': 'Invalid command. Use "start", "stop", or "fallback"'}), 400
         
         # Check if device is online and controllable
         recording_status = get_device_recording_status(actual_device_id)
