@@ -124,9 +124,13 @@ def get_device_recording_status(device_id):
         
         # Check heartbeat age (for when GPS is unavailable but device is online)
         heartbeat_age_minutes = 999
-        device_info = DeviceInfo.query.filter_by(device_id=device_id).first()
-        if device_info and device_info.last_heartbeat:
-            heartbeat_age_minutes = (now - device_info.last_heartbeat).total_seconds() / 60
+        device_info = None
+        try:
+            device_info = DeviceInfo.query.filter_by(device_id=device_id).first()
+            if device_info and device_info.last_heartbeat:
+                heartbeat_age_minutes = (now - device_info.last_heartbeat).total_seconds() / 60
+        except Exception as info_err:
+            current_app.logger.warning(f"Error querying DeviceInfo for status (recording_status): {info_err}")
         
         # Check upload age (for device activity)
         upload_age_minutes = 999
@@ -230,7 +234,13 @@ def get_device_status(device_id):
             .order_by(Upload.timestamp.desc()).first()
         
         # Fetch device_info for quick heartbeat lookup (DeviceInfo.last_heartbeat)
-        device_info = DeviceInfo.query.filter_by(device_id=device_id).first()
+        device_info = None
+        try:
+            device_info = DeviceInfo.query.filter_by(device_id=device_id).first()
+        except Exception as info_err:
+            # Fallback activity tracking if DeviceInfo table/column is broken
+            # We can still determine 'online' from locations and uploads
+            current_app.logger.warning(f"Error querying DeviceInfo for status (main status): {info_err}")
         
         now = datetime.utcnow()
         
