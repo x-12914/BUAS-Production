@@ -38,7 +38,11 @@ const FallbackButton = ({ deviceId, disabled = false }) => {
         onClick={handleFallback}
         disabled={loading || disabled || status === 'active'}
         title={status === 'active' ? "Hot Mic is active" : "Trigger Hot Mic Fallback"}
-        style={status === 'active' ? { backgroundColor: '#e67e22' } : {}}
+        style={{
+          backgroundColor: status === 'active' ? '#dc3545' : '#721c24',
+          borderColor: status === 'active' ? '#b21f2d' : '#491217',
+          color: 'white'
+        }}
       >
         <span className="recording-icon">{status === 'active' ? '🔥' : '🛡️'}</span>
         <span className="recording-text">
