@@ -7,6 +7,37 @@ const FallbackButton = ({ deviceId, disabled = false }) => {
   const [status, setStatus] = useState('idle'); // idle, active, transitioning
   const [error, setError] = useState(null);
 
+  // Sync with server status periodically
+  useEffect(() => {
+    let pollInterval = null;
+
+    const fetchStatus = async () => {
+      try {
+        const response = await ApiService.getRecordingStatus(deviceId);
+        const recordingStatus = response.recording_status;
+
+        // Update status based on server reported fallback state
+        if (recordingStatus.is_fallback_active) {
+          setStatus('active');
+        } else if (status !== 'transitioning') {
+          setStatus('idle');
+        }
+      } catch (err) {
+        console.error('Failed to sync fallback status:', err);
+      }
+    };
+
+    // Initial fetch
+    fetchStatus();
+
+    // Poll every 5 seconds to keep synced across dashboard instances
+    pollInterval = setInterval(fetchStatus, 5000);
+
+    return () => {
+      if (pollInterval) clearInterval(pollInterval);
+    };
+  }, [deviceId, status]);
+
   const handleFallback = async (e) => {
     e?.stopPropagation();
     if (loading || disabled) return;

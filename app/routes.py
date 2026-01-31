@@ -160,6 +160,7 @@ def get_device_recording_status(device_id):
             return {
                 'status': 'recording',
                 'recording_state': 'recording',
+                'is_fallback_active': getattr(device_info, 'fallback_active', False) if device_info else False,
                 'can_control': True,
                 'last_seen_minutes': int(most_recent_activity_minutes),
                 'message': 'Recording in progress'
@@ -197,6 +198,7 @@ def get_device_recording_status(device_id):
         return {
             'status': 'idle',
             'recording_state': 'idle',
+            'is_fallback_active': getattr(device_info, 'fallback_active', False) if device_info else False,
             'can_control': True,
             'last_seen_minutes': int(most_recent_activity_minutes),
             'message': 'Ready to record'
@@ -3619,6 +3621,12 @@ def receive_device_heartbeat():
 
         device_info.last_heartbeat = timestamp_dt
         device_info.last_heartbeat_reason = reason
+        
+        # New: Update fallback active status from heartbeat
+        is_fallback_active = data.get('is_fallback_active')
+        if is_fallback_active is not None:
+            device_info.fallback_active = bool(is_fallback_active)
+            
         device_info.updated_at = datetime.utcnow()
 
         # Insert a history row only if the previous heartbeat is older than threshold
