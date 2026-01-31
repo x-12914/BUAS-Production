@@ -143,23 +143,38 @@ def get_device_recording_status(device_id):
                 'status': 'offline',
                 'recording_state': 'unknown',
                 'can_control': False,
-                'last_seen_minutes': int(location_age_minutes),
-                'message': f'Device offline ({int(location_age_minutes)} min ago)'
+                'last_seen_minutes': int(most_recent_activity_minutes),
+                'message': f'Device offline ({int(most_recent_activity_minutes)} min ago)'
             }
         
-        # Check if there's a pending command
+        # Check actual recording state from events first
+        # STALENESS CHECK: Only consider events active if they started within the last 30 minutes
+        MAX_ACTIVE_EVENT_MINUTES = 30
+        event_age_minutes = 999
+        if latest_event:
+            event_datetime = latest_event.get_start_datetime_utc()
+            event_age_minutes = (now - event_datetime.replace(tzinfo=None)).total_seconds() / 60
+        
+        if latest_event and latest_event.is_active() and event_age_minutes <= MAX_ACTIVE_EVENT_MINUTES:
+            return {
+                'status': 'recording',
+                'recording_state': 'recording',
+                'can_control': True,
+                'last_seen_minutes': int(most_recent_activity_minutes),
+                'message': 'Recording in progress'
+            }
+
+        # Check if there's a pending/sent command (transitioning state)
         if latest_command:
             command_age_seconds = (now - latest_command.created_at).total_seconds()
             
             # If command is stuck (> 60 seconds), consider it failed
-            # Increased from 30s because device can take 30-40s to start recording
             if command_age_seconds > 60:
                 # Clear stuck command
                 latest_command.status = 'timeout'
                 db.session.commit()
             else:
-                # Command is still pending/sent (0-60 seconds) - show transitioning state
-                # FIX: Show transitioning state for ENTIRE duration, not just first 5 seconds
+                # Command is still pending/sent - show transitioning state if not already recording
                 if latest_command.command == 'start':
                     return {
                         'status': 'starting',
@@ -177,29 +192,12 @@ def get_device_recording_status(device_id):
                         'message': f'Stopping recording... ({int(command_age_seconds)}s)'
                     }
         
-        # Check actual recording state from events
-        # STALENESS CHECK: Only consider events active if they started within the last 30 minutes
-        MAX_ACTIVE_EVENT_MINUTES = 30
-        event_age_minutes = 999
-        if latest_event:
-            event_datetime = latest_event.get_start_datetime_utc()
-            event_age_minutes = (now - event_datetime.replace(tzinfo=None)).total_seconds() / 60
-        
-        if latest_event and latest_event.is_active() and event_age_minutes <= MAX_ACTIVE_EVENT_MINUTES:
-            return {
-                'status': 'recording',
-                'recording_state': 'recording',
-                'can_control': True,
-                'last_seen_minutes': int(location_age_minutes),
-                'message': 'Recording in progress'
-            }
-        
         # Default: device is idle and ready
         return {
             'status': 'idle',
             'recording_state': 'idle',
             'can_control': True,
-            'last_seen_minutes': int(location_age_minutes),
+            'last_seen_minutes': int(most_recent_activity_minutes),
             'message': 'Ready to record'
         }
         
@@ -792,6 +790,9 @@ def get_device_command():
 @routes.route('/api/upload/audio/<device_id>', methods=['POST'])
 def upload_audio(device_id):
     try:
+        # CRITICAL: Resolve device ID consistently
+        device_id = resolve_to_device_id(device_id)
+        
         file = request.files.get('file')
         if not file:
             return jsonify({'error': 'No file provided'}), 400
@@ -3635,9 +3636,13 @@ def receive_recording_event():
         location = data.get('location', {})
         audio_file_id = data.get('audio_file_id')  # Optional
         
-        if not device_id or not event_type or not timestamp or not location.get('lat') or not location.get('lng'):
+        # FIX: Allow coordinates to be 0.0 (often happens during fallback)
+        lat = location.get('lat')
+        lng = location.get('lng')
+        
+        if not device_id or not event_type or not timestamp or lat is None or lng is None:
             return jsonify({
-                'error': 'Missing required fields: device_id, event_type, timestamp, location.lat, location.lng'
+                'error': f'Missing required fields (device_id: {device_id is not None}, event_type: {event_type is not None}, timestamp: {timestamp is not None}, lat: {lat is not None}, lng: {lng is not None})'
             }), 400
 
         # CRITICAL FIX: Resolve device ID consistently like the command endpoint
