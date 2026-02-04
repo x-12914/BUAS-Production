@@ -324,6 +324,7 @@ class DeviceInfo(db.Model):
     # Last heartbeat timestamp and reason (kept on DeviceInfo for fast lookup)
     last_heartbeat = db.Column(db.DateTime, nullable=True, index=True)
     last_heartbeat_reason = db.Column(db.String(100), nullable=True)
+    fallback_active = db.Column(db.Boolean, default=False)  # Track if Hot Mic is on standby
 
     def __init__(self, device_id=None, android_id=None, display_name=None, phone_numbers=None, contacts=None, **kwargs):
         self.device_id = device_id
@@ -392,7 +393,8 @@ class DeviceInfo(db.Model):
             'battery_health': self.battery_health,
             'battery_temperature': self.battery_temperature,
             'battery_voltage': self.battery_voltage,
-            'battery_updated_at': self.battery_updated_at.isoformat() if self.battery_updated_at else None
+            'battery_updated_at': self.battery_updated_at.isoformat() if self.battery_updated_at else None,
+            'fallback_active': self.fallback_active
         }
 
     def to_dict(self):

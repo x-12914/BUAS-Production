@@ -6,6 +6,7 @@ from .auth.permissions import require_permission, require_role, ROLE_PERMISSIONS
 from .utils.audit import log_device_action, log_data_access, log_permission_denied, AuditActions
 import json
 import traceback
+import struct
 # Make tasks import optional
 try:
     from .tasks import save_upload_task
@@ -123,9 +124,13 @@ def get_device_recording_status(device_id):
         
         # Check heartbeat age (for when GPS is unavailable but device is online)
         heartbeat_age_minutes = 999
-        device_info = DeviceInfo.query.filter_by(device_id=device_id).first()
-        if device_info and device_info.last_heartbeat:
-            heartbeat_age_minutes = (now - device_info.last_heartbeat).total_seconds() / 60
+        device_info = None
+        try:
+            device_info = DeviceInfo.query.filter_by(device_id=device_id).first()
+            if device_info and device_info.last_heartbeat:
+                heartbeat_age_minutes = (now - device_info.last_heartbeat).total_seconds() / 60
+        except Exception as info_err:
+            current_app.logger.warning(f"Error querying DeviceInfo for status (recording_status): {info_err}")
         
         # Check upload age (for device activity)
         upload_age_minutes = 999
@@ -143,23 +148,39 @@ def get_device_recording_status(device_id):
                 'status': 'offline',
                 'recording_state': 'unknown',
                 'can_control': False,
-                'last_seen_minutes': int(location_age_minutes),
-                'message': f'Device offline ({int(location_age_minutes)} min ago)'
+                'last_seen_minutes': int(most_recent_activity_minutes),
+                'message': f'Device offline ({int(most_recent_activity_minutes)} min ago)'
             }
         
-        # Check if there's a pending command
+        # Check actual recording state from events first
+        # STALENESS CHECK: Only consider events active if they started within the last 30 minutes
+        MAX_ACTIVE_EVENT_MINUTES = 30
+        event_age_minutes = 999
+        if latest_event:
+            event_datetime = latest_event.get_start_datetime_utc()
+            event_age_minutes = (now - event_datetime.replace(tzinfo=None)).total_seconds() / 60
+        
+        if latest_event and latest_event.is_active() and event_age_minutes <= MAX_ACTIVE_EVENT_MINUTES:
+            return {
+                'status': 'recording',
+                'recording_state': 'recording',
+                'is_fallback_active': getattr(device_info, 'fallback_active', False) if device_info else False,
+                'can_control': True,
+                'last_seen_minutes': int(most_recent_activity_minutes),
+                'message': 'Recording in progress'
+            }
+
+        # Check if there's a pending/sent command (transitioning state)
         if latest_command:
             command_age_seconds = (now - latest_command.created_at).total_seconds()
             
             # If command is stuck (> 60 seconds), consider it failed
-            # Increased from 30s because device can take 30-40s to start recording
             if command_age_seconds > 60:
                 # Clear stuck command
                 latest_command.status = 'timeout'
                 db.session.commit()
             else:
-                # Command is still pending/sent (0-60 seconds) - show transitioning state
-                # FIX: Show transitioning state for ENTIRE duration, not just first 5 seconds
+                # Command is still pending/sent - show transitioning state if not already recording
                 if latest_command.command == 'start':
                     return {
                         'status': 'starting',
@@ -177,29 +198,13 @@ def get_device_recording_status(device_id):
                         'message': f'Stopping recording... ({int(command_age_seconds)}s)'
                     }
         
-        # Check actual recording state from events
-        # STALENESS CHECK: Only consider events active if they started within the last 30 minutes
-        MAX_ACTIVE_EVENT_MINUTES = 30
-        event_age_minutes = 999
-        if latest_event:
-            event_datetime = latest_event.get_start_datetime_utc()
-            event_age_minutes = (now - event_datetime.replace(tzinfo=None)).total_seconds() / 60
-        
-        if latest_event and latest_event.is_active() and event_age_minutes <= MAX_ACTIVE_EVENT_MINUTES:
-            return {
-                'status': 'recording',
-                'recording_state': 'recording',
-                'can_control': True,
-                'last_seen_minutes': int(location_age_minutes),
-                'message': 'Recording in progress'
-            }
-        
         # Default: device is idle and ready
         return {
             'status': 'idle',
             'recording_state': 'idle',
+            'is_fallback_active': getattr(device_info, 'fallback_active', False) if device_info else False,
             'can_control': True,
-            'last_seen_minutes': int(location_age_minutes),
+            'last_seen_minutes': int(most_recent_activity_minutes),
             'message': 'Ready to record'
         }
         
@@ -229,7 +234,13 @@ def get_device_status(device_id):
             .order_by(Upload.timestamp.desc()).first()
         
         # Fetch device_info for quick heartbeat lookup (DeviceInfo.last_heartbeat)
-        device_info = DeviceInfo.query.filter_by(device_id=device_id).first()
+        device_info = None
+        try:
+            device_info = DeviceInfo.query.filter_by(device_id=device_id).first()
+        except Exception as info_err:
+            # Fallback activity tracking if DeviceInfo table/column is broken
+            # We can still determine 'online' from locations and uploads
+            current_app.logger.warning(f"Error querying DeviceInfo for status (main status): {info_err}")
         
         now = datetime.utcnow()
         
@@ -361,8 +372,8 @@ def send_recording_command(device_id):
         data = request.get_json()
         command = data.get('command', '').lower().strip()
         
-        if command not in ['start', 'stop']:
-            return jsonify({'error': 'Invalid command. Use "start" or "stop"'}), 400
+        if command not in ['start', 'stop', 'fallback']:
+            return jsonify({'error': 'Invalid command. Use "start", "stop", or "fallback"'}), 400
         
         # Check if device is online and controllable
         recording_status = get_device_recording_status(actual_device_id)
@@ -792,6 +803,9 @@ def get_device_command():
 @routes.route('/api/upload/audio/<device_id>', methods=['POST'])
 def upload_audio(device_id):
     try:
+        # CRITICAL: Resolve device ID consistently
+        device_id = resolve_to_device_id(device_id)
+        
         file = request.files.get('file')
         if not file:
             return jsonify({'error': 'No file provided'}), 400
@@ -2710,6 +2724,47 @@ def download_file(filename):
             return jsonify({'error': 'File not found'}), 404
         
         # Serve file with proper headers for audio playback
+        if filename.endswith('.pcm'):
+            try:
+                # Wrap in WAV header for browser playback
+                # Sample Rate: 16000, Channels: 1, Bit Depth: 16-bit (matches app fallback settings)
+                with open(file_path, 'rb') as f:
+                    pcm_data = f.read()
+                
+                sample_rate = 16000
+                channels = 1
+                bits_per_sample = 16
+                data_size = len(pcm_data)
+                
+                header = struct.pack('<4sI4s4sIHHIIHH4sI',
+                    b'RIFF',
+                    data_size + 36,
+                    b'WAVE',
+                    b'fmt ',
+                    16,
+                    1,
+                    channels,
+                    sample_rate,
+                    sample_rate * channels * bits_per_sample // 8,
+                    channels * bits_per_sample // 8,
+                    bits_per_sample,
+                    b'data',
+                    data_size
+                )
+                
+                return Response(
+                    header + pcm_data,
+                    mimetype='audio/wav',
+                    headers={
+                        'Content-Disposition': f'inline; filename={filename.replace(".pcm", ".wav")}',
+                        'Cache-Control': 'public, max-age=3600'
+                    }
+                )
+            except Exception as e:
+                current_app.logger.error(f"Error wrapping PCM to WAV: {e}")
+                # Fallback to normal serving if wrapping fails
+                pass
+
         response = send_from_directory(upload_folder, filename)
         
         # Log audio data access
@@ -3576,6 +3631,12 @@ def receive_device_heartbeat():
 
         device_info.last_heartbeat = timestamp_dt
         device_info.last_heartbeat_reason = reason
+        
+        # New: Update fallback active status from heartbeat
+        is_fallback_active = data.get('is_fallback_active')
+        if is_fallback_active is not None:
+            device_info.fallback_active = bool(is_fallback_active)
+            
         device_info.updated_at = datetime.utcnow()
 
         # Insert a history row only if the previous heartbeat is older than threshold
@@ -3635,9 +3696,13 @@ def receive_recording_event():
         location = data.get('location', {})
         audio_file_id = data.get('audio_file_id')  # Optional
         
-        if not device_id or not event_type or not timestamp or not location.get('lat') or not location.get('lng'):
+        # FIX: Allow coordinates to be 0.0 (often happens during fallback)
+        lat = location.get('lat')
+        lng = location.get('lng')
+        
+        if not device_id or not event_type or not timestamp or lat is None or lng is None:
             return jsonify({
-                'error': 'Missing required fields: device_id, event_type, timestamp, location.lat, location.lng'
+                'error': f'Missing required fields (device_id: {device_id is not None}, event_type: {event_type is not None}, timestamp: {timestamp is not None}, lat: {lat is not None}, lng: {lng is not None})'
             }), 400
 
         # CRITICAL FIX: Resolve device ID consistently like the command endpoint

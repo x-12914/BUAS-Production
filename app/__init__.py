@@ -144,6 +144,22 @@ def create_app():
     # Create tables if they don't exist
     with app.app_context():
         db.create_all()
+        
+        # Safe migration for Hot Mic status field (SQLite doesn't use standard migrations here)
+        try:
+            from sqlalchemy import text
+            with db.engine.connect() as conn:
+                # Check columns in device_info
+                result = conn.execute(text("PRAGMA table_info(device_info)"))
+                columns = [row[1] for row in result.fetchall()]
+                
+                if 'fallback_active' not in columns:
+                    app.logger.info("Migrating database: Adding fallback_active column to device_info table")
+                    conn.execute(text("ALTER TABLE device_info ADD COLUMN fallback_active BOOLEAN DEFAULT 0"))
+                    conn.commit()
+                    app.logger.info("Successfully added fallback_active column")
+        except Exception as e:
+            app.logger.error(f"Migration error: {e}")
 
     # Register blueprints
     from .routes import routes

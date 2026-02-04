@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DeviceDetailMap from './DeviceDetailMap';
 import RecordingControlButton from './RecordingControlButton';
+import FallbackButton from './FallbackButton';
 import PhoneNumberModal from './PhoneNumberModal';
 import LiveStreamControls from './LiveStreamControls';
 import ApiService from '../services/api';
@@ -28,7 +29,7 @@ const DeviceDetail = ({ user }) => {
   const [newDisplayName, setNewDisplayName] = useState('');
   const [renameError, setRenameError] = useState('');
   const [renameLoading, setRenameLoading] = useState(false);
-  
+
   // Export state
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
@@ -69,9 +70,9 @@ const DeviceDetail = ({ user }) => {
         } else {
           console.error('Device details failed:', deviceResponse.reason);
           // Check if it's an access denied error
-          if (deviceResponse.reason?.message?.includes('Permission denied') || 
-              deviceResponse.reason?.message?.includes('Access denied') ||
-              deviceResponse.reason?.status === 403) {
+          if (deviceResponse.reason?.message?.includes('Permission denied') ||
+            deviceResponse.reason?.message?.includes('Access denied') ||
+            deviceResponse.reason?.status === 403) {
             setError('Access denied: You don\'t have permission to view this device. Contact your administrator if you need access.');
             return;
           }
@@ -265,31 +266,31 @@ const DeviceDetail = ({ user }) => {
 
     try {
       const response = await ApiService.exportDeviceData(deviceId, exportStartDate, exportEndDate);
-      
+
       // Create blob and download
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      
+
       // Generate filename
       const today = new Date().toISOString().split('T')[0];
       const deviceName = deviceInfo?.display_name || deviceId;
       a.download = `${deviceName}_data_export_${today}.xlsx`;
-      
+
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      
+
       // Close modal and reset form
       setShowExportModal(false);
       setExportStartDate('');
       setExportEndDate('');
-      
+
       // Show success message (you might want to add a toast notification here)
       console.log('Device data exported successfully');
-      
+
     } catch (error) {
       setExportError(error.message || 'Failed to export device data');
     } finally {
@@ -299,12 +300,12 @@ const DeviceDetail = ({ user }) => {
 
   const getRecordingState = () => {
     if (!recordingStatus) return 'idle';
-    
+
     // Handle offline devices
     if (!recordingStatus.can_control && recordingStatus.last_seen_minutes > 7) {
       return 'offline';
     }
-    
+
     return recordingStatus.recording_state;
   };
 
@@ -331,19 +332,19 @@ const DeviceDetail = ({ user }) => {
 
   const renderPhoneNumbers = () => {
     const currentPhoneNumbers = phoneNumbers.length > 0 ? phoneNumbers : (deviceExtendedInfo.phone_numbers || []);
-    
+
     if (currentPhoneNumbers.length === 0) {
       return (
         <div className="phone-input-container">
-          <input 
-            type="text" 
-            placeholder="Enter phone number(s)" 
+          <input
+            type="text"
+            placeholder="Enter phone number(s)"
             className="phone-input-field"
             readOnly
             onClick={() => setShowPhoneModal(true)}
           />
-          <button 
-            className="phone-edit-btn" 
+          <button
+            className="phone-edit-btn"
             onClick={() => setShowPhoneModal(true)}
             title="Add phone numbers"
           >
@@ -358,8 +359,8 @@ const DeviceDetail = ({ user }) => {
         <span className="phone-display">
           {currentPhoneNumbers.join(', ')}
         </span>
-        <button 
-          className="phone-edit-btn" 
+        <button
+          className="phone-edit-btn"
           onClick={() => setShowPhoneModal(true)}
           title="Edit phone numbers"
         >
@@ -422,10 +423,10 @@ const DeviceDetail = ({ user }) => {
                iPhone
             </div>
           )}
-          
+
           {/* Battery Indicator */}
           {deviceExtendedInfo?.battery?.level !== null && deviceExtendedInfo?.battery?.level !== undefined && (
-            <div 
+            <div
               className={`battery-indicator ${deviceExtendedInfo.battery.is_charging ? 'battery-charging' : ''} ${deviceExtendedInfo.battery.level < 15 ? 'battery-critical' : ''}`}
               title={`Battery: ${deviceExtendedInfo.battery.level}%
 ${deviceExtendedInfo.battery.is_charging ? `Charging via ${deviceExtendedInfo.battery.charging_method || 'Unknown'}` : 'Not charging'}
@@ -435,7 +436,7 @@ ${deviceExtendedInfo.battery.voltage ? `Voltage: ${deviceExtendedInfo.battery.vo
 ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedInfo.battery.last_updated).toLocaleString()}` : ''}`}
             >
               <span className={`battery-level ${getBatteryClass(deviceExtendedInfo.battery.level)}`}>
-                {getBatteryIcon(deviceExtendedInfo.battery.level, deviceExtendedInfo.battery.is_charging)} 
+                {getBatteryIcon(deviceExtendedInfo.battery.level, deviceExtendedInfo.battery.is_charging)}
                 {deviceExtendedInfo.battery.level}%
               </span>
               {deviceExtendedInfo.battery.is_charging && (
@@ -445,10 +446,10 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
               )}
             </div>
           )}
-          
+
           <div className="device-title-actions">
             {canRenameDevice() && (
-              <button 
+              <button
                 className="btn btn-sm btn-secondary rename-btn"
                 onClick={() => {
                   setNewDisplayName(deviceInfo?.display_name || '');
@@ -460,9 +461,9 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
                 ✏️ Rename
               </button>
             )}
-            
+
             {canExportDevice() && (
-              <button 
+              <button
                 className="btn btn-sm btn-primary export-btn"
                 onClick={() => {
                   setShowExportModal(true);
@@ -483,7 +484,7 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
           <div className="modal-content rename-modal">
             <div className="modal-header">
               <h3>Rename Device</h3>
-              <button 
+              <button
                 className="close-btn"
                 onClick={() => {
                   setShowRenameModal(false);
@@ -493,7 +494,7 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
                 ×
               </button>
             </div>
-            
+
             <div className="modal-body">
               <div className="form-group">
                 <label htmlFor="displayName">Display Name:</label>
@@ -510,14 +511,14 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
                   This name will be displayed instead of the device ID. Original device ID: {deviceId}
                 </small>
               </div>
-              
+
               {renameError && (
                 <div className="error-message">
                   {renameError}
                 </div>
               )}
             </div>
-            
+
             <div className="modal-footer">
               <button
                 className="btn btn-secondary"
@@ -554,7 +555,7 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
           <div className="modal-content export-modal">
             <div className="modal-header">
               <h3>📤 Export Device Data</h3>
-              <button 
+              <button
                 className="close-btn"
                 onClick={() => {
                   setShowExportModal(false);
@@ -564,14 +565,14 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
                 ×
               </button>
             </div>
-            
+
             <div className="modal-body">
               <div className="export-info">
                 <p><strong>Device:</strong> {deviceInfo?.display_name || deviceId}</p>
                 <p><strong>Export Format:</strong> Excel (.xlsx)</p>
                 <p><strong>Data Included:</strong> {isIOS ? 'Locations, Recordings (iOS: other tabs included for structure only)' : 'Locations, Recordings, Contacts, SMS, Call Logs'}</p>
               </div>
-              
+
               <div className="form-group">
                 <label htmlFor="startDate">Start Date (Optional):</label>
                 <input
@@ -583,7 +584,7 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
                   max={exportEndDate || new Date().toISOString().split('T')[0]}
                 />
               </div>
-              
+
               <div className="form-group">
                 <label htmlFor="endDate">End Date (Optional):</label>
                 <input
@@ -596,20 +597,20 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
                   max={new Date().toISOString().split('T')[0]}
                 />
               </div>
-              
+
               <div className="help-text">
                 <small>
                   Leave dates empty to export all historical data. Export includes all device data across multiple Excel tabs.
                 </small>
               </div>
-              
+
               {exportError && (
                 <div className="error-message">
                   {exportError}
                 </div>
               )}
             </div>
-            
+
             <div className="modal-footer">
               <button
                 className="btn btn-secondary"
@@ -637,23 +638,23 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
       <div className="device-summary">
         <div className="summary-card">
           <h3>📊 Device Summary</h3>
-          
+
           {/* Show info message if no device data */}
-          {(!deviceExtendedInfo.android_id && 
-            (!deviceExtendedInfo.phone_numbers || deviceExtendedInfo.phone_numbers.length === 0) && 
+          {(!deviceExtendedInfo.android_id &&
+            (!deviceExtendedInfo.phone_numbers || deviceExtendedInfo.phone_numbers.length === 0) &&
             (!deviceExtendedInfo.contacts || deviceExtendedInfo.contacts.length === 0)) && (
-            <div className="device-info-notice">
-              <p>ℹ️ <strong>Device Information Not Available</strong></p>
-              <p>This device hasn't synced its information yet. Device details (Android ID, phone numbers, contacts) will appear here once the device uploads its data.</p>
-            </div>
-          )}
-          
+              <div className="device-info-notice">
+                <p>ℹ️ <strong>Device Information Not Available</strong></p>
+                <p>This device hasn't synced its information yet. Device details (Android ID, phone numbers, contacts) will appear here once the device uploads its data.</p>
+              </div>
+            )}
+
           {/* Row 1: Data Display */}
           <div className="summary-row summary-data-row">
             <div className="summary-item">
               <span className="item-label">Current Location:</span>
               <span className="item-value">
-                {deviceInfo?.location?.lat && deviceInfo?.location?.lng 
+                {deviceInfo?.location?.lat && deviceInfo?.location?.lng
                   ? `${deviceInfo.location.lat.toFixed(4)}, ${deviceInfo.location.lng.toFixed(4)}`
                   : 'Location not available'
                 }
@@ -684,6 +685,10 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
                   onStatusChange={handleRecordingStatusChange}
                   disabled={loading}
                 />
+                <FallbackButton
+                  deviceId={deviceId}
+                  disabled={loading}
+                />
               </div>
             </div>
             {!isIOS && (
@@ -696,8 +701,8 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
             )}
             {!isIOS && (
               <div className="summary-item">
-                <button 
-                  className="summary-btn btn-contacts" 
+                <button
+                  className="summary-btn btn-contacts"
                   onClick={handleViewContacts}
                   title={deviceExtendedInfo.contacts?.length === 0 ? "No contacts available - Device needs to sync" : ""}
                 >
@@ -707,16 +712,16 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
               </div>
             )}
             <div className="summary-item">
-              <button 
-                className="summary-btn btn-location-table" 
+              <button
+                className="summary-btn btn-location-table"
                 onClick={handleViewLocationTable}
               >
                 📍 Location Table
               </button>
             </div>
             <div className="summary-item">
-              <button 
-                className="summary-btn btn-audio-table" 
+              <button
+                className="summary-btn btn-audio-table"
                 onClick={handleViewAudioTable}
               >
                 🎵 Audio Recordings
@@ -724,8 +729,8 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
             </div>
             {!isIOS && (
               <div className="summary-item">
-                <button 
-                  className="summary-btn btn-sms-table" 
+                <button
+                  className="summary-btn btn-sms-table"
                   onClick={handleViewSmsTable}
                 >
                   💬 SMS Messages
@@ -734,8 +739,8 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
             )}
             {!isIOS && (
               <div className="summary-item">
-                <button 
-                  className="summary-btn btn-call-logs-table" 
+                <button
+                  className="summary-btn btn-call-logs-table"
                   onClick={handleViewCallLogsTable}
                 >
                   📞 Call Logs
@@ -744,15 +749,15 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
             )}
             {/* External Storage button - hidden but implementation preserved */}
             <div className="summary-item" style={{ display: 'none' }}>
-              <button 
-                className="summary-btn btn-external-storage" 
+              <button
+                className="summary-btn btn-external-storage"
                 onClick={handleViewExternalStorage}
               >
                 📁 External Storage
               </button>
             </div>
           </div>
-          
+
           {/* Live Audio Streaming Controls */}
           {!isIOS && (
             <div className="device-controls-section">

@@ -1,13 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import RecordingControlButton from './RecordingControlButton';
+import FallbackButton from './FallbackButton';
 import DeviceCardListenControl from './DeviceCardListenControl';
 import './UserList.css';
 
-const UserList = ({ 
-  users = [], 
-  loading = false, 
-  selectedUser, 
+const UserList = ({
+  users = [],
+  loading = false,
+  selectedUser,
   onUserSelect,
   roleRestrictions = {} // New prop for role-based restrictions
 }) => {
@@ -21,7 +22,7 @@ const UserList = ({
 
     // Apply search filter
     if (searchTerm) {
-      filtered = filtered.filter(user => 
+      filtered = filtered.filter(user =>
         user.user_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (user.android_id && user.android_id.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (user.device_name && user.device_name.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -62,9 +63,9 @@ const UserList = ({
       // New format: separate date and time (already in Nigerian timezone from backend)
       const dateTimeString = `${date}T${time}`;
       const lastSeen = new Date(dateTimeString);
-      
+
       if (isNaN(lastSeen.getTime())) return 'Invalid date';
-      
+
       const now = new Date();
       const diffMs = now - lastSeen;
       const diffMins = Math.floor(diffMs / 60000);
@@ -76,15 +77,15 @@ const UserList = ({
       if (diffHours < 24) return `${diffHours}h ago`;
       return `${diffDays}d ago`;
     }
-    
+
     // Fallback to old timestamp format
     if (!timestamp) return 'Never';
-    
+
     const now = new Date();
     const lastSeen = new Date(timestamp);
-    
+
     if (isNaN(lastSeen.getTime())) return 'Invalid date';
-    
+
     const diffMs = now - lastSeen;
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMins / 60);
@@ -100,9 +101,9 @@ const UserList = ({
   const getLastSeenWithColor = (user) => {
     // Check if we have new format data
     const hasNewFormat = user.latest_location?.date && user.latest_location?.time;
-    
+
     let lastSeenText;
-    
+
     if (hasNewFormat) {
       // Use new date/time format
       lastSeenText = formatLastSeen(null, user.latest_location.date, user.latest_location.time, user.latest_location.timezone);
@@ -110,13 +111,13 @@ const UserList = ({
       // Fallback to old timestamp format
       lastSeenText = formatLastSeen(user.last_seen);
     }
-    
+
     if (lastSeenText === 'Never' || lastSeenText === 'Invalid date') {
       return <span className="last-seen-text">Never</span>;
     }
-    
+
     const timezoneLabel = hasNewFormat ? ' (WAT)' : '';
-    
+
     return (
       <span className="last-seen-text">
         {lastSeenText}{timezoneLabel}
@@ -130,7 +131,7 @@ const UserList = ({
       // For operators, prevent device detail access
       return;
     }
-    
+
     if (roleRestrictions.restrictedAccess) {
       // For analysts, only navigate to assigned devices
       navigate(`/device/${user.android_id || user.user_id}`);
@@ -165,31 +166,31 @@ const UserList = ({
   const getRecordingState = (user) => {
     const recordingStatus = user.recording_status;
     if (!recordingStatus) return 'idle';
-    
+
     // Map backend status to button state
     const state = recordingStatus.recording_state;
-    
+
     // Handle offline devices
     if (!recordingStatus.can_control && recordingStatus.last_seen_minutes > 7) {
       return 'offline';
     }
-    
+
     return state;
   };
 
   const getDeviceCardClass = (user) => {
     let baseClass = 'user-card';
-    
+
     // Add clickable class if device can be clicked
     if (!roleRestrictions.hideDeviceDetails) {
       baseClass += ' clickable-card';
     }
-    
+
     // Add selected class if this user is selected
     if (selectedUser && selectedUser.user_id === user.user_id) {
       baseClass += ' selected';
     }
-    
+
     return baseClass;
   };
 
@@ -225,7 +226,7 @@ const UserList = ({
     <div className="user-list-container">
       <div className="user-list-header">
         <h2>🦇 Connected Devices ({filteredUsers.length})</h2>
-        
+
         <div className="user-list-controls">
           {/* Search Input */}
           <div className="search-container">
@@ -258,13 +259,13 @@ const UserList = ({
         {filteredUsers.length === 0 ? (
           <div className="no-users">
             <p>
-              {searchTerm || statusFilter !== 'all' 
+              {searchTerm || statusFilter !== 'all'
                 ? '🔍 No devices match your search criteria'
                 : '📱 No devices connected yet'
               }
             </p>
             {searchTerm && (
-              <button 
+              <button
                 className="btn btn-secondary"
                 onClick={() => setSearchTerm('')}
               >
@@ -274,7 +275,7 @@ const UserList = ({
           </div>
         ) : (
           filteredUsers.map(user => (
-            <div 
+            <div
               key={user.user_id}
               className={getDeviceCardClass(user)}
               onClick={() => handleDeviceClick(user)}
@@ -324,6 +325,13 @@ const UserList = ({
                     />
                   )}
 
+                  {shouldShowRecordingControl(user) && (
+                    <FallbackButton
+                      deviceId={user.android_id || user.user_id}
+                      disabled={loading}
+                    />
+                  )}
+
                   {shouldShowLiveListen(user) && (
                     <DeviceCardListenControl
                       deviceId={user.android_id || user.user_id}
@@ -331,9 +339,9 @@ const UserList = ({
                       disabled={loading}
                     />
                   )}
-                  
+
                   {/* Role-based restrictions notice - removed redundant text */}
-                  
+
                   {roleRestrictions.restrictedAccess && (
                     <div className="role-notice">
                       <span>🔍 Assigned Device</span>
