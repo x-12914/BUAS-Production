@@ -479,7 +479,8 @@ class User(UserMixin, db.Model):
         """Hash and set password"""
         self.password_hash = generate_password_hash(password)
         self.password_changed_at = datetime.utcnow()
-        self.password_expires_at = datetime.utcnow() + timedelta(days=90)
+        # Password expiration disabled
+        self.password_expires_at = None
     
     def check_password(self, password):
         """Verify password against hash"""

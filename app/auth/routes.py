@@ -61,13 +61,6 @@ def login():
                 'attempts_left': attempts_left
             }), 401
         
-        # Check if password expired (safely)
-        if hasattr(user, 'password_expires_at') and user.password_expires_at and user.password_expires_at < datetime.utcnow():
-            return jsonify({
-                'error': 'Password expired',
-                'must_change_password': True
-            }), 401
-        
         # Successful login
         user.reset_failed_login()
         
