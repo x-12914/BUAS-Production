@@ -8,7 +8,7 @@ backlog = 2048
 
 # Worker processes
 # Default to a single worker for Socket.IO stability unless explicitly overridden.
-workers = int(os.environ.get('GUNICORN_WORKERS', '1'))
+workers = int(os.environ.get('GUNICORN_WORKERS', 8))
 worker_class = 'eventlet'  # Required for SocketIO
 worker_connections = 1000
 timeout = 300
