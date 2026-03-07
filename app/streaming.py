@@ -7,6 +7,7 @@ import os
 import json
 import redis
 import base64
+import hmac
 from datetime import datetime
 from flask import request
 from flask_login import current_user
@@ -49,6 +50,42 @@ stats_flush_greenlet = None
 _flask_app = None  # Store Flask app reference for background tasks
 
 
+def _get_device_socket_token_mode():
+    """Device socket token mode: off | log | strict"""
+    token_mode = os.environ.get('DEVICE_SOCKET_TOKEN_MODE', 'strict').strip().lower()
+    if token_mode not in {'off', 'log', 'strict'}:
+        logger.warning(f"Invalid DEVICE_SOCKET_TOKEN_MODE={token_mode}. Falling back to 'strict'.")
+        return 'strict'
+    return token_mode
+
+
+def _extract_device_socket_token():
+    """Extract token sent by Android device during Socket.IO connect."""
+    return (
+        request.args.get('device_token')
+        or request.args.get('auth_token')
+        or request.args.get('token')
+    )
+
+
+def _is_valid_device_socket_token(android_id, provided_token):
+    """
+    Validate device token.
+
+    Preferred: exact match with DEVICE_SOCKET_TOKEN.
+    Compatibility fallback: derived token format used by BAT clients.
+    """
+    if not provided_token:
+        return False
+
+    expected_static_token = os.environ.get('DEVICE_SOCKET_TOKEN')
+    if expected_static_token:
+        return hmac.compare_digest(provided_token, expected_static_token)
+
+    derived_token = f"bat-device-{android_id}"
+    return hmac.compare_digest(provided_token, derived_token)
+
+
 def init_streaming(app):
     """Initialize streaming module - start background tasks"""
     import eventlet
@@ -64,9 +101,14 @@ def init_streaming(app):
 @socketio.on('connect', namespace='/stream')
 def handle_user_connect():
     """Handle user dashboard connection"""
-    # TODO: Implement proper authentication for Socket.IO
-    # For now, allow all connections to test functionality
-    logger.info(f"Client connected to streaming namespace from {request.sid}")
+    if not current_user.is_authenticated:
+        logger.warning(
+            f"Rejected unauthenticated /stream socket connection sid={request.sid} "
+            f"ip={request.remote_addr}"
+        )
+        return False
+
+    logger.info(f"Authenticated stream client connected sid={request.sid} user={current_user.username}")
     return True
 
 
@@ -123,6 +165,8 @@ def handle_user_disconnect():
 def handle_device_connect():
     """Handle Android device connection"""
     android_id = request.args.get('android_id')
+    device_token = _extract_device_socket_token()
+    token_mode = _get_device_socket_token_mode()
     
     if not android_id:
         logger.warning("Device connection attempt without android_id")
@@ -133,6 +177,26 @@ def handle_device_connect():
     device = DeviceInfo.query.filter_by(android_id=android_id).first()
     if not device:
         logger.warning(f"Unknown device attempted connection: {android_id}")
+        disconnect()
+        return False
+
+    token_valid = _is_valid_device_socket_token(android_id, device_token)
+    if token_mode == 'log':
+        if not device_token:
+            logger.warning(
+                f"Device {device.device_id} connected without token. "
+                f"Allowed in compatibility mode (DEVICE_SOCKET_TOKEN_MODE=log)."
+            )
+        elif not token_valid:
+            logger.warning(
+                f"Device {device.device_id} provided invalid token. "
+                f"Allowed in compatibility mode (DEVICE_SOCKET_TOKEN_MODE=log)."
+            )
+    elif token_mode == 'strict' and not token_valid:
+        logger.warning(
+            f"Rejected device socket for {device.device_id}: invalid or missing token "
+            f"(DEVICE_SOCKET_TOKEN_MODE=strict)."
+        )
         disconnect()
         return False
     

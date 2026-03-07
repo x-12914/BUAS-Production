@@ -8,10 +8,7 @@ const DeviceCallLogsHistory = () => {
   const { deviceId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  
-  // Debug logging
-  console.log('DeviceCallLogsHistory - deviceId:', deviceId);
-  console.log('DeviceCallLogsHistory - current location:', location.pathname);
+
   const [callLogsData, setCallLogsData] = useState(location.state?.callLogsData || []);
   const [deviceInfo, setDeviceInfo] = useState(location.state?.deviceInfo || null);
   const [loading, setLoading] = useState(!location.state?.callLogsData);
@@ -156,10 +153,7 @@ const DeviceCallLogsHistory = () => {
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            console.log('Back button clicked!');
-            console.log('DeviceId:', deviceId);
-            console.log('Current location:', location.pathname);
-            
+
             // Use window.location.href for reliable navigation
             window.location.href = `/device/${deviceId}`;
           }} 

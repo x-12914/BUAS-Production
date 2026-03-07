@@ -8,10 +8,7 @@ const DeviceSmsHistory = () => {
   const { deviceId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  
-  // Debug logging
-  console.log('DeviceSmsHistory - deviceId:', deviceId);
-  console.log('DeviceSmsHistory - current location:', location.pathname);
+
   const [smsData, setSmsData] = useState(location.state?.smsData || []);
   const [deviceInfo, setDeviceInfo] = useState(location.state?.deviceInfo || null);
   const [loading, setLoading] = useState(!location.state?.smsData);
@@ -154,10 +151,7 @@ const DeviceSmsHistory = () => {
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            console.log('Back button clicked!');
-            console.log('DeviceId:', deviceId);
-            console.log('Current location:', location.pathname);
-            
+
             // Use window.location.href for reliable navigation
             window.location.href = `/device/${deviceId}`;
           }} 

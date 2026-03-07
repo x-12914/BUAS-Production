@@ -44,12 +44,6 @@ const AuditLogs = ({ user }) => {
       });
 
       const response = await ApiService.getAuditLogs(params);
-      console.log('Audit logs API response:', { 
-        page: params.page, 
-        total: response.total, 
-        total_pages: response.total_pages,
-        logs_count: response.logs?.length 
-      });
       setAuditLogs(response.logs || []);
       setTotalPages(response.total_pages || Math.ceil((response.total || 0) / itemsPerPage));
       setError(null);

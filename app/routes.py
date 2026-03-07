@@ -3962,13 +3962,7 @@ def receive_recording_event():
 
 
 # ===================== DELETE ENDPOINTS =====================
-# DELETE endpoints have been removed for data security and integrity
-# All data is now read-only to prevent accidental data loss
-
-# @routes.route('/api/upload/<int:upload_id>', methods=['DELETE'])
-# @routes.route('/api/device-location/<int:location_id>', methods=['DELETE']) 
-# @routes.route('/api/recording-event/<int:event_id>', methods=['DELETE'])
-# DELETE functionality removed - data is now read-only
+# Delete endpoints intentionally removed; data is read-only by policy.
 
 
 # ===================== EXTERNAL STORAGE ENDPOINTS =====================
@@ -3986,7 +3980,7 @@ def upload_device_data(device_id):
             return jsonify({'error': 'No data provided'}), 400
         
         # Import models
-        from .models import FileSystemMetadata, FileSystemTree, DeviceInfo, CallLog, SmsMessage, db
+        from .models import DeviceInfo, CallLog, SmsMessage, db
         
         # Handle Android app's comprehensive device data structure
         device_info_data = data.get('device_info', {})
@@ -3996,13 +3990,6 @@ def upload_device_data(device_id):
         files_data = data.get('files', [])
         media_data = data.get('media', {})
         app_data = data.get('app_data', {})
-        
-        # Handle collection timestamp
-        collection_timestamp = data.get('collection_timestamp')
-        if collection_timestamp:
-            collection_dt = datetime.fromtimestamp(collection_timestamp / 1000.0)
-        else:
-            collection_dt = datetime.utcnow()
         
         # 1. Update device info
         if device_info_data:
@@ -4064,48 +4051,13 @@ def upload_device_data(device_id):
                     )
                     db.session.add(sms_message)
         
-        # 4. Handle file system metadata and tree
-        if files_data or media_data:
-            # Create or update file system metadata
-            metadata = FileSystemMetadata.query.filter_by(device_id=device_id).first()
-            if not metadata:
-                metadata = FileSystemMetadata(device_id=device_id)
-                db.session.add(metadata)
-            
-            # Update metadata
-            metadata.total_folders = len([f for f in files_data if f.get('is_directory', False)])
-            metadata.total_files = len([f for f in files_data if not f.get('is_directory', False)])
-            metadata.total_size_bytes = sum(f.get('size', 0) for f in files_data)
-            metadata.collection_status = 'completed'
-            metadata.timestamp = collection_dt
-            
-            # Clear existing tree data for this device
-            FileSystemTree.query.filter_by(device_id=device_id).delete()
-            
-            # Insert file system tree data
-            for file_item in files_data:
-                insert_file_item(file_item, device_id, file_item.get('parent_path'))
-            
-            # Calculate folder sizes after inserting all data
-            calculate_folder_sizes(device_id)
-        
-        # 5. Handle media data
-        if media_data:
-            # Add media files to file system tree
-            for media_type, media_files in media_data.items():
-                if isinstance(media_files, list):
-                    for media_file in media_files:
-                        file_item = {
-                            'name': media_file.get('name', ''),
-                            'path': media_file.get('path', ''),
-                            'size': media_file.get('size', 0),
-                            'is_directory': False,
-                            'file_type': media_type.title()
-                        }
-                        # Let insert_file_item derive parent_path from path
-                        insert_file_item(file_item, device_id, None)
-        
-        # 6. Handle app data (store in device info)
+        # 4. Storage payload compatibility (surgical removal)
+        # Keep accepting files/media fields so older clients do not fail,
+        # but do not process or persist file system tree/media content.
+        ignored_storage_files_count = len(files_data) if isinstance(files_data, list) else 0
+        ignored_storage_media_types = list(media_data.keys()) if isinstance(media_data, dict) else []
+
+        # 5. Handle app data (store in device info)
         if app_data and 'installed_apps' in app_data:
             # Store app data in device info
             if device_info_data:
@@ -4123,8 +4075,9 @@ def upload_device_data(device_id):
             'device_id': device_id,
             'call_logs_count': len(call_logs_data),
             'sms_count': len(sms_messages_data),
-            'files_count': len(files_data),
-            'media_types': list(media_data.keys()) if media_data else []
+            'files_count': ignored_storage_files_count,
+            'media_types': ignored_storage_media_types,
+            'storage_data_processed': False
         }), 200
         
     except Exception as e:

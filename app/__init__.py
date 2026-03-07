@@ -7,6 +7,23 @@ from flask_socketio import SocketIO
 db = SQLAlchemy()
 socketio = None  # Will be initialized in create_app()
 
+
+def _env_bool(name, default=False):
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {'1', 'true', 'yes', 'on'}
+
+
+def _env_int(name, default):
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
 def create_app():
     app = Flask(__name__)
     
@@ -18,13 +35,23 @@ def create_app():
     app.config['SESSION_PERMANENT'] = False
     app.config['SESSION_USE_SIGNER'] = True
     app.config['SESSION_KEY_PREFIX'] = 'buas:'
-    app.config['PERMANENT_SESSION_LIFETIME'] = 1800  # 30 minutes
+    app.config['PERMANENT_SESSION_LIFETIME'] = _env_int('PERMANENT_SESSION_LIFETIME', 1800)
+    app.config['SESSION_COOKIE_NAME'] = os.environ.get('SESSION_COOKIE_NAME', 'buas_session')
     
-    # Security headers - CRITICAL for cross-origin session cookies
-    app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
-    app.config['SESSION_COOKIE_HTTPONLY'] = True
-    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # More permissive for HTTP
-    app.config['SESSION_COOKIE_DOMAIN'] = None  # Let Flask handle this automatically
+    # Security cookie configuration (single source of truth: environment)
+    # Keep SESSION_COOKIE_SECURE=false until HTTPS is enabled in production.
+    session_cookie_samesite = os.environ.get('SESSION_COOKIE_SAMESITE', 'Lax')
+    if session_cookie_samesite not in {'Lax', 'Strict', 'None'}:
+        session_cookie_samesite = 'Lax'
+
+    session_cookie_domain = os.environ.get('SESSION_COOKIE_DOMAIN')
+    if session_cookie_domain == '':
+        session_cookie_domain = None
+
+    app.config['SESSION_COOKIE_SECURE'] = _env_bool('SESSION_COOKIE_SECURE', False)
+    app.config['SESSION_COOKIE_HTTPONLY'] = _env_bool('SESSION_COOKIE_HTTPONLY', True)
+    app.config['SESSION_COOKIE_SAMESITE'] = session_cookie_samesite
+    app.config['SESSION_COOKIE_DOMAIN'] = session_cookie_domain
 
     # CORS configuration for dashboard integration
     # CRITICAL: When using credentials=True, CANNOT use wildcard origins

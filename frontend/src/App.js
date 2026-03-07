@@ -5,11 +5,8 @@ import DeviceDetail from './components/DeviceDetail';
 import PhoneContacts from './components/PhoneContacts';
 import DeviceLocationHistory from './components/DeviceLocationHistory';
 import DeviceRecordingHistory from './components/DeviceRecordingHistory';
-import SmsTable from './components/SmsTable';
 import DeviceSmsHistory from './components/DeviceSmsHistory';
-import CallLogsTable from './components/CallLogsTable';
 import DeviceCallLogsHistory from './components/DeviceCallLogsHistory';
-import ExternalStorageBrowser from './components/ExternalStorageBrowser';
 import AuditLogs from './components/AuditLogs';
 import Login from './components/Login';
 import PasswordChange from './components/PasswordChange';
@@ -174,15 +171,6 @@ function App() {
               element={
                 <ProtectedRoute requiredPermission="view_dashboard">
                   <DeviceCallLogsHistory user={user} />
-                </ProtectedRoute>
-              } 
-            />
-            
-            <Route 
-              path="/device/:deviceId/external-storage" 
-              element={
-                <ProtectedRoute requiredPermission="view_dashboard">
-                  <ExternalStorageBrowser user={user} />
                 </ProtectedRoute>
               } 
             />

@@ -184,10 +184,7 @@ class ApiService {
     
     return this.request(`/api/upload/audio/${deviceId}`, {
       method: 'POST',
-      headers: {
-        'Authorization': this.authHeader,
-        // Don't set Content-Type - let browser set multipart/form-data
-      },
+      // Don't set Content-Type - let browser set multipart/form-data
       body: formData
     });
   }
@@ -318,7 +315,7 @@ class ApiService {
     }
   }
 
-  // Generic HTTP methods for external storage
+  // Generic HTTP methods
   async get(endpoint) {
     return this.request(endpoint, { method: 'GET' });
   }
@@ -341,33 +338,6 @@ class ApiService {
 
   async delete(endpoint) {
     return this.request(endpoint, { method: 'DELETE' });
-  }
-
-  // External Storage endpoints
-  async getFileSystemTree(deviceId) {
-    return this.get(`/api/device/${deviceId}/file-system/tree`);
-  }
-
-  async getFolderContents(deviceId, folderPath, params = {}) {
-    const queryString = new URLSearchParams(params).toString();
-    
-    // Handle path encoding properly to avoid double slash issue
-    // For paths starting with /, we need to encode the path without the leading slash
-    const encodedPath = folderPath.startsWith('/') 
-      ? `/${encodeURIComponent(folderPath.substring(1))}` 
-      : encodeURIComponent(folderPath);
-    
-    const url = `/api/device/${deviceId}/file-system/folder${encodedPath}${queryString ? `?${queryString}` : ''}`;
-    return this.get(url);
-  }
-
-  async searchFiles(deviceId, query, params = {}) {
-    const searchParams = new URLSearchParams({ q: query, ...params });
-    return this.get(`/api/device/${deviceId}/file-system/search?${searchParams.toString()}`);
-  }
-
-  async requestFileDownload(deviceId, filePath) {
-    return this.post(`/api/device/${deviceId}/file/${encodeURIComponent(filePath)}/download`);
   }
 }
 

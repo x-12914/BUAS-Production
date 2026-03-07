@@ -12,7 +12,6 @@ import PasswordChange from './PasswordChange';
  */
 const ProtectedRoute = ({ 
     children, 
-    requiredRole = null, 
     requiredPermission = null,
     fallbackComponent = null 
 }) => {
@@ -50,14 +49,6 @@ const ProtectedRoute = ({
                 // Default to having access
                 let userHasAccess = true;
                 
-                // Check role-based access
-                if (requiredRole) {
-                    const hasRole = authService.hasPermission(requiredRole);
-                    if (!hasRole) {
-                        userHasAccess = false;
-                    }
-                }
-                
                 // Check permission-based access
                 if (requiredPermission) {
                     const hasPermission = authService.hasPermission(requiredPermission);
@@ -78,7 +69,7 @@ const ProtectedRoute = ({
         };
         
         checkAuth();
-    }, [requiredRole, requiredPermission]);
+    }, [requiredPermission]);
     
     const handleLoginSuccess = () => {
         // Refresh the component by re-checking auth
@@ -108,7 +99,7 @@ const ProtectedRoute = ({
     
     // Show access denied if user doesn't have required permissions
     if (!hasAccess) {
-        return fallbackComponent || <AccessDenied user={user} requiredRole={requiredRole} requiredPermission={requiredPermission} />;
+        return fallbackComponent || <AccessDenied user={user} requiredPermission={requiredPermission} />;
     }
     
     // Render protected content
@@ -170,16 +161,13 @@ const LoadingSpinner = () => (
 /**
  * Access Denied Component
  */
-const AccessDenied = ({ user, requiredRole, requiredPermission }) => {
+const AccessDenied = ({ user, requiredPermission }) => {
     const handleLogout = async () => {
         await authService.logout();
         window.location.reload();
     };
     
     const getAccessMessage = () => {
-        if (requiredRole) {
-            return `This page requires ${requiredRole} role access.`;
-        }
         if (requiredPermission) {
             return `This page requires ${requiredPermission} permission.`;
         }
@@ -321,37 +309,6 @@ const AccessDenied = ({ user, requiredRole, requiredPermission }) => {
 };
 
 /**
- * Role-based Route Protection Hook
- * Use this hook in components to check permissions dynamically
- */
-export const useRoleCheck = (requiredRole) => {
-    const [hasRole, setHasRole] = useState(false);
-    const [loading, setLoading] = useState(true);
-    
-    useEffect(() => {
-        const checkRole = async () => {
-            try {
-                const result = authService.hasPermission(requiredRole);
-                setHasRole(result);
-            } catch (error) {
-                console.error('Role check error:', error);
-                setHasRole(false);
-            } finally {
-                setLoading(false);
-            }
-        };
-        
-        if (requiredRole) {
-            checkRole();
-        } else {
-            setLoading(false);
-        }
-    }, [requiredRole]);
-    
-    return { hasRole, loading };
-};
-
-/**
  * Permission-based Route Protection Hook
  * Use this hook in components to check permissions dynamically
  */
@@ -380,48 +337,6 @@ export const usePermissionCheck = (requiredPermission) => {
     }, [requiredPermission]);
     
     return { hasPermission, loading };
-};
-
-/**
- * Multi-Role Protection Component
- * Protects routes that require any of multiple roles
- */
-export const MultiRoleProtectedRoute = ({ children, requiredRoles = [], fallbackComponent = null }) => {
-    const [loading, setLoading] = useState(true);
-    const [hasAccess, setHasAccess] = useState(false);
-    
-    useEffect(() => {
-        const checkRoles = async () => {
-            try {
-                const roleChecks = requiredRoles.map(role => authService.hasPermission(role));
-                
-                // User needs at least one of the required roles
-                const hasAnyRole = roleChecks.some(hasRole => hasRole);
-                setHasAccess(hasAnyRole);
-            } catch (error) {
-                console.error('Multi-role check error:', error);
-                setHasAccess(false);
-            } finally {
-                setLoading(false);
-            }
-        };
-        
-        if (requiredRoles.length > 0) {
-            checkRoles();
-        } else {
-            setLoading(false);
-        }
-    }, [requiredRoles]);
-    
-    if (loading) {
-        return <LoadingSpinner />;
-    }
-    
-    if (!hasAccess) {
-        return fallbackComponent || <AccessDenied requiredRole={requiredRoles.join(' or ')} />;
-    }
-    
-    return children;
 };
 
 export default ProtectedRoute;

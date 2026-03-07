@@ -19,9 +19,7 @@ const PhoneContacts = () => {
     const fetchContacts = async () => {
       try {
         setLoading(true);
-        console.log(`Fetching contacts for device: ${deviceId}`);
         const response = await ApiService.getDeviceContacts(deviceId);
-        console.log('Contacts API response:', response);
         
         // The response should be the JSON object directly
         setContacts(response.contacts || []);

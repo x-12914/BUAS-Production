@@ -34,5 +34,6 @@ tmp_upload_dir = None
 # Environment variables
 raw_env = [
     'ENABLE_STREAMING=true',
+    'DEVICE_SOCKET_TOKEN_MODE=strict',
     'SOCKETIO_MESSAGE_QUEUE_DB=2',
 ]

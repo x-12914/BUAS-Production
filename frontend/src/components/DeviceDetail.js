@@ -178,15 +178,6 @@ const DeviceDetail = ({ user }) => {
     });
   };
 
-  const handleViewExternalStorage = () => {
-    navigate(`/device/${deviceId}/external-storage`, {
-      state: {
-        deviceInfo,
-        deviceId
-      }
-    });
-  };
-
   const handleRecordingStatusChange = (deviceId, updatedRecordingStatus) => {
     setRecordingStatus(updatedRecordingStatus);
   };
@@ -287,9 +278,6 @@ const DeviceDetail = ({ user }) => {
       setShowExportModal(false);
       setExportStartDate('');
       setExportEndDate('');
-
-      // Show success message (you might want to add a toast notification here)
-      console.log('Device data exported successfully');
 
     } catch (error) {
       setExportError(error.message || 'Failed to export device data');
@@ -747,15 +735,6 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
                 </button>
               </div>
             )}
-            {/* External Storage button - hidden but implementation preserved */}
-            <div className="summary-item" style={{ display: 'none' }}>
-              <button
-                className="summary-btn btn-external-storage"
-                onClick={handleViewExternalStorage}
-              >
-                📁 External Storage
-              </button>
-            </div>
           </div>
 
           {/* Live Audio Streaming Controls */}

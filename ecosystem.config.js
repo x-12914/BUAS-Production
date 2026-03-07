@@ -11,6 +11,7 @@ module.exports = {
     max_memory_restart: '1G',
     env: {
       ENABLE_STREAMING: 'true',
+      DEVICE_SOCKET_TOKEN_MODE: 'strict',
       FLASK_ENV: 'production',
       SOCKETIO_MESSAGE_QUEUE_DB: '2',
       GUNICORN_WORKERS: '1',
