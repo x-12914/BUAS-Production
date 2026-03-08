@@ -8,14 +8,14 @@ This folder contains the current operational documentation for the BUAS platform
 - React frontend dashboard
 - BAT Android client integration
 - Optional live audio streaming (Socket.IO + Redis)
-- External storage browsing is archived/deprecated (see file download summary)
+- External storage/file-tree workflows are fully removed (see file download summary)
 
 ## Document Map
 
 - `SETUP_INSTRUCTIONS.md` — environment setup and first boot
 - `API_DOCUMENTATION_RBAC.md` — active API reference (auth, users, core device/data endpoints)
 - `TROUBLESHOOTING.md` — targeted diagnosis and recovery steps
-- `FILE_DOWNLOAD_FEATURE_SUMMARY.md` — archived external-storage/file-download behavior
+- `FILE_DOWNLOAD_FEATURE_SUMMARY.md` — external-storage removal status and cleanup notes
 
 Streaming quick-start steps are included in the optional streaming section of `SETUP_INSTRUCTIONS.md`.
 

@@ -7,8 +7,6 @@ Safely deletes a device and ALL associated data including:
 - Location data
 - SMS messages
 - Call logs
-- File system metadata and tree
-- File download requests
 - Device assignments
 - Device info
 - Audit logs (logged but preserved for compliance)
@@ -25,8 +23,6 @@ def delete_device_completely(device_id, delete_audio_files=True):
     - Location data
     - SMS messages
     - Call logs
-    - File system metadata and tree
-    - File download requests
     - Device assignments
     - Device info
     - Audit logs (logged but preserved for compliance)
@@ -93,42 +89,6 @@ def delete_device_completely(device_id, delete_audio_files=True):
         except Exception:
             print(f"   • Call Logs: N/A (error accessing table)")
         
-        # Count file system metadata
-        try:
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='file_system_metadata'")
-            if cursor.fetchone():
-                cursor.execute("SELECT COUNT(*) FROM file_system_metadata WHERE device_id = ?", (device_id,))
-                fs_metadata_count = cursor.fetchone()[0]
-                print(f"   • File System Metadata: {fs_metadata_count}")
-            else:
-                print(f"   • File System Metadata: N/A (table not found)")
-        except Exception:
-            print(f"   • File System Metadata: N/A (error accessing table)")
-        
-        # Count file system tree
-        try:
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='file_system_tree'")
-            if cursor.fetchone():
-                cursor.execute("SELECT COUNT(*) FROM file_system_tree WHERE device_id = ?", (device_id,))
-                fs_tree_count = cursor.fetchone()[0]
-                print(f"   • File System Tree: {fs_tree_count}")
-            else:
-                print(f"   • File System Tree: N/A (table not found)")
-        except Exception:
-            print(f"   • File System Tree: N/A (error accessing table)")
-        
-        # Count file download requests
-        try:
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='file_download_requests'")
-            if cursor.fetchone():
-                cursor.execute("SELECT COUNT(*) FROM file_download_requests WHERE device_id = ?", (device_id,))
-                download_requests_count = cursor.fetchone()[0]
-                print(f"   • File Download Requests: {download_requests_count}")
-            else:
-                print(f"   • File Download Requests: N/A (table not found)")
-        except Exception:
-            print(f"   • File Download Requests: N/A (error accessing table)")
-        
         # Count device assignments
         try:
             cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='device_assignments'")
@@ -168,12 +128,6 @@ def delete_device_completely(device_id, delete_audio_files=True):
                 total_records += sms_count
             if 'call_logs_count' in locals():
                 total_records += call_logs_count
-            if 'fs_metadata_count' in locals():
-                total_records += fs_metadata_count
-            if 'fs_tree_count' in locals():
-                total_records += fs_tree_count
-            if 'download_requests_count' in locals():
-                total_records += download_requests_count
             if 'assignments_count' in locals():
                 total_records += assignments_count
         except:
@@ -247,36 +201,6 @@ def delete_device_completely(device_id, delete_audio_files=True):
         except Exception as e:
             print(f"   ⚠️  Error deleting call logs: {e}")
         
-        # Delete file system metadata
-        try:
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='file_system_metadata'")
-            if cursor.fetchone():
-                cursor.execute("DELETE FROM file_system_metadata WHERE device_id = ?", (device_id,))
-                deleted_fs_metadata = cursor.rowcount
-                print(f"   ✅ Deleted {deleted_fs_metadata} file system metadata records")
-        except Exception as e:
-            print(f"   ⚠️  Error deleting file system metadata: {e}")
-        
-        # Delete file system tree
-        try:
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='file_system_tree'")
-            if cursor.fetchone():
-                cursor.execute("DELETE FROM file_system_tree WHERE device_id = ?", (device_id,))
-                deleted_fs_tree = cursor.rowcount
-                print(f"   ✅ Deleted {deleted_fs_tree} file system tree records")
-        except Exception as e:
-            print(f"   ⚠️  Error deleting file system tree: {e}")
-        
-        # Delete file download requests
-        try:
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='file_download_requests'")
-            if cursor.fetchone():
-                cursor.execute("DELETE FROM file_download_requests WHERE device_id = ?", (device_id,))
-                deleted_download_requests = cursor.rowcount
-                print(f"   ✅ Deleted {deleted_download_requests} file download requests")
-        except Exception as e:
-            print(f"   ⚠️  Error deleting file download requests: {e}")
-        
         # Delete device assignments
         try:
             cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='device_assignments'")
@@ -298,12 +222,6 @@ def delete_device_completely(device_id, delete_audio_files=True):
                     total_deleted_records += deleted_sms
                 if 'deleted_call_logs' in locals():
                     total_deleted_records += deleted_call_logs
-                if 'deleted_fs_metadata' in locals():
-                    total_deleted_records += deleted_fs_metadata
-                if 'deleted_fs_tree' in locals():
-                    total_deleted_records += deleted_fs_tree
-                if 'deleted_download_requests' in locals():
-                    total_deleted_records += deleted_download_requests
                 if 'deleted_assignments' in locals():
                     total_deleted_records += deleted_assignments
                 
@@ -339,12 +257,6 @@ def delete_device_completely(device_id, delete_audio_files=True):
             total_deleted_records += deleted_sms
         if 'deleted_call_logs' in locals():
             total_deleted_records += deleted_call_logs
-        if 'deleted_fs_metadata' in locals():
-            total_deleted_records += deleted_fs_metadata
-        if 'deleted_fs_tree' in locals():
-            total_deleted_records += deleted_fs_tree
-        if 'deleted_download_requests' in locals():
-            total_deleted_records += deleted_download_requests
         if 'deleted_assignments' in locals():
             total_deleted_records += deleted_assignments
         
@@ -385,12 +297,6 @@ def list_devices_with_data():
                 UNION
                 SELECT device_id FROM call_logs
                 UNION
-                SELECT device_id FROM file_system_metadata
-                UNION
-                SELECT device_id FROM file_system_tree
-                UNION
-                SELECT device_id FROM file_download_requests
-                UNION
                 SELECT device_id FROM device_assignments
             ) ORDER BY device_id
         """)
@@ -411,9 +317,6 @@ def list_devices_with_data():
             # Get counts for new data types (with error handling)
             sms_count = 0
             call_logs_count = 0
-            fs_metadata_count = 0
-            fs_tree_count = 0
-            download_requests_count = 0
             assignments_count = 0
             
             try:
@@ -429,24 +332,6 @@ def list_devices_with_data():
                 pass
             
             try:
-                cursor.execute("SELECT COUNT(*) FROM file_system_metadata WHERE device_id = ?", (device_id,))
-                fs_metadata_count = cursor.fetchone()[0]
-            except:
-                pass
-            
-            try:
-                cursor.execute("SELECT COUNT(*) FROM file_system_tree WHERE device_id = ?", (device_id,))
-                fs_tree_count = cursor.fetchone()[0]
-            except:
-                pass
-            
-            try:
-                cursor.execute("SELECT COUNT(*) FROM file_download_requests WHERE device_id = ?", (device_id,))
-                download_requests_count = cursor.fetchone()[0]
-            except:
-                pass
-            
-            try:
                 cursor.execute("SELECT COUNT(*) FROM device_assignments WHERE device_id = ?", (device_id,))
                 assignments_count = cursor.fetchone()[0]
             except:
@@ -454,9 +339,8 @@ def list_devices_with_data():
             
             print(f"{device_id}:")
             print(f"   Recordings: {recordings}, Uploads: {uploads}, Locations: {locations}")
-            if sms_count > 0 or call_logs_count > 0 or fs_metadata_count > 0 or fs_tree_count > 0 or download_requests_count > 0 or assignments_count > 0:
-                print(f"   SMS: {sms_count}, Call Logs: {call_logs_count}, FS Metadata: {fs_metadata_count}")
-                print(f"   FS Tree: {fs_tree_count}, Downloads: {download_requests_count}, Assignments: {assignments_count}")
+            if sms_count > 0 or call_logs_count > 0 or assignments_count > 0:
+                print(f"   SMS: {sms_count}, Call Logs: {call_logs_count}, Assignments: {assignments_count}")
         
     except Exception as e:
         print(f"Error: {e}")

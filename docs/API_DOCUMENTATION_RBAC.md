@@ -1,6 +1,6 @@
 # BUAS API Documentation
 
-This reference lists active and compatibility endpoints used by the current BUAS stack.
+This reference lists active endpoints used by the current BUAS stack.
 
 ## Authentication
 
@@ -44,7 +44,6 @@ This reference lists active and compatibility endpoints used by the current BUAS
 ## Data Ingestion (Device/BAT)
 
 - `POST /api/upload/audio/<device_id>`
-- `POST /api/upload/metadata/<device_id>`
 - `POST /api/upload/device-info/<device_id>`
 - `POST /api/upload/device-info/battery/<device_id>`
 - `POST /api/upload/device-data/<device_id>`
@@ -77,24 +76,11 @@ This reference lists active and compatibility endpoints used by the current BUAS
 - Frontend requests must use credentials (`withCredentials` / `credentials: include`).
 - Most endpoints require authenticated users and role/permission checks.
 
-## External Storage and File Tree Endpoints
+## External Storage Status
 
-The following endpoints remain for compatibility but are deprecated from active workflow:
+External storage/file-tree endpoints are fully removed from active backend routes and BAT command handling.
 
-- `POST /api/upload/file-system-tree/<device_id>`
-- `POST /api/upload/file`
-- `GET /api/device/<device_id>/file-system/tree`
-- `GET /api/device/<device_id>/file-system/folder/<folder_path>`
-- `GET /api/device/<device_id>/file-system/search`
-- `POST /api/device/<device_id>/file/<file_path>/download`
-- `GET /api/device/<device_id>/download-request/<request_id>/status`
-- `GET /api/external-storage/download/<filename>`
-
-Current behavior for `/api/upload/device-data/<device_id>`:
-- Accepts legacy `files` and `media` fields for compatibility.
-- Ignores file-tree/media persistence in surgical removal mode.
-
-See `FILE_DOWNLOAD_FEATURE_SUMMARY.md` for full deprecation details.
+See `FILE_DOWNLOAD_FEATURE_SUMMARY.md` for implementation status and cleanup notes.
 
 ## Source of Truth
 

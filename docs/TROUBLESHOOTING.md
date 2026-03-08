@@ -116,13 +116,14 @@ Checks:
 - Server receives `/upload/sms`, `/upload/call`, and metadata uploads
 
 Notes:
-- External storage commands are in compatibility mode; non-storage upload flows remain active.
+- External storage/file-tree commands and routes are fully removed; non-storage upload flows remain active.
 
 ## 8) External Storage Confusion
 
 Current state:
 - External storage browser UI is removed from frontend.
-- Backend keeps compatibility endpoints; file-tree/media persistence is disabled in surgical mode.
+- Backend storage/file-tree/download endpoints are removed.
+- BAT storage permission, metadata tree, and on-demand file upload paths are removed.
 
 Reference:
 - `FILE_DOWNLOAD_FEATURE_SUMMARY.md`
