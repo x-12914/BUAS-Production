@@ -87,7 +87,7 @@
 }
 
 .status-listening {
-  background: var(--status-listening, #a1a1aa);
+  background: var(--status-listening, #00c853);
   color: white;
 }
 

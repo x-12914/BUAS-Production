@@ -125,7 +125,7 @@ const LoadingSpinner = () => (
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                background: linear-gradient(135deg, #18181b 0%, #71717a 100%);
+                background: linear-gradient(135deg, #080d08 0%, #00c853 100%);
                 font-family: 'Inter', sans-serif;
             }
             
@@ -137,7 +137,7 @@ const LoadingSpinner = () => (
             .loading-spinner-large {
                 width: 40px;
                 height: 40px;
-                border: 4px solid rgba(255, 255, 255, 0.3);
+                border: 4px solid rgba(0, 230, 118, 0.2);
                 border-top: 4px solid white;
                 border-radius: 50%;
                 animation: spin 1s linear infinite;

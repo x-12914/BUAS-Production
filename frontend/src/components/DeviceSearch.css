@@ -166,7 +166,7 @@
 }
 
 .remove-device-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(0, 230, 118, 0.15);
   transform: scale(1.1);
 }
 
@@ -183,7 +183,7 @@
   width: 16px;
   height: 16px;
   border: 2px solid #e5e7eb;
-  border-top-color: #71717a;
+  border-top-color: #00c853;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }

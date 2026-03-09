@@ -1,37 +1,46 @@
-/* Dark Theme Color Variables */
+/* =============================================
+   BUAS COMMAND CENTER  INTELLIGENCE TERMINAL
+   Palette: Neon Green + Amber (No Blue)
+   ============================================= */
 :root {
-  /* Tactical Dark Colors */
-  --bg-primary: #09090b;
-  --bg-secondary: #121214;
-  --bg-tertiary: #18181b;
-  --bg-header: #09090b;
-  
-  /* Text Colors */
-  --text-primary: #f0f6fc;
-  --text-secondary: #a0aebf;
-  --text-muted: #64748b;
-  
-  /* Cyber Accents */
-  --accent-primary: #3f3f46;
-  --accent-secondary: #52525b;
-  --accent-third: #71717a;
-  --accent-glow: rgba(255, 255, 255, 0.05);
-  --accent-success: #10b981;
-  --accent-warning: #f59e0b;
-  --accent-danger: #ef4444;
-  
-  /* Status Colors */
-  --status-success: #059669;
-  --status-warning: #d97706;
-  --status-danger: #dc2626;
-  --status-info: #52525b;
-  
-  /* Border and UI */
-  --border-color: #27272a;
-  --border-muted: #0f172a;
-  --shadow-color: rgba(0, 0, 0, 0.5);
-  --glass-bg: rgba(18, 18, 20, 0.6);
-  --glass-border: rgba(255, 255, 255, 0.05);
+  /* === Deep Black Backgrounds === */
+  --bg-primary: #060607;
+  --bg-secondary: #0b0c0d;
+  --bg-tertiary: #111214;
+  --bg-header: #060607;
+  --bg-card: #0e0f11;
+
+  /* === Text === */
+  --text-primary: #d8f5d8;
+  --text-secondary: #6e9b6e;
+  --text-muted: #3a573a;
+
+  /* === PRIMARY: Neon Green (terminal operator aesthetic) === */
+  --accent-primary: #00e676;
+  --accent-third: #00c853;
+  --accent-glow: rgba(0, 230, 118, 0.4);
+
+  /* === SECONDARY: Amber (warm tactical highlight) === */
+  --accent-secondary: #ffab00;
+  --accent-amber-glow: rgba(255, 171, 0, 0.35);
+
+  /* === Semantic === */
+  --accent-success: #00c853;
+  --accent-warning: #ffab00;
+  --accent-danger: #ff1744;
+
+  /* === Status === */
+  --status-success: #00c853;
+  --status-warning: #ff6d00;
+  --status-danger: #ff1744;
+  --status-info: #00e676;
+
+  /* === Borders / Glass (no blue) === */
+  --border-color: #152015;
+  --border-muted: #0d160d;
+  --shadow-color: rgba(0, 0, 0, 0.85);
+  --glass-bg: rgba(6, 10, 6, 0.85);
+  --glass-border: rgba(0, 230, 118, 0.12);
 }
 
 * {
@@ -109,7 +118,7 @@ code {
 }
 
 .btn-primary:hover {
-  background: #52525b;
+  background: #cc7a00;
 }
 
 .btn-success {
@@ -168,9 +177,9 @@ code {
 }
 
 .status-listening {
-  background: rgba(161, 161, 170, 0.15);
-  color: #a1a1aa;
-  border: 1px solid rgba(161, 161, 170, 0.3);
+  background: rgba(0, 200, 83, 0.15);
+  color: #00c853;
+  border: 1px solid rgba(0, 200, 83, 0.3);
 }
 
 .status-online {
@@ -362,9 +371,9 @@ code {
 }
 
 .role-badge.super-user {
-  background: rgba(161, 161, 170, 0.15);
-  color: #a1a1aa;
-  border: 1px solid rgba(161, 161, 170, 0.3);
+  background: rgba(0, 200, 83, 0.15);
+  color: #00c853;
+  border: 1px solid rgba(0, 200, 83, 0.3);
 }
 
 .role-badge.analyst {

@@ -78,7 +78,7 @@ const historicalPositionIcon = L.divIcon({
 
 // Create numbered marker function
 const createNumberedIcon = (number, isLatest = false) => {
-  const backgroundColor = isLatest ? '#71717a' : '#71717a'; // Purple for latest, blue for historical
+  const backgroundColor = isLatest ? '#00c853' : '#00c853'; // Purple for latest, blue for historical
   const size = isLatest ? 32 : 28;
   
   return L.divIcon({
@@ -202,7 +202,7 @@ const createTemporalLayeredIcon = (events) => {
       return event.isActive ? '#22c55e' : '#22c55e'; // Green for all recordings
     }
     if (event.type === 'location') {
-      return event.isLatest ? '#71717a' : '#71717a'; // Purple for latest, blue for historical
+      return event.isLatest ? '#00c853' : '#00c853'; // Purple for latest, blue for historical
     }
     return '#6b7280'; // Gray fallback
   };
@@ -569,7 +569,7 @@ const DeviceDetailMap = ({ deviceId }) => {
       {event.audio_file_id && (
         <div style={{ 
           fontSize: '12px', 
-          color: '#71717a',
+          color: '#00c853',
           marginBottom: '4px' 
         }}>
           <a href={`${API_BASE_URL}/api/uploads/${event.audio_file_id}?t=${Date.now()}`} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center' }}>
@@ -620,7 +620,7 @@ const DeviceDetailMap = ({ deviceId }) => {
             }}>
               {event.type === 'location' && (
                 <div>
-                  <div style={{ fontWeight: 'bold', fontSize: '12px', color: event.isLatest ? '#71717a' : '#71717a' }}>
+                  <div style={{ fontWeight: 'bold', fontSize: '12px', color: event.isLatest ? '#00c853' : '#00c853' }}>
                     <MapPin size={12} style={{verticalAlign: 'text-bottom', marginRight: '4px'}}/> Location Update {event.isLatest ? '(Latest)' : ''}
                   </div>
                   <div style={{ fontSize: '11px', color: '#6b7280' }}>
@@ -776,7 +776,7 @@ const DeviceDetailMap = ({ deviceId }) => {
           {pathPositions.length > 1 && (
             <Polyline
               positions={pathPositions}
-              color="#71717a"
+              color="#00c853"
               weight={3}
               opacity={0.7}
             />
@@ -809,7 +809,7 @@ const DeviceDetailMap = ({ deviceId }) => {
                           fontWeight: 'bold', 
                           fontSize: '14px', 
                           marginBottom: '8px',
-                          color: isLatest ? '#71717a' : '#71717a'
+                          color: isLatest ? '#00c853' : '#00c853'
                         }}>
                           Point #{locationNumber} {isLatest ? '(Latest)' : ''}
                         </div>
@@ -907,11 +907,11 @@ const DeviceDetailMap = ({ deviceId }) => {
             </p>
             <div className="legend-items">
               <div className="legend-item">
-                <span className="legend-color" style={{ backgroundColor: '#71717a' }}></span>
+                <span className="legend-color" style={{ backgroundColor: '#00c853' }}></span>
                 <span>Latest Location</span>
               </div>
               <div className="legend-item">
-                <span className="legend-color" style={{ backgroundColor: '#71717a' }}></span>
+                <span className="legend-color" style={{ backgroundColor: '#00c853' }}></span>
                 <span>Historical Location</span>
               </div>
               <div className="legend-item">

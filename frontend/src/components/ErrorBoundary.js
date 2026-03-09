@@ -76,7 +76,7 @@ class ErrorBoundary extends React.Component {
               cursor: 'pointer',
               transition: 'all 0.2s ease'
             }}
-            onMouseOver={(e) => e.target.style.background = '#71717a'}
+            onMouseOver={(e) => e.target.style.background = '#00c853'}
             onMouseOut={(e) => e.target.style.background = 'var(--accent-primary)'}
           >
             🔄 Reload Dashboard
