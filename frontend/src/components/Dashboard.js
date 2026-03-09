@@ -185,26 +185,26 @@ const Dashboard = ({ user, onLogout }) => {
                 className={`tab-button ${activeTab === 'devices' ? 'active' : ''}`}
                 onClick={() => setActiveTab('devices')}
               >
-                📱 Device List
+                DEVICE LIST
               </button>
               <button 
                 className={`tab-button ${activeTab === 'map' ? 'active' : ''}`}
                 onClick={() => setActiveTab('map')}
               >
-                🗺️ Location Map
+                LOCATION MAP
               </button>
               <button 
                 className={`tab-button ${activeTab === 'users' ? 'active' : ''}`}
                 onClick={() => setActiveTab('users')}
               >
-                👥 User Management
+                USER MANAGEMENT
               </button>
               {(currentUser?.role === 'super_user' || currentUser?.role === 'super_super_admin') && (
                 <button 
                   className={`tab-button ${activeTab === 'audit' ? 'active' : ''}`}
                   onClick={() => setActiveTab('audit')}
                 >
-                  📋 Audit Logs
+                  AUDIT LOGS
                 </button>
               )}
             </div>
@@ -259,7 +259,7 @@ const Dashboard = ({ user, onLogout }) => {
       {/* Dashboard Header */}
       <header className="dashboard-header">
         <div className="header-content">
-          <h1>🦇 BUAS Dashboard</h1>
+          <h1>BUAS COMMAND CENTER</h1>
           <div className="header-right">
             <div className="dashboard-controls">
               <button 

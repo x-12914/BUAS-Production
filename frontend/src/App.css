@@ -1,33 +1,37 @@
 /* Dark Theme Color Variables */
 :root {
-  /* Primary Dark Colors */
-  --bg-primary: #0d1117;
-  --bg-secondary: #161b22;
-  --bg-tertiary: #21262d;
-  --bg-header: #1c2128;
+  /* Tactical Dark Colors */
+  --bg-primary: #050810;
+  --bg-secondary: #0a101d;
+  --bg-tertiary: #131e35;
+  --bg-header: #080d19;
   
   /* Text Colors */
   --text-primary: #f0f6fc;
-  --text-secondary: #8b949e;
-  --text-muted: #6e7681;
+  --text-secondary: #a0aebf;
+  --text-muted: #64748b;
   
-  /* Accent Colors */
-  --accent-primary: #58a6ff;
-  --accent-secondary: #64b5f6;
-  --accent-success: #56d364;
-  --accent-warning: #f1c40f;
-  --accent-danger: #ef5350;
+  /* Cyber Accents */
+  --accent-primary: #00e5ff;
+  --accent-secondary: #3b82f6;
+  --accent-third: #00d4ff;
+  --accent-glow: rgba(0, 229, 255, 0.4);
+  --accent-success: #10b981;
+  --accent-warning: #f59e0b;
+  --accent-danger: #ef4444;
   
   /* Status Colors */
-  --status-success: #2ea043;
-  --status-warning: #fb8500;
-  --status-danger: #da3633;
-  --status-info: #1f6feb;
+  --status-success: #059669;
+  --status-warning: #d97706;
+  --status-danger: #dc2626;
+  --status-info: #0284c7;
   
   /* Border and UI */
-  --border-color: #30363d;
-  --border-muted: #21262d;
-  --shadow-color: rgba(0, 0, 0, 0.3);
+  --border-color: #1e293b;
+  --border-muted: #0f172a;
+  --shadow-color: rgba(0, 0, 0, 0.5);
+  --glass-bg: rgba(10, 16, 29, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.05);
 }
 
 * {
@@ -37,7 +41,7 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;

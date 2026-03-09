@@ -1,9 +1,19 @@
+/* ConnectionStatus.css - Tactical Style */
 .connection-status {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 1rem;
+  background: rgba(10, 16, 29, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+.connection-status::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; height: 100%; width: 4px;
 }
 
 .connection-header {
@@ -16,12 +26,10 @@
 .connection-indicator {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
-.connection-icon {
-  font-size: 1.25rem;
-}
+.connection-icon { font-size: 1.5rem; }
 
 .connection-info {
   display: flex;
@@ -31,14 +39,15 @@
 
 .connection-title {
   margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: 0.5px;
 }
 
 .connection-description {
   margin: 0;
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   color: var(--text-secondary);
 }
 
@@ -47,92 +56,53 @@
   flex-direction: column;
   gap: 0.5rem;
   text-align: right;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.last-updated,
-.polling-status {
+.last-updated, .polling-status {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.875rem;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
-.label {
-  color: var(--text-secondary);
-}
+.label { color: var(--text-muted); font-weight: 600; }
+.value { color: #fff; font-weight: 700; }
+.value.active { color: #34d399; text-shadow: 0 0 10px rgba(52, 211, 153, 0.4); }
+.value.inactive { color: var(--text-muted); }
+.error-actions { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
 
-.value {
-  color: var(--text-primary);
-  font-weight: 500;
-}
-
-.value.active {
-  color: var(--status-success);
-}
-
-.value.inactive {
-  color: var(--text-muted);
-}
-
-.error-actions {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-color);
-}
-
-/* Status-specific styling */
+/* Status specific */
 .connection-status.connected {
-  border-color: var(--status-success);
-  background: rgba(46, 160, 67, 0.05);
+  border-color: rgba(16, 185, 129, 0.4);
+  background: rgba(16, 185, 129, 0.05);
+  box-shadow: inset 0 0 20px rgba(16, 185, 129, 0.05);
 }
+.connection-status.connected::before { background: #34d399; box-shadow: 0 0 15px #34d399; }
+.connection-status.connected .connection-title { color: #34d399; text-shadow: 0 0 10px rgba(52, 211, 153, 0.3); }
 
 .connection-status.connecting {
-  border-color: var(--status-warning);
-  background: rgba(251, 133, 0, 0.05);
+  border-color: rgba(245, 158, 11, 0.4);
+  background: rgba(245, 158, 11, 0.05);
 }
-
-.connection-status.connecting .connection-icon {
-  animation: pulse 2s infinite;
-}
+.connection-status.connecting::before { background: #fbbf24; }
+.connection-status.connecting .connection-title { color: #fbbf24; }
+.connection-status.connecting .connection-icon { animation: pulse 2s infinite; }
 
 .connection-status.error {
-  border-color: var(--status-danger);
-  background: rgba(218, 54, 51, 0.05);
+  border-color: rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.05);
 }
+.connection-status.error::before { background: #f87171; box-shadow: 0 0 15px #f87171; }
+.connection-status.error .connection-title { color: #f87171; text-shadow: 0 0 10px rgba(248, 113, 113, 0.3); }
 
-/* Responsive Design */
 @media (max-width: 768px) {
-  .connection-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-  
-  .connection-details {
-    align-self: stretch;
-    text-align: left;
-  }
-  
-  .last-updated,
-  .polling-status {
-    justify-content: space-between;
-  }
-}
-
-@media (max-width: 480px) {
-  .connection-status {
-    padding: 0.75rem;
-  }
-  
-  .connection-indicator {
-    gap: 0.5rem;
-  }
-  
-  .connection-title {
-    font-size: 0.9rem;
-  }
-  
-  .connection-description {
-    font-size: 0.8rem;
-  }
+  .connection-header { flex-direction: column; align-items: flex-start; }
+  .connection-details { align-self: stretch; text-align: left; }
 }
