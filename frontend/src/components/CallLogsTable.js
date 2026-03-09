@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import ApiService from '../services/api';
+import { PhoneCall, PhoneIncoming, PhoneOutgoing, PhoneMissed, FileText, FileJson, ChevronLeft, ChevronRight } from 'lucide-react';
 import './CallLogsTable.css';
 
 const CallLogsTable = ({ 
@@ -279,10 +280,10 @@ const CallLogsTable = ({
   // Get call type icon
   const getCallTypeIcon = (type) => {
     switch (type) {
-      case 'incoming': return '📞';
-      case 'outgoing': return '📱';
-      case 'missed': return '❌';
-      default: return '📞';
+      case 'incoming': return <PhoneIncoming size={14} style={{verticalAlign: 'middle', marginRight: '4px'}}/>;
+      case 'outgoing': return <PhoneOutgoing size={14} style={{verticalAlign: 'middle', marginRight: '4px'}}/>;
+      case 'missed': return <PhoneMissed size={14} style={{verticalAlign: 'middle', marginRight: '4px'}}/>;
+      default: return <PhoneCall size={14} style={{verticalAlign: 'middle', marginRight: '4px'}}/>;
     }
   };
 
@@ -300,7 +301,7 @@ const CallLogsTable = ({
     <div className="call-logs-table-container">
       {/* Header */}
       <div className="call-logs-table-header">
-        <h2>📞 Call Logs - {deviceInfo?.display_name || deviceId}</h2>
+        <h2><PhoneCall size={24} style={{verticalAlign: 'text-bottom', marginRight: '8px'}} /> Call Logs - {deviceInfo?.display_name || deviceId}</h2>
         
         {/* Summary Stats */}
         <div className="call-logs-summary">
@@ -404,28 +405,28 @@ const CallLogsTable = ({
               onClick={() => exportToCSV(false)}
               disabled={callLogsData.length === 0}
             >
-              📄 Export All CSV
+              <FileText size={16} style={{verticalAlign: 'text-bottom', marginRight: '6px'}}/> Export All CSV
             </button>
             <button 
               className="btn btn-export" 
               onClick={() => exportToCSV(true)}
               disabled={selectedCalls.size === 0}
             >
-              📄 Export Selected CSV
+              <FileText size={16} style={{verticalAlign: 'text-bottom', marginRight: '6px'}}/> Export Selected CSV
             </button>
             <button 
               className="btn btn-export" 
               onClick={() => exportToJSON(false)}
               disabled={callLogsData.length === 0}
             >
-              📊 Export All JSON
+              <FileJson size={16} style={{verticalAlign: 'text-bottom', marginRight: '6px'}}/> Export All JSON
             </button>
             <button 
               className="btn btn-export" 
               onClick={() => exportToJSON(true)}
               disabled={selectedCalls.size === 0}
             >
-              📊 Export Selected JSON
+              <FileJson size={16} style={{verticalAlign: 'text-bottom', marginRight: '6px'}}/> Export Selected JSON
             </button>
           </div>
         </div>
@@ -526,7 +527,7 @@ const CallLogsTable = ({
               disabled={currentPage === 1}
               className="btn btn-pagination"
             >
-              ← Previous
+              <ChevronLeft size={16} style={{verticalAlign: 'text-bottom', marginRight: '4px'}} /> Previous
             </button>
             <span className="page-info">
               Page {currentPage} of {totalPages} ({totalItems} total calls)
@@ -536,7 +537,7 @@ const CallLogsTable = ({
               disabled={currentPage === totalPages}
               className="btn btn-pagination"
             >
-              Next →
+              Next <ChevronRight size={16} style={{verticalAlign: 'text-bottom', marginLeft: '4px'}} />
             </button>
           </div>
         </div>

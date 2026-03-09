@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import authService from '../services/authService';
+import { User, Lock, AlertTriangle } from 'lucide-react';
 import './Login.css';
 
 const Login = ({ onLoginSuccess }) => {
@@ -90,7 +91,7 @@ const Login = ({ onLoginSuccess }) => {
         
         return (
             <div className="login-error">
-                <span className="error-icon">⚠️</span>
+                <span className="error-icon"><AlertTriangle size={16} /></span>
                 <span>{error}</span>
                 {attemptsLeft !== null && attemptsLeft > 0 && (
                     <div className="attempts-warning">
@@ -111,7 +112,7 @@ const Login = ({ onLoginSuccess }) => {
         
         return (
             <div className="login-warning">
-                <span className="warning-icon">🔒</span>
+                <span className="warning-icon"><Lock size={16} /></span>
                 <span>You must change your password after login</span>
                 <button 
                     className="continue-button"
@@ -148,7 +149,7 @@ const Login = ({ onLoginSuccess }) => {
                     <div className="form-group">
                         <label htmlFor="username" className="sr-only">Username</label>
                         <div className="input-container">
-                            <span className="input-icon">👤</span>
+                            <span className="input-icon"><User size={20} /></span>
                             <input
                                 type="text"
                                 id="username"
@@ -167,7 +168,7 @@ const Login = ({ onLoginSuccess }) => {
                     <div className="form-group">
                         <label htmlFor="password" className="sr-only">Password</label>
                         <div className="input-container">
-                            <span className="input-icon">🔒</span>
+                            <span className="input-icon"><Lock size={20} /></span>
                             <input
                                 type="password"
                                 id="password"

@@ -7,6 +7,7 @@ import PhoneNumberModal from './PhoneNumberModal';
 import LiveStreamControls from './LiveStreamControls';
 import ApiService from '../services/api';
 import authService from '../services/authService';
+import { Smartphone, PenLine, Download, Info, Battery, BatteryCharging, BatteryWarning, Cpu, MapPin, Contact, FileAudio, MessageSquare, PhoneCall, AlertTriangle, Zap } from 'lucide-react';
 import './DeviceDetail.css';
 
 const DeviceDetail = ({ user }) => {
@@ -336,7 +337,7 @@ const DeviceDetail = ({ user }) => {
             onClick={() => setShowPhoneModal(true)}
             title="Add phone numbers"
           >
-            ✏️
+            <PenLine size={14} />
           </button>
         </div>
       );
@@ -352,7 +353,7 @@ const DeviceDetail = ({ user }) => {
           onClick={() => setShowPhoneModal(true)}
           title="Edit phone numbers"
         >
-          ✏️
+          <PenLine size={14} />
         </button>
       </div>
     );
@@ -365,11 +366,11 @@ const DeviceDetail = ({ user }) => {
   };
 
   const getBatteryIcon = (batteryLevel, isCharging) => {
-    if (isCharging) return '🔋'; // Charging icon
-    if (batteryLevel >= 75) return '🔋'; // Full battery
-    if (batteryLevel >= 50) return '🔋'; // Medium battery
-    if (batteryLevel >= 25) return '🔋'; // Low battery
-    return '🪫'; // Very low battery
+    if (isCharging) return <BatteryCharging size={14} />;
+    if (batteryLevel >= 75) return <Battery size={14} />;
+    if (batteryLevel >= 50) return <Battery size={14} />;
+    if (batteryLevel >= 25) return <Battery size={14} />;
+    return <BatteryWarning size={14} />;
   };
 
   if (loading) {
@@ -387,7 +388,7 @@ const DeviceDetail = ({ user }) => {
     return (
       <div className="device-detail-container">
         <div className="error-state">
-          <h2>❌ Error</h2>
+          <h2><AlertTriangle size={24} className="inline-icon" /> Error</h2>
           <p>{error}</p>
           <button onClick={() => navigate('/')} className="btn btn-secondary">
             ← Back to Dashboard
@@ -405,7 +406,7 @@ const DeviceDetail = ({ user }) => {
           ← Back to Dashboard
         </button>
         <div className="device-title">
-          <h1>📱 {deviceInfo?.display_name || deviceId}</h1>
+          <h1><Smartphone size={28} className="title-icon" /> {deviceInfo?.display_name || deviceId}</h1>
           {isIOS && (
             <div className="device-platform-badge ios">
                iPhone
@@ -429,7 +430,7 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
               </span>
               {deviceExtendedInfo.battery.is_charging && (
                 <span className="charging-indicator" title={`Charging via ${deviceExtendedInfo.battery.charging_method || 'Unknown'}`}>
-                  ⚡
+                  <Zap size={10} />
                 </span>
               )}
             </div>
@@ -446,7 +447,7 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
                 }}
                 title="Rename Device"
               >
-                ✏️ Rename
+                <PenLine size={14} /> Rename
               </button>
             )}
 
@@ -459,7 +460,7 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
                 }}
                 title="Export Device Data"
               >
-                📤 Export Data
+                <Download size={14} /> Export Data
               </button>
             )}
           </div>
@@ -542,7 +543,7 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
         <div className="modal-overlay">
           <div className="modal-content export-modal">
             <div className="modal-header">
-              <h3>📤 Export Device Data</h3>
+              <h3><Download size={20} className="inline-icon" /> Export Device Data</h3>
               <button
                 className="close-btn"
                 onClick={() => {
@@ -615,7 +616,7 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
                 onClick={handleExportDevice}
                 disabled={exportLoading}
               >
-                {exportLoading ? '📤 Exporting...' : '📤 Export Excel File'}
+                {exportLoading ? <><Download size={14} /> Exporting...</> : <><Download size={14} /> Export Excel File</>}
               </button>
             </div>
           </div>
@@ -625,14 +626,14 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
       {/* Device Info Summary */}
       <div className="device-summary">
         <div className="summary-card">
-          <h3>📊 Device Summary</h3>
+          <h3><Cpu size={20} className="inline-icon" /> Device Summary</h3>
 
           {/* Show info message if no device data */}
           {(!deviceExtendedInfo.android_id &&
             (!deviceExtendedInfo.phone_numbers || deviceExtendedInfo.phone_numbers.length === 0) &&
             (!deviceExtendedInfo.contacts || deviceExtendedInfo.contacts.length === 0)) && (
               <div className="device-info-notice">
-                <p>ℹ️ <strong>Device Information Not Available</strong></p>
+                <p><Info size={16} className="inline-icon" /> <strong>Device Information Not Available</strong></p>
                 <p>This device hasn't synced its information yet. Device details (Android ID, phone numbers, contacts) will appear here once the device uploads its data.</p>
               </div>
             )}
@@ -694,7 +695,7 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
                   onClick={handleViewContacts}
                   title={deviceExtendedInfo.contacts?.length === 0 ? "No contacts available - Device needs to sync" : ""}
                 >
-                  📞 View Contacts ({deviceExtendedInfo.contacts?.length || 0})
+                  <Contact size={16} /> View Contacts ({deviceExtendedInfo.contacts?.length || 0})
                   {deviceExtendedInfo.contacts?.length === 0 && <span className="sync-indicator"> - Not synced</span>}
                 </button>
               </div>
@@ -704,7 +705,7 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
                 className="summary-btn btn-location-table"
                 onClick={handleViewLocationTable}
               >
-                📍 Location Table
+                <MapPin size={16} /> Location Table
               </button>
             </div>
             <div className="summary-item">
@@ -712,7 +713,7 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
                 className="summary-btn btn-audio-table"
                 onClick={handleViewAudioTable}
               >
-                🎵 Audio Recordings
+                <FileAudio size={16} /> Audio Recordings
               </button>
             </div>
             {!isIOS && (
@@ -721,7 +722,7 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
                   className="summary-btn btn-sms-table"
                   onClick={handleViewSmsTable}
                 >
-                  💬 SMS Messages
+                  <MessageSquare size={16} /> SMS Messages
                 </button>
               </div>
             )}
@@ -731,7 +732,7 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
                   className="summary-btn btn-call-logs-table"
                   onClick={handleViewCallLogsTable}
                 >
-                  📞 Call Logs
+                  <PhoneCall size={16} /> Call Logs
                 </button>
               </div>
             )}

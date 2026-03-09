@@ -1,4 +1,5 @@
 import React from 'react';
+import { Activity, CircleDashed, AlertCircle, HelpCircle, RefreshCw } from 'lucide-react';
 import './ConnectionStatus.css';
 
 const ConnectionStatus = ({ status, lastUpdated, isPolling }) => {
@@ -6,28 +7,28 @@ const ConnectionStatus = ({ status, lastUpdated, isPolling }) => {
     switch (status) {
       case 'connected':
         return {
-          icon: '🟢',
+          icon: <Activity size={24} />,
           title: 'Connected',
           description: 'Real-time updates active',
           className: 'connected'
         };
       case 'connecting':
         return {
-          icon: '🟡',
+          icon: <CircleDashed size={24} />,
           title: 'Connecting',
           description: 'Establishing connection...',
           className: 'connecting'
         };
       case 'error':
         return {
-          icon: '🔴',
+          icon: <AlertCircle size={24} />,
           title: 'Connection Error',
           description: 'Unable to reach server',
           className: 'error'
         };
       default:
         return {
-          icon: '⚫',
+          icon: <HelpCircle size={24} />,
           title: 'Unknown',
           description: 'Status unknown',
           className: 'unknown'
@@ -71,7 +72,7 @@ const ConnectionStatus = ({ status, lastUpdated, isPolling }) => {
             className="btn btn-secondary"
             onClick={() => window.location.reload()}
           >
-            🔄 Retry Connection
+            <RefreshCw size={14} style={{marginRight: '6px', verticalAlign: 'middle'}} /> Retry Connection
           </button>
         </div>
       )}

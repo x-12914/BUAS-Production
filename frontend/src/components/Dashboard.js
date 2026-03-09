@@ -11,6 +11,7 @@ import OperatorDashboard from './OperatorDashboard';
 import SuperUserDashboard from './SuperUserDashboard';
 import ApiService from '../services/api';
 import authService from '../services/authService';
+import { Pause, Play, Lock, Users, LogOut } from 'lucide-react';
 import './Dashboard.css';
 import './RoleDashboards.css';
 
@@ -266,7 +267,7 @@ const Dashboard = ({ user, onLogout }) => {
                 className={`polling-toggle ${isPolling ? 'active' : ''}`}
                 onClick={togglePolling}
               >
-                {isPolling ? '⏸️' : '▶️'} 
+                {isPolling ? <Pause size={16} /> : <Play size={16} />} 
                 {isPolling ? 'Pause Updates' : 'Resume Updates'}
               </button>
               <div className="polling-indicator">
@@ -296,7 +297,7 @@ const Dashboard = ({ user, onLogout }) => {
                     </div>
                   </div>
                   <button className="user-menu-item" onClick={handleChangePassword}>
-                    🔒 Change Password
+                    <Lock size={16} /> Change Password
                   </button>
                   {(currentUser?.role === 'super_super_admin' || 
                     currentUser?.role === 'super_user') && (
@@ -304,12 +305,12 @@ const Dashboard = ({ user, onLogout }) => {
                       setActiveTab('users');
                       setShowUserMenu(false);
                     }}>
-                      👥 User Management
+                      <Users size={16} /> User Management
                     </button>
                   )}
                   <hr className="menu-divider" />
                   <button className="user-menu-item danger" onClick={handleLogout}>
-                    🚪 Logout
+                    <LogOut size={16} /> Logout
                   </button>
                 </div>
               )}

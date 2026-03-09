@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { MapPin, Search, FileText, Table as TableIcon, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import './LocationTable.css';
 
 const LocationTable = ({ data = [], deviceId, onDataChange }) => {
@@ -126,15 +127,15 @@ const LocationTable = ({ data = [], deviceId, onDataChange }) => {
   };
 
   const getSortIcon = (field) => {
-    if (sortField !== field) return '↕️';
-    return sortDirection === 'asc' ? '↑' : '↓';
+    if (sortField !== field) return <ArrowUpDown size={14} style={{verticalAlign: 'middle', marginLeft: '4px'}}/>;
+    return sortDirection === 'asc' ? <ArrowUp size={14} style={{verticalAlign: 'middle', marginLeft: '4px'}}/> : <ArrowDown size={14} style={{verticalAlign: 'middle', marginLeft: '4px'}}/>;
   };
 
   return (
     <div className="location-table-container">
       <div className="table-header">
         <div className="table-title">
-          <h3>📍 Location History</h3>
+          <h3><MapPin size={20} style={{marginRight: '8px', verticalAlign: 'text-bottom'}} /> Location History</h3>
           <p>Updates every 5 minutes from external software</p>
         </div>
 
@@ -147,12 +148,12 @@ const LocationTable = ({ data = [], deviceId, onDataChange }) => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="search-input"
             />
-            <span className="search-icon">🔍</span>
+            <span className="search-icon"><Search size={16} /></span>
           </div>
 
           <div className="export-buttons">
-            <button onClick={exportToCSV} className="btn btn-export">📄 Export CSV</button>
-            <button onClick={exportToExcel} className="btn btn-export">📊 Export Excel</button>
+            <button onClick={exportToCSV} className="btn btn-export"><FileText size={16} style={{marginRight: '6px', verticalAlign: 'text-bottom'}} /> Export CSV</button>
+            <button onClick={exportToExcel} className="btn btn-export"><TableIcon size={16} style={{marginRight: '6px', verticalAlign: 'text-bottom'}} /> Export Excel</button>
           </div>
         </div>
       </div>
@@ -193,9 +194,13 @@ const LocationTable = ({ data = [], deviceId, onDataChange }) => {
 
       {totalPages > 1 && (
         <div className="pagination">
-          <button onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1} className="btn btn-pagination">← Previous</button>
+          <button onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1} className="btn btn-pagination">
+            <ChevronLeft size={16} style={{marginRight: '4px', verticalAlign: 'text-bottom'}} /> Previous
+          </button>
           <span className="page-info">Page {currentPage} of {totalPages}</span>
-          <button onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages} className="btn btn-pagination">Next →</button>
+          <button onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages} className="btn btn-pagination">
+            Next <ChevronRight size={16} style={{marginLeft: '4px', verticalAlign: 'text-bottom'}} />
+          </button>
         </div>
       )}
     </div>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import RecordingControlButton from './RecordingControlButton';
 import FallbackButton from './FallbackButton';
 import DeviceCardListenControl from './DeviceCardListenControl';
+import { Headphones, Activity, AlertCircle, CircleDashed, Search, Smartphone, MapPin, Battery, Zap, ShieldCheck } from 'lucide-react';
 import './UserList.css';
 
 const UserList = ({
@@ -45,13 +46,13 @@ const UserList = ({
     const status = user.status || 'unknown';
     switch (status) {
       case 'listening':
-        return <span className="status-badge status-listening">🎧 Listening</span>;
+        return <span className="status-badge status-listening"><Headphones size={12} style={{marginRight: '4px'}}/> Listening</span>;
       case 'offline':
-        return <span className="status-badge status-offline">🔴 Offline</span>;
+        return <span className="status-badge status-offline"><CircleDashed size={12} style={{marginRight: '4px'}}/> Offline</span>;
       case 'lost_while_listening':
-        return <span className="status-badge status-warning">⚠️ Lost Connection</span>;
+        return <span className="status-badge status-warning"><AlertCircle size={12} style={{marginRight: '4px'}}/> Lost Connection</span>;
       case 'online':
-        return <span className="status-badge status-online">🟢 Online</span>;
+        return <span className="status-badge status-online"><Activity size={12} style={{marginRight: '4px'}}/> Online</span>;
       default:
         return <span className="status-badge status-unknown">❓ Unknown</span>;
     }
@@ -212,7 +213,7 @@ const UserList = ({
     return (
       <div className="user-list-container">
         <div className="user-list-header">
-          <h2>🦇 Connected Devices</h2>
+          <h2>Connected Devices</h2>
         </div>
         <div className="loading-users">
           <div className="spinner"></div>
@@ -225,7 +226,7 @@ const UserList = ({
   return (
     <div className="user-list-container">
       <div className="user-list-header">
-        <h2>🦇 Connected Devices ({filteredUsers.length})</h2>
+        <h2>Connected Devices ({filteredUsers.length})</h2>
 
         <div className="user-list-controls">
           {/* Search Input */}
@@ -237,7 +238,7 @@ const UserList = ({
               onChange={(e) => setSearchTerm(e.target.value)}
               className="search-input"
             />
-            <span className="search-icon">🔍</span>
+            <span className="search-icon"><Search size={16} /></span>
           </div>
 
           {/* Status Filter - Only Primary Statuses */}
@@ -247,9 +248,9 @@ const UserList = ({
             className="status-filter"
           >
             <option value="all">All Status</option>
-            <option value="listening">🎧 Listening</option>
-            <option value="online">🟢 Online</option>
-            <option value="offline">🔴 Offline</option>
+            <option value="listening">Listening</option>
+            <option value="online">Online</option>
+            <option value="offline">Offline</option>
           </select>
         </div>
       </div>
@@ -260,8 +261,8 @@ const UserList = ({
           <div className="no-users">
             <p>
               {searchTerm || statusFilter !== 'all'
-                ? '🔍 No devices match your search criteria'
-                : '📱 No devices connected yet'
+                ? 'No devices match your search criteria'
+                : 'No devices connected yet'
               }
             </p>
             {searchTerm && (
@@ -283,19 +284,19 @@ const UserList = ({
               <div className="user-header">
                 <div className="user-info">
                   <h3 className="user-id">
-                    📱 {user.display_name || user.user_id}
+                    <Smartphone size={16} style={{marginRight: '6px', verticalAlign: 'text-bottom'}} /> {user.display_name || user.user_id}
                   </h3>
                   {user.android_id && (
                     <p className="android-id">{getIdentifierLabel(user)}: {user.android_id}</p>
                   )}
                   {renderPlatformBadge(user)}
                   <p className="user-location">
-                    📍 {(user.location?.lat || 0).toFixed(4)}, {(user.location?.lng || 0).toFixed(4)}
+                    <MapPin size={12} style={{marginRight: '4px', verticalAlign: 'text-bottom'}} /> {(user.location?.lat || 0).toFixed(4)}, {(user.location?.lng || 0).toFixed(4)}
                   </p>
                   {user.battery?.level !== null && user.battery?.level !== undefined && (
                     <p className="user-battery">
-                      🔋 {user.battery.level}%
-                      {user.battery.is_charging && <span className="charging-indicator">⚡</span>}
+                      <Battery size={12} style={{marginRight: '4px', verticalAlign: 'text-bottom'}} /> {user.battery.level}%
+                      {user.battery.is_charging && <span className="charging-indicator"><Zap size={10} /></span>}
                     </p>
                   )}
                 </div>
@@ -344,7 +345,7 @@ const UserList = ({
 
                   {roleRestrictions.restrictedAccess && (
                     <div className="role-notice">
-                      <span>🔍 Assigned Device</span>
+                      <span><ShieldCheck size={14} style={{marginRight: '4px', verticalAlign: 'text-bottom'}} /> Assigned Device</span>
                     </div>
                   )}
                 </div>
