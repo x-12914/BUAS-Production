@@ -2,8 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import ApiService from '../services/api';
+import { Mic, Square, MapPin, AlertTriangle, Play, HelpCircle } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import './DeviceDetailMap.css';
+
+// SVG strings for Leaflet divIcons
+const SVG_MIC = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>`;
+const SVG_SQUARE = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/></svg>`;
+const SVG_MAP_PIN = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>`;
+const SVG_HELP = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>`;
 
 // Get the API base URL for audio links
 const getApiUrl = () => {
@@ -118,7 +125,7 @@ const createRecordingStartIcon = () => {
         justify-content: center;
         font-size: 14px;
       ">
-        🎤
+        ${SVG_MIC}
       </div>
     `,
     iconSize: [28, 28],
@@ -143,7 +150,7 @@ const createRecordingStopIcon = () => {
         justify-content: center;
         font-size: 14px;
       ">
-        ⏹️
+        ${SVG_SQUARE}
       </div>
     `,
     iconSize: [28, 28],
@@ -169,7 +176,7 @@ const createActiveRecordingIcon = () => {
         font-size: 16px;
         animation: pulse 2s infinite;
       ">
-        🎤
+        ${SVG_MIC}
       </div>
     `,
     iconSize: [32, 32],
@@ -202,12 +209,12 @@ const createTemporalLayeredIcon = (events) => {
   
   const getIconForType = (event) => {
     if (event.type === 'recording') {
-      return '🎤';
+      return SVG_MIC;
     }
     if (event.type === 'location') {
-      return '📍';
+      return SVG_MAP_PIN;
     }
-    return '❓';
+    return SVG_HELP;
   };
   
   return L.divIcon({
@@ -528,7 +535,7 @@ const DeviceDetailMap = ({ deviceId }) => {
         marginBottom: '8px',
         color: event.isActive ? '#22c55e' : '#ef4444'
       }}>
-        🎤 Recording {event.isActive ? 'Active' : 'Completed'}
+        <Mic size={16} style={{verticalAlign: 'text-bottom', marginRight: '4px'}}/> Recording {event.isActive ? 'Active' : 'Completed'}
       </div>
       
       <div style={{ 
@@ -565,8 +572,8 @@ const DeviceDetailMap = ({ deviceId }) => {
           color: '#3b82f6',
           marginBottom: '4px' 
         }}>
-          <a href={`${API_BASE_URL}/api/uploads/${event.audio_file_id}?t=${Date.now()}`} target="_blank" rel="noopener noreferrer">
-            🎵 Play Audio
+          <a href={`${API_BASE_URL}/api/uploads/${event.audio_file_id}?t=${Date.now()}`} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center' }}>
+            <Play size={12} style={{marginRight: '4px'}}/> Play Audio
           </a>
         </div>
       )}
@@ -589,7 +596,7 @@ const DeviceDetailMap = ({ deviceId }) => {
         marginBottom: '8px',
         color: '#6b7280'
       }}>
-        📍 Events at This Location
+        <MapPin size={16} style={{verticalAlign: 'text-bottom', marginRight: '4px'}}/> Events at This Location
       </div>
       
       <div style={{ 
@@ -614,7 +621,7 @@ const DeviceDetailMap = ({ deviceId }) => {
               {event.type === 'location' && (
                 <div>
                   <div style={{ fontWeight: 'bold', fontSize: '12px', color: event.isLatest ? '#8b5cf6' : '#3b82f6' }}>
-                    📍 Location Update {event.isLatest ? '(Latest)' : ''}
+                    <MapPin size={12} style={{verticalAlign: 'text-bottom', marginRight: '4px'}}/> Location Update {event.isLatest ? '(Latest)' : ''}
                   </div>
                   <div style={{ fontSize: '11px', color: '#6b7280' }}>
                     {formatTimestamp(event.timestamp)}
@@ -629,7 +636,7 @@ const DeviceDetailMap = ({ deviceId }) => {
               {event.type === 'recording' && (
                 <div>
                   <div style={{ fontWeight: 'bold', fontSize: '12px', color: '#22c55e' }}>
-                    🎤 Recording {event.isActive ? 'Active' : 'Completed'}
+                    <Mic size={12} style={{verticalAlign: 'text-bottom', marginRight: '4px'}}/> Recording {event.isActive ? 'Active' : 'Completed'}
                   </div>
                   <div style={{ fontSize: '11px', color: '#6b7280' }}>
                     Started: {formatTimestamp(event.startTime)}
@@ -646,8 +653,8 @@ const DeviceDetailMap = ({ deviceId }) => {
                   )}
                   {event.audio_file_id && (
                     <div style={{ fontSize: '11px' }}>
-                      <a href={`${API_BASE_URL}/api/uploads/${event.audio_file_id}?t=${Date.now()}`} target="_blank" rel="noopener noreferrer">
-                        🎵 Play Audio
+                      <a href={`${API_BASE_URL}/api/uploads/${event.audio_file_id}?t=${Date.now()}`} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                        <Play size={10} style={{marginRight: '2px'}}/> Play Audio
                       </a>
                     </div>
                   )}
@@ -656,7 +663,7 @@ const DeviceDetailMap = ({ deviceId }) => {
               {event.type === 'recording_stop' && (
                 <div>
                   <div style={{ fontWeight: 'bold', fontSize: '12px', color: '#ef4444' }}>
-                    ⏹️ Recording Stopped
+                    <Square size={12} fill="currentColor" style={{verticalAlign: 'text-bottom', marginRight: '4px'}}/> Recording Stopped
                   </div>
                   <div style={{ fontSize: '11px', color: '#6b7280' }}>
                     Duration: {event.duration < 1 ? `${Math.round(event.duration * 60)} seconds` : `${Math.floor(event.duration)} minutes`}
@@ -699,7 +706,7 @@ const DeviceDetailMap = ({ deviceId }) => {
     return (
       <div className="device-detail-map-container">
         <div className="map-error">
-          <span>⚠️ {error}</span>
+          <span><AlertTriangle size={18} style={{verticalAlign: 'middle', marginRight: '8px'}}/> {error}</span>
         </div>
       </div>
     );
@@ -737,7 +744,7 @@ const DeviceDetailMap = ({ deviceId }) => {
                 checked={showLocations} 
                 onChange={(e) => setShowLocations(e.target.checked)}
               />
-              📍 Locations
+              <MapPin size={16} style={{verticalAlign: 'middle'}}/> Locations
             </label>
             <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
               <input 
@@ -745,7 +752,7 @@ const DeviceDetailMap = ({ deviceId }) => {
                 checked={showRecordings} 
                 onChange={(e) => setShowRecordings(e.target.checked)}
               />
-              🎤 Recordings
+              <Mic size={16} style={{verticalAlign: 'middle'}}/> Recordings
             </label>
           </div>
         </div>

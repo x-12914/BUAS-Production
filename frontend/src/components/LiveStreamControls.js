@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import LiveAudioPlayer from './LiveAudioPlayer';
+import { Headphones, Radio } from 'lucide-react';
 import './LiveStreamControls.css';
 
 const LiveStreamControls = ({ deviceId, deviceInfo }) => {
@@ -25,7 +26,7 @@ const LiveStreamControls = ({ deviceId, deviceInfo }) => {
             onClick={handleStartListening}
             title="Start listening to live audio from this device"
           >
-            <span className="button-icon">🎧</span>
+            <span className="button-icon"><Headphones size={18} style={{verticalAlign: 'text-bottom'}}/></span>
             <span className="button-text">Listen Live</span>
           </button>
           <p className="stream-info-text">
@@ -41,7 +42,7 @@ const LiveStreamControls = ({ deviceId, deviceInfo }) => {
       
       {isStreaming && (
         <div className="streaming-indicator">
-          <span className="live-badge">🔴 LIVE</span>
+          <span className="live-badge"><Radio size={12} style={{marginRight: '4px', verticalAlign: 'middle', animation: 'pulse 2s infinite'}}/> LIVE</span>
           <span className="live-text">Streaming active</span>
         </div>
       )}

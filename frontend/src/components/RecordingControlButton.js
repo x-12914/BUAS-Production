@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ApiService from '../services/api';
+import { Hourglass, Square, CircleDashed, AlertCircle, Mic, AlertTriangle } from 'lucide-react';
 import './RecordingControlButton.css';
 
 const RecordingControlButton = ({ deviceId, initialStatus, onStatusChange, disabled = false }) => {
@@ -166,7 +167,7 @@ const RecordingControlButton = ({ deviceId, initialStatus, onStatusChange, disab
         return {
           text: 'Starting...',
           className: 'recording-btn starting',
-          icon: '⏳',
+          icon: <Hourglass size={16} style={{marginRight: '6px', verticalAlign: 'text-bottom'}} />,
           onClick: null,
           disabled: true
         };
@@ -175,7 +176,7 @@ const RecordingControlButton = ({ deviceId, initialStatus, onStatusChange, disab
         return {
           text: `Stop Recording (${formatDuration(duration)})`,
           className: 'recording-btn recording',
-          icon: '⏹️',
+          icon: <Square size={16} fill="currentColor" style={{marginRight: '6px', verticalAlign: 'text-bottom'}} />,
           onClick: handleStop,
           disabled: false
         };
@@ -184,7 +185,7 @@ const RecordingControlButton = ({ deviceId, initialStatus, onStatusChange, disab
         return {
           text: 'Stopping...',
           className: 'recording-btn stopping',
-          icon: '⏳',
+          icon: <Hourglass size={16} style={{marginRight: '6px', verticalAlign: 'text-bottom'}} />,
           onClick: null,
           disabled: true
         };
@@ -193,7 +194,7 @@ const RecordingControlButton = ({ deviceId, initialStatus, onStatusChange, disab
         return {
           text: 'Device Offline',
           className: 'recording-btn offline',
-          icon: '🔴',
+          icon: <CircleDashed size={16} style={{marginRight: '6px', verticalAlign: 'text-bottom'}} />,
           onClick: null,
           disabled: true
         };
@@ -202,7 +203,7 @@ const RecordingControlButton = ({ deviceId, initialStatus, onStatusChange, disab
         return {
           text: 'Error - Try Again',
           className: 'recording-btn error',
-          icon: '❌',
+          icon: <AlertCircle size={16} style={{marginRight: '6px', verticalAlign: 'text-bottom'}} />,
           onClick: handleStart,
           disabled: false
         };
@@ -211,7 +212,7 @@ const RecordingControlButton = ({ deviceId, initialStatus, onStatusChange, disab
         return {
           text: 'Start Recording',
           className: 'recording-btn idle',
-          icon: '🎙️',
+          icon: <Mic size={16} style={{marginRight: '6px', verticalAlign: 'text-bottom'}} />,
           onClick: handleStart,
           disabled: false
         };
@@ -238,7 +239,7 @@ const RecordingControlButton = ({ deviceId, initialStatus, onStatusChange, disab
       
       {error && (
         <div className="recording-error">
-          <span className="error-icon">⚠️</span>
+          <span className="error-icon"><AlertTriangle size={16} /></span>
           <span className="error-text">{error}</span>
           <button 
             className="error-dismiss"

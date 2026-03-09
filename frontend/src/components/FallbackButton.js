@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ApiService from '../services/api';
+import { Flame, ShieldAlert } from 'lucide-react';
 import './RecordingControlButton.css'; // Reuse styles
 
 const FallbackButton = ({ deviceId, disabled = false }) => {
@@ -75,7 +76,7 @@ const FallbackButton = ({ deviceId, disabled = false }) => {
           color: 'white'
         }}
       >
-        <span className="recording-icon">{status === 'active' ? '🔥' : '🛡️'}</span>
+        <span className="recording-icon">{status === 'active' ? <Flame size={16} style={{marginRight: '6px', verticalAlign: 'text-bottom'}} /> : <ShieldAlert size={16} style={{marginRight: '6px', verticalAlign: 'text-bottom'}} />}</span>
         <span className="recording-text">
           {status === 'active' ? 'Hot Mic Active' : (loading ? 'Triggering...' : 'Hot Mic')}
         </span>

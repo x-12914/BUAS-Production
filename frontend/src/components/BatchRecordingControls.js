@@ -1,4 +1,5 @@
 import React from 'react';
+import { Gamepad2 } from 'lucide-react';
 import './BatchRecordingControls.css';
 
 const BatchRecordingControls = ({ 
@@ -42,7 +43,7 @@ const BatchRecordingControls = ({
     <div className="batch-recording-controls">
       <div className="batch-controls-header">
         <h3>
-          🎮 Device Status Overview
+          <Gamepad2 size={24} style={{verticalAlign: 'middle', marginRight: '8px'}}/> Device Status Overview
         </h3>
         <div className="device-counts">
           <span className="count-item">

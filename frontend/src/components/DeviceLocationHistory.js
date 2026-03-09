@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import LocationTable from './LocationTable';
 import ApiService from '../services/api';
+import { MapPin, AlertTriangle } from 'lucide-react';
 import './DeviceLocationHistory.css';
 
 const DeviceLocationHistory = () => {
@@ -67,7 +68,7 @@ const DeviceLocationHistory = () => {
     return (
       <div className="device-location-history-container">
         <div className="error-state">
-          <h2>❌ Error</h2>
+          <h2><AlertTriangle size={24} style={{verticalAlign: 'text-bottom', marginRight: '8px'}}/> Error</h2>
           <p>{error}</p>
           <button onClick={() => navigate(`/device/${deviceId}`)} className="btn btn-secondary">
             ← Back to Device Details
@@ -85,7 +86,7 @@ const DeviceLocationHistory = () => {
           ← Back to Device Details
         </button>
         <div className="location-history-title">
-          <h1>📍 Device Location History</h1>
+          <h1><MapPin size={28} style={{verticalAlign: 'text-bottom', marginRight: '8px'}} /> Device Location History</h1>
           <p>Device: {deviceId}</p>
           {deviceInfo && (
             <div className="device-status-info">

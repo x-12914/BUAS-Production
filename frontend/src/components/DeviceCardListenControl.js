@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import LiveAudioPlayer from './LiveAudioPlayer';
+import { Headphones } from 'lucide-react';
 import './DeviceCardListenControl.css';
 
 let activeListenSession = null;
@@ -175,7 +176,7 @@ const DeviceCardListenControl = ({ deviceId, deviceName, disabled = false }) => 
         disabled={disabled || isOpen}
         title={disabled ? 'Action disabled while dashboard is loading' : buttonLabel}
       >
-        <span className="listen-live-icon">🎧</span>
+        <span className="listen-live-icon"><Headphones size={16} /></span>
         <span className="listen-live-text">{buttonLabel}</span>
         {isBusy && <span className="listen-live-spinner" aria-hidden="true"></span>}
       </button>
