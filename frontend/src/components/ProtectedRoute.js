@@ -125,7 +125,7 @@ const LoadingSpinner = () => (
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+                background: linear-gradient(135deg, #18181b 0%, #71717a 100%);
                 font-family: 'Inter', sans-serif;
             }
             

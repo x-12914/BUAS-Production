@@ -38,7 +38,7 @@
   padding: 10px 15px;
   background: var(--bg-tertiary, #21262d);
   border-radius: 8px;
-  border-left: 4px solid var(--accent-primary, #58a6ff);
+  border-left: 4px solid var(--accent-primary, #a1a1aa);
   border: 1px solid var(--border-color, #30363d);
 }
 
@@ -59,7 +59,7 @@
 }
 
 .stat-value.outgoing {
-  color: var(--accent-primary, #58a6ff);
+  color: var(--accent-primary, #a1a1aa);
 }
 
 .stat-value.missed {
@@ -113,7 +113,7 @@
 .filter-group input:focus,
 .filter-group select:focus {
   outline: none;
-  border-color: var(--accent-primary, #58a6ff);
+  border-color: var(--accent-primary, #a1a1aa);
   box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.25);
 }
 
@@ -327,7 +327,7 @@
 
 .type-badge.outgoing {
   background: rgba(88, 166, 255, 0.2);
-  color: var(--accent-primary, #58a6ff);
+  color: var(--accent-primary, #a1a1aa);
   border: 1px solid rgba(88, 166, 255, 0.3);
 }
 
@@ -424,7 +424,7 @@
 }
 
 .loading {
-  color: var(--accent-primary, #58a6ff);
+  color: var(--accent-primary, #a1a1aa);
 }
 
 .error {

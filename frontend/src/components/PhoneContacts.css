@@ -30,7 +30,7 @@
 }
 
 .back-button {
-  background: var(--accent-primary, #58a6ff);
+  background: var(--accent-primary, #a1a1aa);
   color: white;
   border: none;
   padding: 10px 20px;
@@ -96,7 +96,7 @@
 
 .search-input:focus {
   outline: none;
-  border-color: var(--accent-primary, #58a6ff);
+  border-color: var(--accent-primary, #a1a1aa);
 }
 
 .search-icon {
@@ -176,7 +176,7 @@
 .contact-phone {
   font-family: 'Courier New', monospace;
   font-weight: 500;
-  color: var(--accent-primary, #58a6ff);
+  color: var(--accent-primary, #a1a1aa);
 }
 
 .no-data {
@@ -198,7 +198,7 @@
 }
 
 .btn-pagination {
-  background: var(--accent-primary, #58a6ff);
+  background: var(--accent-primary, #a1a1aa);
   color: white;
   border: none;
   padding: 8px 16px;
@@ -275,7 +275,7 @@
 .loading-contacts .spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid var(--accent-primary, #58a6ff);
+  border: 4px solid var(--accent-primary, #a1a1aa);
   border-top: 4px solid transparent;
   border-radius: 50%;
   animation: spin 1s linear infinite;
@@ -294,7 +294,7 @@
 
 .error-state .btn {
   margin-top: 15px;
-  background: var(--accent-primary, #58a6ff);
+  background: var(--accent-primary, #a1a1aa);
   color: white;
   border: none;
   padding: 10px 20px;
