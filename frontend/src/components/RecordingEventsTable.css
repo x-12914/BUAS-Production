@@ -273,12 +273,12 @@
 }
 
 .audio-btn.play-btn {
-  border-color: #00c853;
-  color: #00c853;
+  border-color: #00f0ff;
+  color: #00f0ff;
 }
 
 .audio-btn.play-btn:hover:not(.disabled) {
-  background-color: #00c853;
+  background-color: #00f0ff;
   color: white;
 }
 

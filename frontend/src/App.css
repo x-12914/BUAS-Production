@@ -1,46 +1,46 @@
 /* =============================================
-   BUAS COMMAND CENTER  INTELLIGENCE TERMINAL
-   Palette: Neon Green + Amber (No Blue)
+   BUAS COMMAND CENTER  CLASSIFIED HUD
+   Obsidian / Navy / Teal accent  No Generic Blue
    ============================================= */
 :root {
-  /* === Deep Black Backgrounds === */
-  --bg-primary: #060607;
-  --bg-secondary: #0b0c0d;
-  --bg-tertiary: #111214;
-  --bg-header: #060607;
-  --bg-card: #0e0f11;
+  /* === Deep Navy Backgrounds (not pure black, not powder blue) === */
+  --bg-primary: #07101c;        /* Page background  deepest navy */
+  --bg-secondary: #0b1624;      /* Panels / containers */
+  --bg-tertiary: #0f1d2e;       /* Cards / rows */
+  --bg-card: #0c1828;          /* Elevated cards */
+  --bg-header: #060e1a;         /* Header bar */
 
   /* === Text === */
-  --text-primary: #d8f5d8;
-  --text-secondary: #6e9b6e;
-  --text-muted: #3a573a;
+  --text-primary: #c8dce8;      /* Primary  light steel */
+  --text-secondary: #5c8099;    /* Secondary  muted teal-grey */
+  --text-muted: #2d4a5e;        /* Very muted */
 
-  /* === PRIMARY: Neon Green (terminal operator aesthetic) === */
-  --accent-primary: #00e676;
-  --accent-third: #00c853;
-  --accent-glow: rgba(0, 230, 118, 0.4);
+  /* === PRIMARY: Sharp HUD Teal (used SPARINGLY - borders, brackets, glows) === */
+  --accent-primary: #00f0ff;    /* HUD teal  the bracket/border color */
+  --accent-third: #00c8d4;      /* Slightly darker teal variant */
+  --accent-glow: rgba(0, 240, 255, 0.25);
 
-  /* === SECONDARY: Amber (warm tactical highlight) === */
-  --accent-secondary: #ffab00;
-  --accent-amber-glow: rgba(255, 171, 0, 0.35);
+  /* === SECONDARY: Violet/Purple (for tags/badges  adds depth) === */
+  --accent-secondary: #7c4dff;
+  --accent-amber: #ff9100;      /* Orange for warnings  not amber, more vivid */
 
   /* === Semantic === */
-  --accent-success: #00c853;
-  --accent-warning: #ffab00;
-  --accent-danger: #ff1744;
+  --accent-success: #00e676;    /* Bright green  online/active */
+  --accent-warning: #ff9100;    /* Orange-amber */
+  --accent-danger: #ff3d71;     /* Pink-red  danger */
 
   /* === Status === */
-  --status-success: #00c853;
-  --status-warning: #ff6d00;
-  --status-danger: #ff1744;
-  --status-info: #00e676;
+  --status-success: #00e676;
+  --status-warning: #ff9100;
+  --status-danger: #ff3d71;
+  --status-info: #00f0ff;
 
-  /* === Borders / Glass (no blue) === */
-  --border-color: #152015;
-  --border-muted: #0d160d;
-  --shadow-color: rgba(0, 0, 0, 0.85);
-  --glass-bg: rgba(6, 10, 6, 0.85);
-  --glass-border: rgba(0, 230, 118, 0.12);
+  /* === Borders / Glass === */
+  --border-color: #0e2035;
+  --border-muted: #091826;
+  --shadow-color: rgba(0, 0, 0, 0.8);
+  --glass-bg: rgba(7, 16, 28, 0.85);
+  --glass-border: rgba(0, 240, 255, 0.1);
 }
 
 * {
@@ -177,9 +177,9 @@ code {
 }
 
 .status-listening {
-  background: rgba(0, 200, 83, 0.15);
-  color: #00c853;
-  border: 1px solid rgba(0, 200, 83, 0.3);
+  background: rgba(0, 240, 255, 0.15);
+  color: #00f0ff;
+  border: 1px solid rgba(0, 240, 255, 0.3);
 }
 
 .status-online {
@@ -371,9 +371,9 @@ code {
 }
 
 .role-badge.super-user {
-  background: rgba(0, 200, 83, 0.15);
-  color: #00c853;
-  border: 1px solid rgba(0, 200, 83, 0.3);
+  background: rgba(0, 240, 255, 0.15);
+  color: #00f0ff;
+  border: 1px solid rgba(0, 240, 255, 0.3);
 }
 
 .role-badge.analyst {

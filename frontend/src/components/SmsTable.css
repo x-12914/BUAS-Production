@@ -38,7 +38,7 @@
   padding: 10px 15px;
   background: var(--bg-tertiary, #21262d);
   border-radius: 8px;
-  border-left: 4px solid var(--accent-primary, #00c853);
+  border-left: 4px solid var(--accent-primary, #00f0ff);
   border: 1px solid var(--border-color, #30363d);
 }
 
@@ -109,7 +109,7 @@
 .filter-group input:focus,
 .filter-group select:focus {
   outline: none;
-  border-color: var(--accent-primary, #00c853);
+  border-color: var(--accent-primary, #00f0ff);
   box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.25);
 }
 
@@ -385,7 +385,7 @@
 }
 
 .loading {
-  color: var(--accent-primary, #00c853);
+  color: var(--accent-primary, #00f0ff);
 }
 
 .error {
@@ -477,7 +477,7 @@
 }
 
 .expand-btn, .modal-btn {
-  background: var(--accent-primary, #00c853);
+  background: var(--accent-primary, #00f0ff);
   color: white;
   border: none;
   padding: 4px 8px;
@@ -510,7 +510,7 @@
   background: var(--bg-tertiary, #21262d);
   border-radius: 6px;
   margin: 10px;
-  border-left: 4px solid var(--accent-primary, #00c853);
+  border-left: 4px solid var(--accent-primary, #00f0ff);
   white-space: pre-wrap;
   word-wrap: break-word;
   line-height: 1.5;

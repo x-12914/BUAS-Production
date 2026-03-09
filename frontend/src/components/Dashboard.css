@@ -8,16 +8,16 @@
   color: var(--text-primary);
   font-family: 'Inter', sans-serif;
   background-image: 
-    radial-gradient(circle at top right, rgba(0, 230, 118, 0.05), transparent 40%),
-    radial-gradient(circle at bottom left, rgba(0, 153, 76, 0.05), transparent 40%);
+    radial-gradient(circle at 85% 10%, rgba(0, 240, 255, 0.04) 0%, transparent 35%),
+    radial-gradient(circle at 10% 90%, rgba(124, 77, 255, 0.03) 0%, transparent 30%);
 }
 
 /* Header */
 .dashboard-header {
-  background: rgba(7, 12, 7, 0.85);
+  background: rgba(7, 16, 28, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(0, 230, 118, 0.12);
+  border-bottom: 1px solid rgba(0, 245, 255, 0.12);
   padding: 1rem 2rem;
   position: sticky;
   top: 0;
@@ -60,8 +60,8 @@
 }
 
 .polling-toggle {
-  background: rgba(0, 230, 118, 0.08);
-  border: 1px solid rgba(0, 230, 118, 0.2);
+  background: rgba(0, 245, 255, 0.08);
+  border: 1px solid rgba(0, 245, 255, 0.2);
   color: var(--accent-primary);
   padding: 0.5rem 1rem;
   border-radius: 8px;
@@ -77,8 +77,8 @@
 }
 
 .polling-toggle:hover {
-  background: rgba(0, 230, 118, 0.15);
-  box-shadow: 0 0 15px rgba(0, 230, 118, 0.15);
+  background: rgba(0, 245, 255, 0.15);
+  box-shadow: 0 0 15px rgba(0, 245, 255, 0.15);
 }
 
 .polling-toggle.active {
@@ -122,8 +122,8 @@
 .user-menu { position: relative; }
 
 .user-menu-toggle {
-  background: rgba(15, 20, 15, 0.6);
-  border: 1px solid rgba(0, 230, 118, 0.08);
+  background: rgba(8, 14, 24, 0.6);
+  border: 1px solid rgba(0, 245, 255, 0.08);
   color: var(--text-primary);
   padding: 0.5rem 1rem;
   border-radius: 8px;
@@ -135,9 +135,9 @@
 }
 
 .user-menu-toggle:hover {
-  background: rgba(15, 20, 15, 0.9);
-  border-color: rgba(0, 230, 118, 0.2);
-  box-shadow: 0 0 10px rgba(0, 230, 118, 0.08);
+  background: rgba(8, 14, 24, 0.9);
+  border-color: rgba(0, 245, 255, 0.2);
+  box-shadow: 0 0 10px rgba(0, 245, 255, 0.08);
 }
 
 .user-info {
@@ -172,9 +172,9 @@
   position: absolute;
   top: calc(100% + 10px);
   right: 0;
-  background: rgba(10, 15, 10, 0.95);
+  background: rgba(7, 16, 28, 0.95);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(0, 230, 118, 0.08);
+  border: 1px solid rgba(0, 245, 255, 0.08);
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   min-width: 240px;
@@ -191,7 +191,7 @@
 .user-menu-header {
   padding: 1rem;
   background: rgba(255, 255, 255, 0.03);
-  border-bottom: 1px solid rgba(0, 230, 118, 0.05);
+  border-bottom: 1px solid rgba(0, 245, 255, 0.05);
 }
 
 .user-details strong { color: #fff; font-size: 0.95rem; }
@@ -213,13 +213,13 @@
 }
 
 .user-menu-item:hover {
-  background: rgba(0, 230, 118, 0.05);
+  background: rgba(0, 245, 255, 0.05);
   color: var(--text-primary);
 }
 
 .user-menu-item.danger { color: var(--accent-danger); }
 .user-menu-item.danger:hover { background: rgba(239, 68, 68, 0.1); }
-.menu-divider { border-top: 1px solid rgba(0, 230, 118, 0.05); margin: 0; }
+.menu-divider { border-top: 1px solid rgba(0, 245, 255, 0.05); margin: 0; }
 
 /* Main Content */
 .dashboard-content {
@@ -241,7 +241,7 @@
   display: flex;
   gap: 1rem;
   margin-bottom: 1rem;
-  border-bottom: 1px solid rgba(0, 230, 118, 0.08);
+  border-bottom: 1px solid rgba(0, 245, 255, 0.08);
   padding-bottom: 0;
 }
 
@@ -277,7 +277,7 @@
 
 .tab-button.active {
   color: var(--accent-primary);
-  background: linear-gradient(to top, rgba(0, 230, 118, 0.08), transparent);
+  background: linear-gradient(to top, rgba(0, 245, 255, 0.08), transparent);
 }
 
 .tab-button.active::after { transform: scaleX(1); }
@@ -296,17 +296,17 @@
 .spinner {
   width: 50px;
   height: 50px;
-  border: 3px solid rgba(0, 230, 118, 0.08);
+  border: 3px solid rgba(0, 245, 255, 0.08);
   border-top: 3px solid var(--accent-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  box-shadow: 0 0 15px rgba(0, 230, 118, 0.15);
+  box-shadow: 0 0 15px rgba(0, 245, 255, 0.15);
 }
 
 /* Footer */
 .dashboard-footer {
-  background: rgba(7, 12, 7, 0.9);
-  border-top: 1px solid rgba(0, 230, 118, 0.05);
+  background: rgba(7, 16, 28, 0.9);
+  border-top: 1px solid rgba(0, 245, 255, 0.05);
   padding: 1.5rem 2rem;
   margin-top: auto;
 }

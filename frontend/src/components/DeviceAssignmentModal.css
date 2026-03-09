@@ -97,7 +97,7 @@
 .device-search:focus {
     outline: none;
     border-color: var(--accent-info);
-    box-shadow: 0 0 0 2px rgba(0, 200, 83, 0.2);
+    box-shadow: 0 0 0 2px rgba(0, 240, 255, 0.2);
 }
 
 .control-buttons {
@@ -146,7 +146,7 @@
 }
 
 .device-item.selected {
-    background-color: rgba(0, 200, 83, 0.1);
+    background-color: rgba(0, 240, 255, 0.1);
     border-left: 4px solid var(--accent-info);
 }
 
