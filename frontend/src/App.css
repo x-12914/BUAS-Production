@@ -1,10 +1,10 @@
 /* Dark Theme Color Variables */
 :root {
   /* Tactical Dark Colors */
-  --bg-primary: #050810;
-  --bg-secondary: #0a101d;
-  --bg-tertiary: #131e35;
-  --bg-header: #080d19;
+  --bg-primary: #09090b;
+  --bg-secondary: #121214;
+  --bg-tertiary: #18181b;
+  --bg-header: #09090b;
   
   /* Text Colors */
   --text-primary: #f0f6fc;
@@ -12,10 +12,10 @@
   --text-muted: #64748b;
   
   /* Cyber Accents */
-  --accent-primary: #00e5ff;
-  --accent-secondary: #3b82f6;
-  --accent-third: #00d4ff;
-  --accent-glow: rgba(0, 229, 255, 0.4);
+  --accent-primary: #3f3f46;
+  --accent-secondary: #52525b;
+  --accent-third: #71717a;
+  --accent-glow: rgba(255, 255, 255, 0.05);
   --accent-success: #10b981;
   --accent-warning: #f59e0b;
   --accent-danger: #ef4444;
@@ -27,10 +27,10 @@
   --status-info: #0284c7;
   
   /* Border and UI */
-  --border-color: #1e293b;
+  --border-color: #27272a;
   --border-muted: #0f172a;
   --shadow-color: rgba(0, 0, 0, 0.5);
-  --glass-bg: rgba(10, 16, 29, 0.6);
+  --glass-bg: rgba(18, 18, 20, 0.6);
   --glass-border: rgba(255, 255, 255, 0.05);
 }
 
@@ -109,7 +109,7 @@ code {
 }
 
 .btn-primary:hover {
-  background: #4493e0;
+  background: #52525b;
 }
 
 .btn-success {
