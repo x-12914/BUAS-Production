@@ -164,23 +164,27 @@ def handle_user_disconnect():
 @socketio.on('connect', namespace='/device')
 def handle_device_connect():
     """Handle Android device connection"""
-    android_id = request.args.get('android_id')
+    # Look for ID in multiple possible parameters (Android apps vary)
+    identifier = request.args.get('android_id') or request.args.get('device_id') or request.args.get('id')
     device_token = _extract_device_socket_token()
     token_mode = _get_device_socket_token_mode()
     
-    if not android_id:
-        logger.warning("Device connection attempt without android_id")
-        disconnect()
+    if not identifier:
+        logger.warning(f"Device connection attempt without identifier. Args: {list(request.args.keys())}")
         return False
     
+    # Resolve identifier to actual device_id (handles android_id or device_id match)
+    from .device_utils import resolve_to_device_id
+    device_id = resolve_to_device_id(identifier)
+    
     # Verify device exists in database
-    device = DeviceInfo.query.filter_by(android_id=android_id).first()
+    device = DeviceInfo.query.filter_by(device_id=device_id).first()
     if not device:
-        logger.warning(f"Unknown device attempted connection: {android_id}")
-        disconnect()
+        logger.warning(f"Unknown device attempted connection: {identifier} (resolved as {device_id})")
         return False
 
-    token_valid = _is_valid_device_socket_token(android_id, device_token)
+    # Check token against the device's android_id
+    token_valid = _is_valid_device_socket_token(device.android_id, device_token)
     if token_mode == 'log':
         if not device_token:
             logger.warning(
@@ -189,19 +193,18 @@ def handle_device_connect():
             )
         elif not token_valid:
             logger.warning(
-                f"Device {device.device_id} provided invalid token. "
+                f"Device {device.device_id} provided invalid token: {device_token}. "
                 f"Allowed in compatibility mode (DEVICE_SOCKET_TOKEN_MODE=log)."
             )
     elif token_mode == 'strict' and not token_valid:
         logger.warning(
             f"Rejected device socket for {device.device_id}: invalid or missing token "
-            f"(DEVICE_SOCKET_TOKEN_MODE=strict)."
+            f"(DEVICE_SOCKET_TOKEN_MODE=strict). Provided: {device_token}"
         )
-        disconnect()
         return False
     
     device_sockets[device.device_id] = request.sid
-    logger.info(f"Device {device.device_id} connected to streaming namespace")
+    logger.info(f"✅ Device {device.device_id} connected successfully to streaming namespace")
     return True
 
 

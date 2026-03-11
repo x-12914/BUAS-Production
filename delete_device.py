@@ -36,7 +36,7 @@ def delete_device_completely(device_id, delete_audio_files=True):
     print("=" * 50)
     
     # Connect to database
-    conn = sqlite3.connect('uploads.db')
+    conn = sqlite3.connect('uploads.db', timeout=30)
     cursor = conn.cursor()
     
     try:
@@ -278,7 +278,7 @@ def list_devices_with_data():
     print("📱 DEVICES WITH DATA:")
     print("=" * 30)
     
-    conn = sqlite3.connect('uploads.db')
+    conn = sqlite3.connect('uploads.db', timeout=30)
     cursor = conn.cursor()
     
     try:
