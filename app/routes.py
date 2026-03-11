@@ -672,6 +672,11 @@ def complete_device_command(command_id):
         command_record.status = 'executed'
         command_record.executed_at = datetime.utcnow()
         db.session.commit()
+
+        if command_record.command in ['stream_start', 'stream_stop']:
+            current_app.logger.info(
+                f"[STREAM_FLOW] stage=command_completion_received device_id={command_record.device_id} command={command_record.command} command_id={command_record.id} status={command_record.status}"
+            )
         
         current_app.logger.info(f"✅ Command {command_id} marked as executed for device {command_record.device_id}")
         
@@ -699,6 +704,10 @@ def get_device_command():
         # Resolve android_id to device_id (Android sends android_id but we store device_id in sessions)
         from .device_utils import resolve_to_device_id
         device_id = resolve_to_device_id(identifier)
+
+        current_app.logger.debug(
+            f"[STREAM_FLOW] stage=command_poll_received identifier={identifier} resolved_device_id={device_id} ip={request.remote_addr}"
+        )
         
         # Log resolution for debugging
         if device_id != identifier:
@@ -718,6 +727,11 @@ def get_device_command():
                 db.session.commit()
                 
                 current_app.logger.info(f"Command served to {device_id}: {command_record.command}")
+
+                if command_record.command in ['stream_start', 'stream_stop']:
+                    current_app.logger.info(
+                        f"[STREAM_FLOW] stage=command_poll_served_stream_command device_id={device_id} command={command_record.command} command_id={command_record.id} created_at={command_record.created_at.isoformat()}"
+                    )
                 
                 return jsonify({
                     'command': command_record.command,
@@ -749,7 +763,9 @@ def get_device_command():
                         current_app.logger.info(f"Found session with android_id as device_id: {android_id} -> session {stream_session.id}")
             
             if stream_session:
-                current_app.logger.info(f"Stream start command served to {device_id} (from {identifier}): session {stream_session.id}")
+                current_app.logger.info(
+                    f"[STREAM_FLOW] stage=command_poll_served_stream_start_from_session device_id={device_id} identifier={identifier} session_id={stream_session.id} session_status={stream_session.status} listener_count={stream_session.listener_count}"
+                )
                 
                 return jsonify({
                     'command': 'stream_start',

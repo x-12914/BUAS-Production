@@ -44,10 +44,29 @@ device_sockets = {}  # {device_id: socket_id}
 listener_counts = {}  # {device_id: count}
 redis_subscribers = {}  # {device_id: greenlet} - Track active Redis subscriber greenlets
 stream_stats = {}  # {device_id: {'bytes': 0, 'chunks': 0, 'last_flush': datetime}} - In-memory stats
+stream_seq_state = {}  # {device_id: {'last_seq': int|None, 'chunk_count': int}}
 
 # Background stats flush greenlet
 stats_flush_greenlet = None
 _flask_app = None  # Store Flask app reference for background tasks
+
+
+def _safe_username():
+    try:
+        if current_user.is_authenticated:
+            return current_user.username
+    except Exception:
+        pass
+    return 'anonymous'
+
+
+def _stream_log(stage, level='info', **fields):
+    """Structured stream-flow logs for correlating client/server events."""
+    sanitized = {k: v for k, v in fields.items() if v is not None}
+    details = " ".join([f"{k}={sanitized[k]}" for k in sorted(sanitized.keys())])
+    message = f"[STREAM_FLOW] stage={stage} {details}".strip()
+    log_fn = getattr(logger, level, logger.info)
+    log_fn(message)
 
 
 def _get_device_socket_token_mode():
@@ -108,7 +127,13 @@ def handle_user_connect():
         )
         return False
 
-    logger.info(f"Authenticated stream client connected sid={request.sid} user={current_user.username}")
+    _stream_log(
+        'user_connect',
+        sid=request.sid,
+        user=current_user.username,
+        ip=request.remote_addr,
+        namespace='/stream'
+    )
     return True
 
 
@@ -170,13 +195,31 @@ def handle_device_connect():
     token_mode = _get_device_socket_token_mode()
     
     if not identifier:
-        logger.warning(f"Device connection attempt without identifier. Args: {list(request.args.keys())}")
+        _stream_log(
+            'device_connect_rejected',
+            level='warning',
+            reason='missing_identifier',
+            sid=request.sid,
+            arg_keys=list(request.args.keys()),
+            namespace='/device'
+        )
         return False
     
     # Resolve identifier to actual device_id (handles android_id or device_id match)
     from .device_utils import resolve_to_device_id
     device_id = resolve_to_device_id(identifier)
     
+    _stream_log(
+        'device_connect_attempt',
+        sid=request.sid,
+        identifier=identifier,
+        resolved_device_id=device_id,
+        token_mode=token_mode,
+        token_present=bool(device_token),
+        ip=request.remote_addr,
+        namespace='/device'
+    )
+
     # Verify device exists in database
     device = DeviceInfo.query.filter_by(device_id=device_id).first()
     if not device:
@@ -210,14 +253,25 @@ def handle_device_connect():
                 f"Allowed in compatibility mode (DEVICE_SOCKET_TOKEN_MODE=log)."
             )
     elif token_mode == 'strict' and not token_valid:
-        logger.warning(
-            f"Rejected device socket for {device.device_id}: invalid or missing token "
-            f"(DEVICE_SOCKET_TOKEN_MODE=strict). Provided: {device_token}"
+        _stream_log(
+            'device_connect_rejected',
+            level='warning',
+            reason='invalid_token_strict_mode',
+            sid=request.sid,
+            device_id=device.device_id,
+            token_present=bool(device_token),
+            namespace='/device'
         )
         return False
     
     device_sockets[device.device_id] = request.sid
-    logger.info(f"✅ Device {device.device_id} connected successfully to streaming namespace")
+    _stream_log(
+        'device_connect_accepted',
+        sid=request.sid,
+        device_id=device.device_id,
+        android_id=device.android_id,
+        namespace='/device'
+    )
     
     # PROACTIVE: Check if there's a pending 'requested' session for this device
     # and trigger it immediately upon connection.
@@ -225,7 +279,13 @@ def handle_device_connect():
         session_id = active_sessions[device.device_id]
         session = LiveStreamSession.query.get(session_id)
         if session and session.status == 'requested':
-            logger.info(f"Found pending session {session_id} for device {device.device_id}, sending start command")
+            _stream_log(
+                'pending_session_found_on_device_connect',
+                device_id=device.device_id,
+                session_id=session_id,
+                session_status=session.status,
+                sid=request.sid
+            )
             socketio.emit('live_stream_request', {
                 'session_id': session_id,
                 'device_id': device.device_id
@@ -245,7 +305,13 @@ def handle_device_disconnect():
             break
     
     if device_id:
-        logger.info(f"Device {device_id} disconnected from streaming")
+        _stream_log(
+            'device_disconnect',
+            sid=request.sid,
+            device_id=device_id,
+            had_active_session=device_id in active_sessions,
+            namespace='/device'
+        )
         del device_sockets[device_id]
         
         # Stop active session if exists
@@ -265,19 +331,51 @@ def handle_stream_request(data):
         return
     
     device_id_param = data.get('device_id')
+    _stream_log(
+        'listen_live_clicked',
+        user=_safe_username(),
+        sid=request.sid,
+        requested_device=device_id_param,
+        namespace='/stream'
+    )
+
     if not device_id_param:
         emit('stream_error', {'message': 'Device ID required'})
+        _stream_log(
+            'listen_live_rejected',
+            level='warning',
+            reason='missing_device_id',
+            user=_safe_username(),
+            sid=request.sid,
+            namespace='/stream'
+        )
         return
     
     try:
         # Resolve device_id (frontend may send android_id or device_id)
         from .device_utils import resolve_to_device_id
         device_id = resolve_to_device_id(device_id_param)
+        _stream_log(
+            'listen_live_resolved',
+            user=_safe_username(),
+            sid=request.sid,
+            requested_device=device_id_param,
+            resolved_device=device_id
+        )
         
         # Check if user has permission to access this device
         device = DeviceInfo.query.filter_by(device_id=device_id).first()
         if not device:
             emit('stream_error', {'message': 'Device not found'})
+            _stream_log(
+                'listen_live_rejected',
+                level='warning',
+                reason='device_not_found',
+                user=_safe_username(),
+                sid=request.sid,
+                requested_device=device_id_param,
+                resolved_device=device_id
+            )
             log_audit(
                 action='LIVE_STREAM_REQUEST_FAILED',
                 success=False,
@@ -290,6 +388,14 @@ def handle_stream_request(data):
         # Check device access permission (respects RBAC)
         if not current_user.can_access_device(device_id):
             emit('stream_error', {'message': 'Access denied to this device'})
+            _stream_log(
+                'listen_live_rejected',
+                level='warning',
+                reason='permission_denied',
+                user=_safe_username(),
+                sid=request.sid,
+                resolved_device=device_id
+            )
             log_audit(
                 action=AuditActions.PERMISSION_DENIED,
                 success=False,
@@ -310,7 +416,13 @@ def handle_stream_request(data):
                 if session.status == 'requested':
                     time_since_request = (datetime.utcnow() - session.start_time).total_seconds()
                     if time_since_request > 120:  # 2 minutes timeout
-                        logger.warning(f"Cleaning up stale session {session_id} for {device_id} (requested {time_since_request:.0f}s ago)")
+                        _stream_log(
+                            'stale_requested_session_cleanup',
+                            level='warning',
+                            session_id=session_id,
+                            device_id=device_id,
+                            age_seconds=int(time_since_request)
+                        )
                         stop_stream_session(session_id, 'timeout')
                         # Remove from tracking to allow new session
                         if device_id in active_sessions:
@@ -340,8 +452,15 @@ def handle_stream_request(data):
                             'device_id': device_id,
                             'status': 'waiting_for_device'
                         })
-                        
-                        logger.info(f"User {current_user.username} waiting for existing stream request for {device_id}")
+
+                        _stream_log(
+                            'listen_live_waiting_for_device',
+                            user=_safe_username(),
+                            sid=request.sid,
+                            session_id=session_id,
+                            device_id=device_id,
+                            listener_count=session.listener_count
+                        )
                         return
                 
                 # Join existing active stream
@@ -385,9 +504,22 @@ def handle_stream_request(data):
                         socketio.emit('send_header', {
                             'session_id': session_id
                         }, room=device_socket, namespace='/device')
-                        logger.debug(f"Requested header resend from device {device_id}")
+                        _stream_log(
+                            'header_resend_requested',
+                            level='debug',
+                            session_id=session_id,
+                            device_id=device_id,
+                            device_socket=device_socket,
+                            listener_count=session.listener_count
+                        )
                     else:
-                        logger.warning(f"Cannot request header from {device_id}: device socket not found")
+                        _stream_log(
+                            'header_resend_skipped',
+                            level='warning',
+                            reason='device_socket_not_found',
+                            session_id=session_id,
+                            device_id=device_id
+                        )
                     
                     log_audit(
                         action='LIVE_STREAM_JOINED',
@@ -397,7 +529,14 @@ def handle_stream_request(data):
                         new_value={'session_id': session_id}
                     )
                     
-                    logger.info(f"User {current_user.username} joined existing stream for {device_id} - {session.listener_count} total listeners")
+                    _stream_log(
+                        'listen_live_joined_existing_session',
+                        user=_safe_username(),
+                        sid=request.sid,
+                        session_id=session_id,
+                        device_id=device_id,
+                        listener_count=session.listener_count
+                    )
                     return
                 # Session exists but is stopped/error - clean up and create new
                 else:
@@ -447,9 +586,23 @@ def handle_stream_request(data):
                 'session_id': session.id,
                 'device_id': device_id
             }, room=device_socket, namespace='/device')
-            logger.info(f"✅ Sent live_stream_request command to device {device_id} on socket {device_socket}")
+            _stream_log(
+                'stream_request_emitted_to_device_socket',
+                session_id=session.id,
+                device_id=device_id,
+                device_socket=device_socket,
+                listener_count=session.listener_count,
+                requested_by=_safe_username()
+            )
         else:
-            logger.warning(f"⚠️ Cannot send live_stream_request to {device_id}: device not connected to /device namespace. It will trigger automatically when the device connects.")
+            _stream_log(
+                'stream_request_queued_waiting_device_connect',
+                level='warning',
+                session_id=session.id,
+                device_id=device_id,
+                requested_by=_safe_username(),
+                reason='device_not_connected'
+            )
         
         log_audit(
             action='LIVE_STREAM_STARTED',
@@ -459,7 +612,14 @@ def handle_stream_request(data):
             new_value={'session_id': session.id, 'started_by': current_user.username}
         )
         
-        logger.info(f"Stream session {session.id} created for device {device_id} by {current_user.username}")
+        _stream_log(
+            'stream_session_created',
+            session_id=session.id,
+            device_id=device_id,
+            requested_by=_safe_username(),
+            listener_count=session.listener_count,
+            status=session.status
+        )
         
     except Exception as e:
         logger.error(f"Error handling stream request: {e}", exc_info=True)
@@ -484,14 +644,27 @@ def handle_stream_ready(data):
     session_id_str = data.get('session_id')
     
     if not android_id_from_payload or not session_id_str:
-        logger.warning("stream_ready received without device_id or session_id")
+        _stream_log(
+            'stream_ready_rejected',
+            level='warning',
+            reason='missing_fields',
+            sid=request.sid,
+            payload_keys=list(data.keys()) if isinstance(data, dict) else 'non_dict'
+        )
         return
     
     try:
         # Resolve android_id to device_id
         device = DeviceInfo.query.filter_by(android_id=android_id_from_payload).first()
         if not device:
-            logger.warning(f"stream_ready from unknown device: {android_id_from_payload}")
+            _stream_log(
+                'stream_ready_rejected',
+                level='warning',
+                reason='unknown_device',
+                sid=request.sid,
+                android_id=android_id_from_payload,
+                session_id=session_id_str
+            )
             emit('stream_error', {'message': 'Device not found'})
             return
         
@@ -501,13 +674,27 @@ def handle_stream_ready(data):
         try:
             session_id = int(session_id_str)
         except (ValueError, TypeError):
-            logger.warning(f"Invalid session_id format: {session_id_str}")
+            _stream_log(
+                'stream_ready_rejected',
+                level='warning',
+                reason='invalid_session_id_format',
+                sid=request.sid,
+                android_id=android_id_from_payload,
+                session_id=session_id_str
+            )
             emit('stream_error', {'message': 'Invalid session ID'})
             return
         
         session = LiveStreamSession.query.get(session_id)
         if not session:
-            logger.warning(f"Stream session {session_id} not found")
+            _stream_log(
+                'stream_ready_rejected',
+                level='warning',
+                reason='session_not_found',
+                sid=request.sid,
+                device_id=device_id,
+                session_id=session_id
+            )
             emit('stream_error', {'message': 'Session not found'})
             return
         
@@ -523,10 +710,24 @@ def handle_stream_ready(data):
             android_id_for_device = get_android_id_for_device(device_id)
             if android_id_for_device and session_device_id == android_id_for_device:
                 device_match = True
-                logger.info(f"Session {session_id} device match via android_id: session.device_id={session_device_id} matches android_id={android_id_for_device} of device_id={device_id}")
+                _stream_log(
+                    'stream_ready_device_match_via_android_id',
+                    session_id=session_id,
+                    session_device_id=session_device_id,
+                    resolved_device_id=device_id,
+                    android_id=android_id_for_device
+                )
         
         if not device_match:
-            logger.warning(f"Session {session_id} device mismatch: session.device_id={session_device_id}, resolved device_id={device_id}, android_id={android_id_from_payload}")
+            _stream_log(
+                'stream_ready_rejected',
+                level='warning',
+                reason='session_device_mismatch',
+                session_id=session_id,
+                session_device_id=session_device_id,
+                resolved_device_id=device_id,
+                android_id=android_id_from_payload
+            )
             emit('stream_error', {'message': 'Session device mismatch'})
             return
         
@@ -541,8 +742,15 @@ def handle_stream_ready(data):
             'status': 'active',
             'listener_count': session.listener_count
         }, room=f'listeners_{device_id}', namespace='/stream')
-        
-        logger.info(f"Stream {session_id} for device {device_id} is now active")
+
+        _stream_log(
+            'stream_activated',
+            session_id=session_id,
+            device_id=device_id,
+            listener_count=session.listener_count,
+            sid=request.sid,
+            previous_status='requested'
+        )
         
         # Start Redis subscriber thread for this device (only if not already started)
         if device_id not in redis_subscribers:
@@ -567,13 +775,28 @@ def handle_audio_chunk(data):
     sequence = data.get('sequence', 0)
     
     if not android_id_from_payload or not chunk_data:
+        _stream_log(
+            'audio_chunk_rejected',
+            level='debug',
+            reason='missing_payload_fields',
+            sid=request.sid,
+            has_device_id=bool(android_id_from_payload),
+            has_chunk=bool(chunk_data)
+        )
         return
     
     try:
         # Resolve android_id to device_id (Android sends android_id as "device_id")
         device = DeviceInfo.query.filter_by(android_id=android_id_from_payload).first()
         if not device:
-            logger.warning(f"Audio chunk from unknown device: {android_id_from_payload}")
+            _stream_log(
+                'audio_chunk_rejected',
+                level='warning',
+                reason='unknown_device',
+                sid=request.sid,
+                android_id=android_id_from_payload,
+                sequence=sequence
+            )
             return
         
         device_id = device.device_id  # Use actual device_id from database
@@ -609,6 +832,37 @@ def handle_audio_chunk(data):
             chunk_bytes = len(chunk_data) * 3 // 4
             stream_stats[device_id]['bytes'] += chunk_bytes
             stream_stats[device_id]['chunks'] += 1
+
+            # Sequence diagnostics + periodic telemetry logs
+            if device_id not in stream_seq_state:
+                stream_seq_state[device_id] = {'last_seq': None, 'chunk_count': 0}
+
+            prev_seq = stream_seq_state[device_id]['last_seq']
+            stream_seq_state[device_id]['chunk_count'] += 1
+            stream_seq_state[device_id]['last_seq'] = sequence
+
+            if prev_seq is not None and isinstance(sequence, int) and sequence < prev_seq:
+                _stream_log(
+                    'audio_sequence_regression',
+                    level='warning',
+                    device_id=device_id,
+                    previous_sequence=prev_seq,
+                    current_sequence=sequence,
+                    session_id=active_sessions.get(device_id)
+                )
+
+            chunk_count = stream_seq_state[device_id]['chunk_count']
+            if chunk_count == 1 or chunk_count % 250 == 0:
+                _stream_log(
+                    'audio_chunk_telemetry',
+                    level='debug',
+                    device_id=device_id,
+                    session_id=active_sessions.get(device_id),
+                    sequence=sequence,
+                    chunk_count=chunk_count,
+                    total_bytes=stream_stats[device_id]['bytes'],
+                    listener_count=listener_counts.get(device_id, 0)
+                )
             
             # No db.session.commit() here! Background task handles it.
         
@@ -821,7 +1075,15 @@ def stop_stream_session(session_id, reason='manual'):
         if device_id in stream_stats:
             final_bytes = stream_stats[device_id]['bytes']
             session.bytes_transferred = final_bytes
-            logger.info(f"Final stats flush for {device_id}: {final_bytes} bytes")
+            final_chunks = stream_stats[device_id].get('chunks', 0)
+            _stream_log(
+                'stream_final_stats_flush',
+                session_id=session_id,
+                device_id=device_id,
+                final_bytes=final_bytes,
+                final_chunks=final_chunks,
+                reason=reason
+            )
         
         session.status = 'stopped'
         session.end_time = datetime.utcnow()
@@ -848,6 +1110,8 @@ def stop_stream_session(session_id, reason='manual'):
             del redis_subscribers[device_id]
         if device_id in stream_stats:
             del stream_stats[device_id]
+        if device_id in stream_seq_state:
+            del stream_seq_state[device_id]
         
         log_audit(
             action='LIVE_STREAM_STOPPED',
@@ -857,7 +1121,15 @@ def stop_stream_session(session_id, reason='manual'):
             new_value={'session_id': session_id, 'reason': reason}
         )
         
-        logger.info(f"Stream session {session_id} stopped: {reason}")
+        _stream_log(
+            'stream_session_stopped',
+            session_id=session_id,
+            device_id=device_id,
+            reason=reason,
+            duration_seconds=session.duration_seconds,
+            listener_count=session.listener_count,
+            bytes_transferred=session.bytes_transferred
+        )
         
     except Exception as e:
         logger.error(f"Error stopping stream session {session_id}: {e}", exc_info=True)
