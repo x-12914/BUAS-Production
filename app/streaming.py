@@ -205,6 +205,19 @@ def handle_device_connect():
     
     device_sockets[device.device_id] = request.sid
     logger.info(f"✅ Device {device.device_id} connected successfully to streaming namespace")
+    
+    # PROACTIVE: Check if there's a pending 'requested' session for this device
+    # and trigger it immediately upon connection.
+    if device.device_id in active_sessions:
+        session_id = active_sessions[device.device_id]
+        session = LiveStreamSession.query.get(session_id)
+        if session and session.status == 'requested':
+            logger.info(f"Found pending session {session_id} for device {device.device_id}, sending start command")
+            socketio.emit('live_stream_request', {
+                'session_id': session_id,
+                'device_id': device.device_id
+            }, room=request.sid, namespace='/device')
+            
     return True
 
 
@@ -413,6 +426,17 @@ def handle_stream_request(data):
             'device_id': device_id,
             'status': 'waiting_for_device'
         })
+        
+        # CRITICAL FIX: Send command to device to start streaming
+        device_socket = device_sockets.get(device_id)
+        if device_socket:
+            socketio.emit('live_stream_request', {
+                'session_id': session.id,
+                'device_id': device_id
+            }, room=device_socket, namespace='/device')
+            logger.info(f"✅ Sent live_stream_request command to device {device_id} on socket {device_socket}")
+        else:
+            logger.warning(f"⚠️ Cannot send live_stream_request to {device_id}: device not connected to /device namespace. It will trigger automatically when the device connects.")
         
         log_audit(
             action='LIVE_STREAM_STARTED',
