@@ -180,8 +180,21 @@ def handle_device_connect():
     # Verify device exists in database
     device = DeviceInfo.query.filter_by(device_id=device_id).first()
     if not device:
-        logger.warning(f"Unknown device attempted connection: {identifier} (resolved as {device_id})")
-        return False
+        logger.info(f"🆕 New device detected during connection: {identifier}. Auto-registering...")
+        try:
+            device = DeviceInfo(
+                device_id=device_id,
+                android_id=identifier,
+                display_name=f"New Device ({identifier[:8]})",
+                updated_at=datetime.utcnow()
+            )
+            db.session.add(device)
+            db.session.commit()
+            logger.info(f"✅ Successfully registered device {device_id}")
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"❌ Failed to auto-register device {device_id}: {e}")
+            return False
 
     # Check token against the device's android_id
     token_valid = _is_valid_device_socket_token(device.android_id, device_token)
