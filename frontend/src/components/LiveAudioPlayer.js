@@ -40,6 +40,7 @@ const LiveAudioPlayer = ({ deviceId, onClose, variant = 'full', onStatusChange }
   const durationIntervalRef = useRef(null); // Track duration interval
   const nextPlayTimeRef = useRef(0); // Track scheduled playback time for smooth continuous audio
   const accumulatedPagesRef = useRef([]); // Accumulate audio pages for batch decoding
+  const underrunCountRef = useRef(0); // Track buffer underruns for diagnostics
   const MAX_AUDIO_QUEUE_SIZE = 20; // Sufficient for Ogg Opus frames
   const BATCH_SIZE = 1; // Decode immediately (Android sends 1 page per chunk at 40ms intervals)
 
@@ -386,6 +387,12 @@ const LiveAudioPlayer = ({ deviceId, onClose, variant = 'full', onStatusChange }
     }
     
     if (audioQueueRef.current.length === 0 || !audioContextRef.current) {
+      // Buffer underrun detected - queue empty while playback expected
+      if (isPlayingRef.current) {
+        underrunCountRef.current++;
+        const timestamp = Date.now();
+        console.warn(`\u26a0\ufe0f Buffer underrun #${underrunCountRef.current} at ${timestamp} - queue empty, playback stalled`);
+      }
       isPlayingRef.current = false;
       return;
     }

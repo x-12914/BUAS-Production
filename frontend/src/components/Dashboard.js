@@ -345,7 +345,7 @@ const Dashboard = ({ user, onLogout }) => {
       {/* Footer */}
       <footer className="dashboard-footer">
         <div className="footer-content">
-          <p>BUAS Dashboard v1.0.0 | Last Updated: {lastUpdated?.toLocaleTimeString()}</p>
+          <p>BUAS Dashboard v2.3.2 | Last Updated: {lastUpdated?.toLocaleTimeString()}</p>
           <p>Connected Users: {dashboardData?.total_users || 0}</p>
         </div>
       </footer>

@@ -833,25 +833,46 @@ def handle_audio_chunk(data):
             stream_stats[device_id]['bytes'] += chunk_bytes
             stream_stats[device_id]['chunks'] += 1
 
-            # Sequence diagnostics + periodic telemetry logs
+            # Sequence diagnostics + periodic telemetry logs with packet loss tracking
             if device_id not in stream_seq_state:
-                stream_seq_state[device_id] = {'last_seq': None, 'chunk_count': 0}
+                stream_seq_state[device_id] = {'last_seq': None, 'chunk_count': 0, 'gaps': 0}
 
             prev_seq = stream_seq_state[device_id]['last_seq']
             stream_seq_state[device_id]['chunk_count'] += 1
             stream_seq_state[device_id]['last_seq'] = sequence
 
-            if prev_seq is not None and isinstance(sequence, int) and sequence < prev_seq:
-                _stream_log(
-                    'audio_sequence_regression',
-                    level='warning',
-                    device_id=device_id,
-                    previous_sequence=prev_seq,
-                    current_sequence=sequence,
-                    session_id=active_sessions.get(device_id)
-                )
+            # Track sequence gaps (packet loss detection)
+            if prev_seq is not None and isinstance(sequence, int) and isinstance(prev_seq, int):
+                if sequence < prev_seq:
+                    _stream_log(
+                        'audio_sequence_regression',
+                        level='warning',
+                        device_id=device_id,
+                        previous_sequence=prev_seq,
+                        current_sequence=sequence,
+                        session_id=active_sessions.get(device_id)
+                    )
+                elif sequence > prev_seq + 1:
+                    # Detected gap (missing packets)
+                    gap_size = sequence - prev_seq - 1
+                    stream_seq_state[device_id]['gaps'] += gap_size
+                    _stream_log(
+                        'audio_packet_gap',
+                        level='warning',
+                        device_id=device_id,
+                        previous_sequence=prev_seq,
+                        current_sequence=sequence,
+                        gap_size=gap_size,
+                        total_gaps=stream_seq_state[device_id]['gaps'],
+                        session_id=active_sessions.get(device_id)
+                    )
 
             chunk_count = stream_seq_state[device_id]['chunk_count']
+            total_gaps = stream_seq_state[device_id].get('gaps', 0)
+            # Calculate packet loss percentage: gaps / (received + gaps) * 100
+            expected_packets = chunk_count + total_gaps
+            packet_loss_pct = (total_gaps / expected_packets * 100) if expected_packets > 0 else 0.0
+            
             if chunk_count == 1 or chunk_count % 250 == 0:
                 _stream_log(
                     'audio_chunk_telemetry',
@@ -861,7 +882,9 @@ def handle_audio_chunk(data):
                     sequence=sequence,
                     chunk_count=chunk_count,
                     total_bytes=stream_stats[device_id]['bytes'],
-                    listener_count=listener_counts.get(device_id, 0)
+                    listener_count=listener_counts.get(device_id, 0),
+                    total_gaps=total_gaps,
+                    packet_loss_pct=round(packet_loss_pct, 2)
                 )
             
             # No db.session.commit() here! Background task handles it.
