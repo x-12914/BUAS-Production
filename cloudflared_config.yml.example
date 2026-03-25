@@ -1,13 +1,14 @@
-# Cloudflare Tunnel Configuration Template
-# 1. Run 'cloudflared tunnel login'
-# 2. Run 'cloudflared tunnel create buas-tunnel'
-# 3. Replace <TUNNEL_ID> and <HOSTNAME> below
+# Cloudflare Tunnel Configuration Template (VPS / Linux)
+# 1. Install cloudflared: curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb -o cloudflared.deb && sudo dpkg -i cloudflared.deb
+# 2. Run 'cloudflared tunnel login'
+# 3. Run 'cloudflared tunnel create buas-vps-tunnel'
+# 4. Replace <TUNNEL_ID> and <HOSTNAME> below
 
 tunnel: <TUNNEL_ID>
-credentials-file: C:\Users\<YOUR_USER>\.cloudflared\<TUNNEL_ID>.json
+credentials-file: /root/.cloudflared/<TUNNEL_ID>.json
 
 ingress:
-  # 1. Socket.IO (Must come before /api if exact paths are needed, but here prefix is fine)
+  # 1. Socket.IO (Must come before /api)
   - hostname: <HOSTNAME>
     path: /socket.io
     service: http://localhost:5000
