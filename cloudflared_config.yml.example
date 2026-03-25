@@ -1,0 +1,25 @@
+# Cloudflare Tunnel Configuration Template
+# 1. Run 'cloudflared tunnel login'
+# 2. Run 'cloudflared tunnel create buas-tunnel'
+# 3. Replace <TUNNEL_ID> and <HOSTNAME> below
+
+tunnel: <TUNNEL_ID>
+credentials-file: C:\Users\<YOUR_USER>\.cloudflared\<TUNNEL_ID>.json
+
+ingress:
+  # 1. Socket.IO (Must come before /api if exact paths are needed, but here prefix is fine)
+  - hostname: <HOSTNAME>
+    path: /socket.io
+    service: http://localhost:5000
+
+  # 2. Flask Backend (Includes /api and /api/uploads)
+  - hostname: <HOSTNAME>
+    path: /api
+    service: http://localhost:5000
+
+  # 3. React Frontend (served by PM2 on port 3000)
+  - hostname: <HOSTNAME>
+    service: http://localhost:3000
+
+  # 4. Catch-all 404
+  - service: http_status:404

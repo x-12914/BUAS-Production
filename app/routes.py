@@ -778,6 +778,12 @@ def get_device_command():
 
 # ===================== API ROUTES =====================
 
+@routes.route('/api/uploads/<path:filename>', methods=['GET'])
+def serve_upload(filename):
+    """Serve uploaded audio files"""
+    return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)
+
+
 @routes.route('/api/upload/audio/<device_id>', methods=['POST'])
 def upload_audio(device_id):
     try:
