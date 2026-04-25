@@ -54,20 +54,20 @@ def create_app():
     app.config['SESSION_COOKIE_DOMAIN'] = session_cookie_domain
 
     # CORS configuration for dashboard integration
-    # CRITICAL: When using credentials=True, CANNOT use wildcard origins
+    allowed_origins = [
+        "http://localhost:3000",
+        "http://localhost:4000",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:4000",
+        # Add any additional origins from environment variable
+    ]
+    
+    env_origins = os.environ.get('ALLOWED_ORIGINS')
+    if env_origins:
+        allowed_origins.extend([origin.strip() for origin in env_origins.split(',')])
+
     CORS(app,
-         origins=[
-             "http://localhost:3000",              # React development (legacy)
-             "http://localhost:4000",              # React development (current)
-             "http://127.0.0.1:3000",              # Alternative localhost (legacy)
-             "http://127.0.0.1:4000",              # Alternative localhost (current)
-             "http://105.114.25.157:3000",        # VPS frontend (legacy)
-             "http://105.114.25.157:4000",        # VPS frontend (current)
-             "http://105.114.25.157",             # VPS base (no port) - THIS IS THE ACTIVE ONE
-             "https://105.114.25.157:3000",       # VPS frontend HTTPS (legacy)
-             "https://105.114.25.157:4000",       # VPS frontend HTTPS (current)
-             "https://105.114.25.157",            # VPS HTTPS (no port)
-         ],
+         origins=allowed_origins,
          allow_headers=[
              "Content-Type", 
              "Authorization", 
@@ -120,31 +120,15 @@ def create_app():
                 socketio_message_queue = f"redis://{redis_host}:{redis_port}/{redis_db}"
 
     # Initialize Socket.IO with CORS settings
-    # CRITICAL: Must match Flask-CORS origins when using withCredentials
-    # Wildcard "*" is forbidden by browsers when credentials are used
     global socketio
     socketio = SocketIO(
         app,
-        cors_allowed_origins=[
-            "http://localhost:3000",
-            "http://localhost:4000",
-            "http://127.0.0.1:3000",
-            "http://127.0.0.1:4000",
-            "http://105.114.25.157:3000",
-            "http://105.114.25.157:4000",
-            "http://105.114.25.157",  # Active production origin
-            "https://105.114.25.157:3000",
-            "https://105.114.25.157:4000",
-            "https://105.114.25.157"
-        ],
+        cors_allowed_origins=allowed_origins,
         async_mode='eventlet',
         logger=True,
         engineio_logger=True,
         ping_timeout=60,
         ping_interval=25,
-        # REMOVED: manage_session=False
-        # Socket.IO MUST manage its own connection sessions (sid tracking)
-        # Flask-Login manages user authentication separately - no conflict
         cors_credentials=True,  # Explicitly enable credentials for cookies
         message_queue=socketio_message_queue
     )
