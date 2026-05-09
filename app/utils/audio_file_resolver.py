@@ -175,7 +175,7 @@ class AudioFileResolver:
     
     def get_audio_url(self, device_id: str, audio_file_id: str = None,
                      start_date: str = None, start_time: str = None,
-                     base_url: str = "http://105.114.25.157") -> Tuple[str, str]:
+                     base_url: str = "http://buas.eibstratoc.com") -> Tuple[str, str]:
         """
         Get the audio URL and filename for a recording event
         
@@ -222,7 +222,7 @@ class AudioFileResolver:
 # Convenience function for easy import
 def resolve_audio_file(device_id: str, audio_file_id: str = None,
                       start_date: str = None, start_time: str = None,
-                      base_url: str = "http://105.114.25.157") -> Tuple[str, str]:
+                      base_url: str = "http://buas.eibstratoc.com") -> Tuple[str, str]:
     """
     Resolve audio file reference to actual filename and URL
     

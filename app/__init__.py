@@ -63,10 +63,14 @@ def create_app():
              "http://127.0.0.1:4000",              # Alternative localhost (current)
              "http://105.114.25.157:3000",        # VPS frontend (legacy)
              "http://105.114.25.157:4000",        # VPS frontend (current)
-             "http://105.114.25.157",             # VPS base (no port) - THIS IS THE ACTIVE ONE
+             "http://105.114.25.157",             # VPS base (no port)
              "https://105.114.25.157:3000",       # VPS frontend HTTPS (legacy)
              "https://105.114.25.157:4000",       # VPS frontend HTTPS (current)
              "https://105.114.25.157",            # VPS HTTPS (no port)
+             "http://buas.eibstratoc.com",        # NEW DOMAIN
+             "https://buas.eibstratoc.com",       # NEW DOMAIN HTTPS
+             "http://41.242.54.76",               # NEW IP
+             "https://41.242.54.76",              # NEW IP HTTPS
          ],
          allow_headers=[
              "Content-Type", 
@@ -135,7 +139,11 @@ def create_app():
             "http://105.114.25.157",  # Active production origin
             "https://105.114.25.157:3000",
             "https://105.114.25.157:4000",
-            "https://105.114.25.157"
+            "https://105.114.25.157",
+            "http://buas.eibstratoc.com",
+            "https://buas.eibstratoc.com",
+            "http://41.242.54.76",
+            "https://41.242.54.76"
         ],
         async_mode='eventlet',
         logger=True,

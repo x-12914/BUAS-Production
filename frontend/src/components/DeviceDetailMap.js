@@ -15,7 +15,7 @@ const SVG_HELP = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
 // Get the API base URL for audio links
 const getApiUrl = () => {
   if (process.env.NODE_ENV === 'production') {
-    return process.env.REACT_APP_VPS_URL || 'http://105.114.25.157';
+    return process.env.REACT_APP_VPS_URL || 'http://buas.eibstratoc.com';
   }
   return process.env.REACT_APP_API_URL || 'http://localhost:5000';
 };
