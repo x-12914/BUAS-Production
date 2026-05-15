@@ -105,6 +105,7 @@ def create_app():
     
     # Determine whether streaming is enabled (used for Socket.IO config)
     streaming_enabled = os.environ.get('ENABLE_STREAMING', 'false').lower() == 'true'
+    app.logger.info(f"Live streaming: {'✅ ENABLED' if streaming_enabled else '⏸️ DISABLED'}")
 
     # Build Redis message queue URL for Socket.IO when streaming is enabled and
     # no explicit queue URL is provided. Multi-worker Gunicorn deployments need
