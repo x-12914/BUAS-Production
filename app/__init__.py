@@ -74,6 +74,8 @@ def create_app():
              "http://41.242.54.78",               # CURRENT VPS IP
              "https://41.242.54.78",              # CURRENT VPS IP HTTPS
              "http://41.242.54.78:4000",          # CURRENT VPS IP (frontend dev port)
+             "http://157.250.205.174",            # WHITELABEL VPS
+             "https://157.250.205.174",           # WHITELABEL VPS HTTPS
          ],
          allow_headers=[
              "Content-Type", 

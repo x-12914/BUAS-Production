@@ -249,7 +249,7 @@ const Dashboard = ({ user, onLogout }) => {
       <div className="dashboard dark-theme">
         <div className="loading-container">
           <div className="spinner"></div>
-          <p>Loading BUAS Dashboard...</p>
+          <p>Loading Dashboard...</p>
         </div>
       </div>
     );
@@ -260,7 +260,7 @@ const Dashboard = ({ user, onLogout }) => {
       {/* Dashboard Header */}
       <header className="dashboard-header">
         <div className="header-content">
-          <h1>BUAS COMMAND CENTER</h1>
+          <h1>COMMAND CENTER</h1>
           <div className="header-right">
             <div className="dashboard-controls">
               <button 
@@ -293,7 +293,7 @@ const Dashboard = ({ user, onLogout }) => {
                   <div className="user-menu-header">
                     <div className="user-details">
                       <strong>{currentUser?.username || 'User'}</strong>
-                      <small>{currentUser?.agency_name || 'Briech UAS'}</small>
+                      <small>{currentUser?.agency_name || ''}</small>
                     </div>
                   </div>
                   <button className="user-menu-item" onClick={handleChangePassword}>
@@ -345,7 +345,7 @@ const Dashboard = ({ user, onLogout }) => {
       {/* Footer */}
       <footer className="dashboard-footer">
         <div className="footer-content">
-          <p>BUAS Dashboard v2.3.2 | Last Updated: {lastUpdated?.toLocaleTimeString()}</p>
+          <p>Dashboard v2.3.2 | Last Updated: {lastUpdated?.toLocaleTimeString()}</p>
           <p>Connected Users: {dashboardData?.total_users || 0}</p>
         </div>
       </footer>

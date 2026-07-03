@@ -137,11 +137,11 @@ const Login = ({ onLoginSuccess }) => {
                 <div className="login-header">
                     <div className="login-logo">
                         <div className="logo-circle">
-                            <span className="logo-text">BUAS</span>
+                            <span className="logo-text"></span>
                         </div>
                     </div>
-                    <h1 className="login-title">BUAS Command Center</h1>
-                    <p className="login-subtitle">Briech UAS System</p>
+                    <h1 className="login-title">Command Center</h1>
+                    <p className="login-subtitle"></p>
                 </div>
                 
                 {/* Login Form */}
@@ -226,7 +226,7 @@ const Login = ({ onLoginSuccess }) => {
                         Contact your administrator for password assistance
                     </p>
                     <p className="login-copyright">
-                        © 2025 BUAS - All Rights Reserved
+                        © 2025 All Rights Reserved
                     </p>
                 </div>
             </div>

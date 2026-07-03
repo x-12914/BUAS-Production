@@ -3,44 +3,44 @@
    Obsidian / Navy / Teal accent  No Generic Blue
    ============================================= */
 :root {
-  /* === Deep Navy Backgrounds (not pure black, not powder blue) === */
-  --bg-primary: #07101c;        /* Page background  deepest navy */
-  --bg-secondary: #0b1624;      /* Panels / containers */
-  --bg-tertiary: #0f1d2e;       /* Cards / rows */
-  --bg-card: #0c1828;          /* Elevated cards */
-  --bg-header: #060e1a;         /* Header bar */
+  /* === Muted Slate Backgrounds (whitelabel: no navy, no HUD) === */
+  --bg-primary: #14171c;
+  --bg-secondary: #1a1e24;
+  --bg-tertiary: #20242c;
+  --bg-card: #1c2028;
+  --bg-header: #0f1216;
 
-  /* === Text === */
-  --text-primary: #c8dce8;      /* Primary  light steel */
-  --text-secondary: #5c8099;    /* Secondary  muted teal-grey */
-  --text-muted: #2d4a5e;        /* Very muted */
+  /* === Text (neutral warm-grey, not steel-teal) === */
+  --text-primary: #d6d8db;
+  --text-secondary: #8b8f95;
+  --text-muted: #4a4e55;
 
-  /* === PRIMARY: Sharp HUD Teal (used SPARINGLY - borders, brackets, glows) === */
-  --accent-primary: #00f0ff;    /* HUD teal  the bracket/border color */
-  --accent-third: #00c8d4;      /* Slightly darker teal variant */
-  --accent-glow: rgba(0, 240, 255, 0.25);
+  /* === PRIMARY accent: soft steel-grey (no neon, no glow) === */
+  --accent-primary: #7a8a9c;
+  --accent-third: #6a7684;
+  --accent-glow: transparent;
 
-  /* === SECONDARY: Violet/Purple (for tags/badges  adds depth) === */
-  --accent-secondary: #7c4dff;
-  --accent-amber: #ff9100;      /* Orange for warnings  not amber, more vivid */
+  /* === SECONDARY: muted violet-grey === */
+  --accent-secondary: #8a7fa8;
+  --accent-amber: #c48242;
 
-  /* === Semantic === */
-  --accent-success: #00e676;    /* Bright green  online/active */
-  --accent-warning: #ff9100;    /* Orange-amber */
-  --accent-danger: #ff3d71;     /* Pink-red  danger */
+  /* === Semantic (muted, still recognizable) === */
+  --accent-success: #6ea87a;
+  --accent-warning: #c48242;
+  --accent-danger: #b26565;
 
   /* === Status === */
-  --status-success: #00e676;
-  --status-warning: #ff9100;
-  --status-danger: #ff3d71;
-  --status-info: #00f0ff;
+  --status-success: #6ea87a;
+  --status-warning: #c48242;
+  --status-danger: #b26565;
+  --status-info: #7a8a9c;
 
-  /* === Borders / Glass === */
-  --border-color: #0e2035;
-  --border-muted: #091826;
-  --shadow-color: rgba(0, 0, 0, 0.8);
-  --glass-bg: rgba(7, 16, 28, 0.85);
-  --glass-border: rgba(0, 240, 255, 0.1);
+  /* === Borders / Glass (calmer shadows, near-neutral glass border) === */
+  --border-color: #262a30;
+  --border-muted: #1e2228;
+  --shadow-color: rgba(0, 0, 0, 0.4);
+  --glass-bg: rgba(20, 23, 28, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.06);
 }
 
 * {

@@ -175,7 +175,7 @@ class DeviceExcelExporter:
                 audio_file_id=recording.audio_file_id,
                 start_date=start_date_str,
                 start_time=start_time_str,
-                base_url=os.environ.get("PUBLIC_BASE_URL", "http://41.242.54.78")
+                base_url=os.environ.get("PUBLIC_BASE_URL", "http://157.250.205.174")
             )
             
             # Set the audio file name

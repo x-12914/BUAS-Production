@@ -1,6 +1,6 @@
 {
-  "short_name": "BUAS Dashboard",
-  "name": "BUAS Dashboard - Bat Detection Monitoring",
+  "short_name": "Dashboard",
+  "name": "Dashboard",
   "icons": [
     {
       "src": "favicon.ico",
