@@ -1,5 +1,5 @@
 .listen-live-btn {
-  background: var(--accent-primary, #00f0ff);
+  background: var(--accent-primary, #7a8a9c);
   color: #ffffff;
   border: none;
   border-radius: 6px;
@@ -15,7 +15,7 @@
 }
 
 .listen-live-btn:hover:not(:disabled) {
-  background: #00f0ff;
+  background: #7a8a9c;
   transform: translateY(-1px);
 }
 

@@ -269,7 +269,7 @@
 
 .compact-status-dot.waiting,
 .compact-status-dot.connecting {
-  background: var(--accent-primary, #00f0ff);
+  background: var(--accent-primary, #7a8a9c);
 }
 
 .compact-status-dot.error {

@@ -8,7 +8,7 @@
   font-family: 'Inter', sans-serif;
   background-image: 
     radial-gradient(circle at top left, rgba(255, 255, 255, 0.03), transparent 50%),
-    radial-gradient(circle at bottom right, rgba(0, 240, 255, 0.03), transparent 50%);
+    radial-gradient(circle at bottom right, rgba(122, 138, 156, 0.03), transparent 50%);
 }
 
 .device-header {
@@ -107,7 +107,7 @@
 .device-summary { margin-bottom: 2rem; }
 
 .summary-card {
-  background: rgba(7, 16, 28, 0.6);
+  background: rgba(20, 23, 28, 0.6);
   backdrop-filter: blur(10px);
   border-radius: 12px;
   padding: 1.5rem;
@@ -147,7 +147,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  background: rgba(7, 16, 28, 0.6);
+  background: rgba(20, 23, 28, 0.6);
   padding: 1rem;
   border-radius: 8px;
   border: 1px solid rgba(0, 245, 255, 0.05);
@@ -198,8 +198,8 @@
 .btn-contacts { background: rgba(16, 185, 129, 0.2) !important; color: #34d399 !important; border-color: rgba(16, 185, 129, 0.4) !important; }
 .btn-contacts:hover { background: rgba(16, 185, 129, 0.3) !important; box-shadow: 0 0 15px rgba(16, 185, 129, 0.2) !important; }
 
-.btn-location-table { background: rgba(0, 240, 255, 0.2) !important; color: #00f0ff !important; border-color: rgba(0, 240, 255, 0.4) !important; }
-.btn-location-table:hover { background: rgba(0, 240, 255, 0.3) !important; box-shadow: 0 0 15px rgba(0, 240, 255, 0.2) !important; }
+.btn-location-table { background: rgba(122, 138, 156, 0.2) !important; color: #7a8a9c !important; border-color: rgba(122, 138, 156, 0.4) !important; }
+.btn-location-table:hover { background: rgba(122, 138, 156, 0.3) !important; box-shadow: 0 0 15px rgba(122, 138, 156, 0.2) !important; }
 
 .btn-audio-table { background: rgba(245, 158, 11, 0.2) !important; color: #fbbf24 !important; border-color: rgba(245, 158, 11, 0.4) !important; }
 .btn-audio-table:hover { background: rgba(245, 158, 11, 0.3) !important; box-shadow: 0 0 15px rgba(245, 158, 11, 0.2) !important; }
@@ -212,7 +212,7 @@
 
 /* Listen Live button */
 .listen-live-btn {
-  background: linear-gradient(90deg, #ffffff, #00f0ff) !important;
+  background: linear-gradient(90deg, #ffffff, #7a8a9c) !important;
   color: #070c07 !important;
   border: none !important;
   padding: 1rem 2rem !important;
@@ -222,7 +222,7 @@
 }
 
 .listen-live-btn:hover {
-  background: linear-gradient(90deg, #00f0ff, #ffffff) !important;
+  background: linear-gradient(90deg, #7a8a9c, #ffffff) !important;
   box-shadow: 0 8px 25px rgba(255, 255, 255, 0.5), 0 0 10px rgba(255, 255, 255, 0.4) !important;
 }
 
@@ -240,7 +240,7 @@
 /* Tables */
 .tables-container { display: flex; flex-direction: column; gap: 2rem; }
 .table-section {
-  background: rgba(7, 16, 28, 0.6);
+  background: rgba(20, 23, 28, 0.6);
   border-radius: 12px;
   padding: 1.5rem;
   border: 1px solid rgba(0, 245, 255, 0.05);
@@ -283,7 +283,7 @@
 .modal-header { border-bottom: 1px solid rgba(0, 245, 255, 0.08); }
 .modal-header h3 { color: #fff; font-family: 'Outfit', sans-serif; }
 .form-group label { color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
-.form-group input { background: rgba(7, 16, 28, 0.8); border: 1px solid rgba(0, 245, 255, 0.08); color: #fff; }
+.form-group input { background: rgba(20, 23, 28, 0.8); border: 1px solid rgba(0, 245, 255, 0.08); color: #fff; }
 .form-group input:focus { border-color: var(--accent-primary); box-shadow: 0 0 0 1px var(--accent-primary); }
 .modal-footer { border-top: 1px solid rgba(0, 245, 255, 0.08); }
 
@@ -294,7 +294,7 @@
   gap: 0.3rem;
   padding: 0.2rem 0.5rem;
   border-radius: 6px;
-  background: rgba(7, 16, 28, 0.6);
+  background: rgba(20, 23, 28, 0.6);
   border: 1px solid rgba(0, 245, 255, 0.08);
   font-size: 0.75rem;
   font-family: 'Courier New', Courier, monospace;

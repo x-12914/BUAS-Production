@@ -8,13 +8,13 @@
   color: var(--text-primary);
   font-family: 'Inter', sans-serif;
   background-image: 
-    radial-gradient(circle at 85% 10%, rgba(0, 240, 255, 0.04) 0%, transparent 35%),
-    radial-gradient(circle at 10% 90%, rgba(124, 77, 255, 0.03) 0%, transparent 30%);
+    radial-gradient(circle at 85% 10%, rgba(122, 138, 156, 0.04) 0%, transparent 35%),
+    radial-gradient(circle at 10% 90%, rgba(138, 127, 168, 0.03) 0%, transparent 30%);
 }
 
 /* Header */
 .dashboard-header {
-  background: rgba(7, 16, 28, 0.85);
+  background: rgba(20, 23, 28, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(0, 245, 255, 0.12);
@@ -172,7 +172,7 @@
   position: absolute;
   top: calc(100% + 10px);
   right: 0;
-  background: rgba(7, 16, 28, 0.95);
+  background: rgba(20, 23, 28, 0.95);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(0, 245, 255, 0.08);
   border-radius: 12px;
@@ -305,7 +305,7 @@
 
 /* Footer */
 .dashboard-footer {
-  background: rgba(7, 16, 28, 0.9);
+  background: rgba(20, 23, 28, 0.9);
   border-top: 1px solid rgba(0, 245, 255, 0.05);
   padding: 1.5rem 2rem;
   margin-top: auto;

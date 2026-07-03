@@ -177,9 +177,9 @@ code {
 }
 
 .status-listening {
-  background: rgba(0, 240, 255, 0.15);
-  color: #00f0ff;
-  border: 1px solid rgba(0, 240, 255, 0.3);
+  background: rgba(122, 138, 156, 0.15);
+  color: #7a8a9c;
+  border: 1px solid rgba(122, 138, 156, 0.3);
 }
 
 .status-online {
@@ -371,9 +371,9 @@ code {
 }
 
 .role-badge.super-user {
-  background: rgba(0, 240, 255, 0.15);
-  color: #00f0ff;
-  border: 1px solid rgba(0, 240, 255, 0.3);
+  background: rgba(122, 138, 156, 0.15);
+  color: #7a8a9c;
+  border: 1px solid rgba(122, 138, 156, 0.3);
 }
 
 .role-badge.analyst {

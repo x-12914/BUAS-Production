@@ -13,12 +13,12 @@
 }
 
 .stream-trigger:hover {
-  border-color: var(--accent-primary, #00f0ff);
+  border-color: var(--accent-primary, #7a8a9c);
   box-shadow: 0 4px 12px rgba(88, 166, 255, 0.15);
 }
 
 .listen-live-button {
-  background: var(--accent-primary, #00f0ff);
+  background: var(--accent-primary, #7a8a9c);
   color: white;
   border: none;
   padding: 12px 30px;
@@ -33,7 +33,7 @@
 }
 
 .listen-live-button:hover {
-  background: #00f0ff;
+  background: #7a8a9c;
   transform: translateY(-1px);
 }
 
