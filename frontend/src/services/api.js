@@ -1,8 +1,11 @@
 // Smart environment detection for robust deployment
 const getApiUrl = () => {
-  // For production build, use hardcoded VPS IP to avoid DNS issues
+  // For production build, default to the same origin that served the app.
+  // Nginx serves the frontend and proxies /api + /socket.io on the same host,
+  // so this works for any IP/domain (e.g. http://41.242.54.78) with no config.
+  // REACT_APP_VPS_URL can still override it (e.g. a separate API host).
   if (process.env.NODE_ENV === 'production') {
-    return process.env.REACT_APP_VPS_URL || 'http://buas.eibstratoc.com';
+    return process.env.REACT_APP_VPS_URL || window.location.origin;
   }
   // For development, use environment variable or localhost fallback
   return process.env.REACT_APP_API_URL || 'http://localhost:5000';

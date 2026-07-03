@@ -14,8 +14,10 @@ const SVG_HELP = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
 
 // Get the API base URL for audio links
 const getApiUrl = () => {
+  // Default to same origin (Nginx proxies /api on the same host). Works for any
+  // IP/domain without config; REACT_APP_VPS_URL can override if needed.
   if (process.env.NODE_ENV === 'production') {
-    return process.env.REACT_APP_VPS_URL || 'http://buas.eibstratoc.com';
+    return process.env.REACT_APP_VPS_URL || window.location.origin;
   }
   return process.env.REACT_APP_API_URL || 'http://localhost:5000';
 };

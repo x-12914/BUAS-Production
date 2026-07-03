@@ -9,6 +9,7 @@ from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.hyperlink import Hyperlink
 from datetime import datetime, date
 import io
+import os
 import pytz
 from flask import current_app
 from ..models import db, DeviceLocation, RecordingEvent, Upload, SmsMessage, CallLog, NIGERIAN_TZ
@@ -174,7 +175,7 @@ class DeviceExcelExporter:
                 audio_file_id=recording.audio_file_id,
                 start_date=start_date_str,
                 start_time=start_time_str,
-                base_url="http://buas.eibstratoc.com"
+                base_url=os.environ.get("PUBLIC_BASE_URL", "http://41.242.54.78")
             )
             
             # Set the audio file name
