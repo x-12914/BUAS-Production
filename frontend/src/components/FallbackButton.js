@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ApiService from '../services/api';
 import { Flame, ShieldAlert } from 'lucide-react';
-import './RecordingControlButton.css'; // Reuse styles
 
 const FallbackButton = ({ deviceId, disabled = false }) => {
   const [loading, setLoading] = useState(false);
@@ -51,8 +50,6 @@ const FallbackButton = ({ deviceId, disabled = false }) => {
       const response = await ApiService.sendRecordingCommand(deviceId, 'fallback');
       if (response.status === 'success') {
         setStatus('active');
-        // Stay active for a while or until page refresh
-        // This is a manual trigger, the app just "stays" in this mode once triggered
       }
     } catch (err) {
       console.error('Failed to trigger fallback:', err);
@@ -63,24 +60,26 @@ const FallbackButton = ({ deviceId, disabled = false }) => {
     }
   };
 
+  const isActive = status === 'active';
+  const isDisabled = loading || disabled || isActive;
+
   return (
-    <div className="recording-control-container" style={{ marginLeft: '10px' }}>
+    <div className="ml-2.5">
       <button
-        className={`recording-btn ${status === 'active' ? 'recording' : 'idle'} ${loading ? 'loading' : ''} ${disabled ? 'disabled' : ''}`}
+        className={`inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+          isActive
+            ? 'bg-danger/10 text-danger border border-danger/20'
+            : 'bg-danger/20 hover:bg-danger/30 text-danger border border-danger/30'
+        } ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         onClick={handleFallback}
-        disabled={loading || disabled || status === 'active'}
-        title={status === 'active' ? "Hot Mic is active" : "Trigger Hot Mic Fallback"}
-        style={{
-          backgroundColor: status === 'active' ? '#dc3545' : '#721c24',
-          borderColor: status === 'active' ? '#b21f2d' : '#491217',
-          color: 'white'
-        }}
+        disabled={isDisabled}
+        title={isActive ? "Hot Mic is active" : "Trigger Hot Mic Fallback"}
       >
-        <span className="recording-icon">{status === 'active' ? <Flame size={16} style={{marginRight: '6px', verticalAlign: 'text-bottom'}} /> : <ShieldAlert size={16} style={{marginRight: '6px', verticalAlign: 'text-bottom'}} />}</span>
-        <span className="recording-text">
-          {status === 'active' ? 'Hot Mic Active' : (loading ? 'Triggering...' : 'Hot Mic')}
+        {isActive ? <Flame size={14} className="mr-1.5" /> : <ShieldAlert size={14} className="mr-1.5" />}
+        <span>
+          {isActive ? 'Hot Mic Active' : (loading ? 'Triggering...' : 'Hot Mic')}
         </span>
-        {loading && <div className="button-spinner"></div>}
+        {loading && <span className="ml-1.5 w-3 h-3 border-2 border-danger/30 border-t-danger rounded-full animate-spin"></span>}
       </button>
     </div>
   );

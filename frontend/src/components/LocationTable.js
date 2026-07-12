@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import { MapPin, Search, FileText, Table as TableIcon, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from 'lucide-react';
-import './LocationTable.css';
 
 const LocationTable = ({ data = [], deviceId, onDataChange }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -127,51 +126,85 @@ const LocationTable = ({ data = [], deviceId, onDataChange }) => {
   };
 
   const getSortIcon = (field) => {
-    if (sortField !== field) return <ArrowUpDown size={14} style={{verticalAlign: 'middle', marginLeft: '4px'}}/>;
-    return sortDirection === 'asc' ? <ArrowUp size={14} style={{verticalAlign: 'middle', marginLeft: '4px'}}/> : <ArrowDown size={14} style={{verticalAlign: 'middle', marginLeft: '4px'}}/>;
+    if (sortField !== field) return <ArrowUpDown size={14} className="inline-block ml-1 align-middle" />;
+    return sortDirection === 'asc' ? <ArrowUp size={14} className="inline-block ml-1 align-middle" /> : <ArrowDown size={14} className="inline-block ml-1 align-middle" />;
   };
 
   return (
-    <div className="location-table-container">
-      <div className="table-header">
-        <div className="table-title">
-          <h3><MapPin size={20} style={{marginRight: '8px', verticalAlign: 'text-bottom'}} /> Location History</h3>
-          <p>Updates every 5 minutes from external software</p>
-        </div>
-
-        <div className="table-controls">
-          <div className="search-container">
-            <input
-              type="text"
-              placeholder="Search location data..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="search-input"
-            />
-            <span className="search-icon"><Search size={16} /></span>
+    <div className="bg-surface-raised border border-surface-border rounded-xl overflow-hidden">
+      <div className="p-4 border-b border-surface-border">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h3 className="text-lg font-display font-semibold text-content flex items-center gap-2">
+              <MapPin size={20} className="text-accent" /> Location History
+            </h3>
+            <p className="text-xs text-content-muted mt-1">Updates every 5 minutes from external software</p>
           </div>
 
-          <div className="export-buttons">
-            <button onClick={exportToCSV} className="btn btn-export"><FileText size={16} style={{marginRight: '6px', verticalAlign: 'text-bottom'}} /> Export CSV</button>
-            <button onClick={exportToExcel} className="btn btn-export"><TableIcon size={16} style={{marginRight: '6px', verticalAlign: 'text-bottom'}} /> Export Excel</button>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search location data..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="px-3 py-2 pl-9 bg-surface border border-surface-border rounded-lg text-sm text-content placeholder:text-content-muted focus:outline-none focus:border-accent/50 min-w-[200px]"
+              />
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-content-muted" />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={exportToCSV}
+                className="px-3 py-2 text-xs font-medium rounded-lg bg-accent hover:bg-accent-hover text-white transition-colors inline-flex items-center gap-1"
+              >
+                <FileText size={14} /> Export CSV
+              </button>
+              <button
+                onClick={exportToExcel}
+                className="px-3 py-2 text-xs font-medium rounded-lg border border-surface-border text-content-secondary hover:bg-surface-hover transition-colors inline-flex items-center gap-1"
+              >
+                <TableIcon size={14} /> Export Excel
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="table-wrapper">
-        <table className="location-table">
+      <div className="overflow-x-auto">
+        <table className="w-full">
           <thead>
-            <tr>
-              <th onClick={() => handleSort('date')} className="sortable">DATE(YYYY-MM-DD) {getSortIcon('date')}</th>
-              <th onClick={() => handleSort('timestamp')} className="sortable">Time (WAT) {getSortIcon('timestamp')}</th>
-              <th onClick={() => handleSort('latitude')} className="sortable">LATITUDE(N) {getSortIcon('latitude')}</th>
-              <th onClick={() => handleSort('longitude')} className="sortable">LONGITUDE(E) {getSortIcon('longitude')}</th>
+            <tr className="border-b border-surface-border">
+              <th
+                onClick={() => handleSort('date')}
+                className="px-4 py-3 text-left text-xs font-semibold text-content-secondary uppercase tracking-wider bg-surface cursor-pointer hover:text-content transition-colors"
+              >
+                Date {getSortIcon('date')}
+              </th>
+              <th
+                onClick={() => handleSort('timestamp')}
+                className="px-4 py-3 text-left text-xs font-semibold text-content-secondary uppercase tracking-wider bg-surface cursor-pointer hover:text-content transition-colors"
+              >
+                Time (WAT) {getSortIcon('timestamp')}
+              </th>
+              <th
+                onClick={() => handleSort('latitude')}
+                className="px-4 py-3 text-left text-xs font-semibold text-content-secondary uppercase tracking-wider bg-surface cursor-pointer hover:text-content transition-colors"
+              >
+                Latitude(N) {getSortIcon('latitude')}
+              </th>
+              <th
+                onClick={() => handleSort('longitude')}
+                className="px-4 py-3 text-left text-xs font-semibold text-content-secondary uppercase tracking-wider bg-surface cursor-pointer hover:text-content transition-colors"
+              >
+                Longitude(E) {getSortIcon('longitude')}
+              </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-surface-border">
             {paginatedData.length === 0 ? (
               <tr>
-                <td colSpan="4" className="no-data">
+                <td colSpan="4" className="text-center py-12 text-content-muted text-sm">
                   {searchTerm ? 'No matching records found' : 'No location data available'}
                 </td>
               </tr>
@@ -179,11 +212,11 @@ const LocationTable = ({ data = [], deviceId, onDataChange }) => {
               paginatedData.map((item, index) => {
                 const hasNewFormat = item.date && item.time;
                 return (
-                  <tr key={item.id || index}>
-                    <td>{hasNewFormat ? item.date : (item.timestamp ? new Date(item.timestamp).toISOString().split('T')[0] : 'N/A')}</td>
-                    <td>{hasNewFormat ? item.time : (item.timestamp ? new Date(item.timestamp).toTimeString().split(' ')[0] : 'N/A')}</td>
-                    <td>{hasNewFormat ? (item.latitude?.toFixed(6) || '0.000000') : (item.location?.lat?.toFixed(6) || '0.000000')}</td>
-                    <td>{hasNewFormat ? (item.longitude?.toFixed(6) || '0.000000') : (item.location?.lng?.toFixed(6) || '0.000000')}</td>
+                  <tr key={item.id || index} className="hover:bg-surface-hover transition-colors">
+                    <td className="px-4 py-3 text-xs text-content-secondary font-mono">{hasNewFormat ? item.date : (item.timestamp ? new Date(item.timestamp).toISOString().split('T')[0] : 'N/A')}</td>
+                    <td className="px-4 py-3 text-xs text-content-secondary font-mono">{hasNewFormat ? item.time : (item.timestamp ? new Date(item.timestamp).toTimeString().split(' ')[0] : 'N/A')}</td>
+                    <td className="px-4 py-3 text-sm text-content font-mono">{hasNewFormat ? (item.latitude?.toFixed(6) || '0.000000') : (item.location?.lat?.toFixed(6) || '0.000000')}</td>
+                    <td className="px-4 py-3 text-sm text-content font-mono">{hasNewFormat ? (item.longitude?.toFixed(6) || '0.000000') : (item.location?.lng?.toFixed(6) || '0.000000')}</td>
                   </tr>
                 );
               })
@@ -193,14 +226,24 @@ const LocationTable = ({ data = [], deviceId, onDataChange }) => {
       </div>
 
       {totalPages > 1 && (
-        <div className="pagination">
-          <button onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1} className="btn btn-pagination">
-            <ChevronLeft size={16} style={{marginRight: '4px', verticalAlign: 'text-bottom'}} /> Previous
-          </button>
-          <span className="page-info">Page {currentPage} of {totalPages}</span>
-          <button onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages} className="btn btn-pagination">
-            Next <ChevronRight size={16} style={{marginLeft: '4px', verticalAlign: 'text-bottom'}} />
-          </button>
+        <div className="flex items-center justify-between px-4 py-3 border-t border-surface-border">
+          <span className="text-xs text-content-muted">Page {currentPage} of {totalPages}</span>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1.5 text-xs rounded-lg border border-surface-border text-content-secondary hover:bg-surface-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors inline-flex items-center gap-1"
+            >
+              <ChevronLeft size={14} /> Previous
+            </button>
+            <button
+              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1.5 text-xs rounded-lg border border-surface-border text-content-secondary hover:bg-surface-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors inline-flex items-center gap-1"
+            >
+              Next <ChevronRight size={14} />
+            </button>
+          </div>
         </div>
       )}
     </div>

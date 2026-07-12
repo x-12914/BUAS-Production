@@ -3,8 +3,6 @@ import { MapContainer, TileLayer, Marker, Polyline, Popup } from 'react-leaflet'
 import L from 'leaflet';
 import ApiService from '../services/api';
 import { Mic, Square, MapPin, AlertTriangle, Play, HelpCircle } from 'lucide-react';
-import 'leaflet/dist/leaflet.css';
-import './DeviceDetailMap.css';
 
 // SVG strings for Leaflet divIcons
 const SVG_MIC = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>`;
@@ -80,9 +78,9 @@ const historicalPositionIcon = L.divIcon({
 
 // Create numbered marker function
 const createNumberedIcon = (number, isLatest = false) => {
-  const backgroundColor = isLatest ? '#00d4e8' : '#00d4e8'; // Purple for latest, blue for historical
+  const backgroundColor = isLatest ? '#00d4e8' : '#00d4e8';
   const size = isLatest ? 32 : 28;
-  
+
   return L.divIcon({
     className: 'numbered-position-marker',
     html: `
@@ -194,21 +192,21 @@ const createTemporalLayeredIcon = (events) => {
     if (!a.isActive && b.isActive) return 1;
     return new Date(b.timestamp || b.startTime) - new Date(a.timestamp || a.startTime);
   });
-  
+
   const primaryEvent = sortedEvents[0];
   const hasSecondaryEvents = sortedEvents.length > 1;
-  
+
   // Color mapping for primary event
   const getPrimaryColor = (event) => {
     if (event.type === 'recording') {
-      return event.isActive ? '#22c55e' : '#22c55e'; // Green for all recordings
+      return event.isActive ? '#22c55e' : '#22c55e';
     }
     if (event.type === 'location') {
-      return event.isLatest ? '#00d4e8' : '#00d4e8'; // Purple for latest, blue for historical
+      return event.isLatest ? '#00d4e8' : '#00d4e8';
     }
-    return '#6b7280'; // Gray fallback
+    return '#6b7280';
   };
-  
+
   const getIconForType = (event) => {
     if (event.type === 'recording') {
       return SVG_MIC;
@@ -218,7 +216,7 @@ const createTemporalLayeredIcon = (events) => {
     }
     return SVG_HELP;
   };
-  
+
   return L.divIcon({
     className: 'temporal-layered-marker',
     html: `
@@ -238,7 +236,7 @@ const createTemporalLayeredIcon = (events) => {
         ">
           ${getIconForType(primaryEvent)}
         </div>
-        
+
         <!-- Secondary events badge -->
         ${hasSecondaryEvents ? `
           <div style="
@@ -311,7 +309,7 @@ const DeviceDetailMap = ({ deviceId }) => {
             for (let i = 1; i < filteredHistory.length; i++) {
               const prev = significantMovements[significantMovements.length - 1];
               const current = filteredHistory[i];
-              
+
               const distance = calculateDistance(
                 prev.location.lat, prev.location.lng,
                 current.location.lat, current.location.lng
@@ -390,7 +388,7 @@ const DeviceDetailMap = ({ deviceId }) => {
     };
 
     fetchMapData();
-    
+
     // Refresh every 5 minutes to match location upload frequency
     const interval = setInterval(fetchMapData, 5 * 60 * 1000);
     return () => clearInterval(interval);
@@ -401,9 +399,9 @@ const DeviceDetailMap = ({ deviceId }) => {
     const R = 6371; // Radius of the Earth in kilometers
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 
+    const a =
       Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
       Math.sin(dLon/2) * Math.sin(dLon/2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     const d = R * c; // Distance in kilometers
@@ -454,7 +452,7 @@ const DeviceDetailMap = ({ deviceId }) => {
   // Group events by location (with small tolerance for GPS drift)
   const groupEventsByLocation = () => {
     const allEvents = [];
-    
+
     // Add location events
     if (showLocations) {
       locationHistory.forEach((location, index) => {
@@ -467,7 +465,7 @@ const DeviceDetailMap = ({ deviceId }) => {
         });
       });
     }
-    
+
     // Add recording events
     if (showRecordings) {
       recordingEvents.forEach(event => {
@@ -479,17 +477,17 @@ const DeviceDetailMap = ({ deviceId }) => {
           lng: event.start_longitude,
           isActive: !event.stop_timestamp,
           startTime: event.start_timestamp || `${event.start_date}T${event.start_time}`,
-          duration: event.stop_timestamp ? 
+          duration: event.stop_timestamp ?
             Math.round((new Date(event.stop_timestamp) - new Date(event.start_timestamp || `${event.start_date}T${event.start_time}`)) / 1000 / 60) : null
         });
-        
+
         // Add stop location if different from start
         if (event.stop_latitude && event.stop_longitude) {
           const startLat = parseFloat(event.start_latitude);
           const startLng = parseFloat(event.start_longitude);
           const stopLat = parseFloat(event.stop_latitude);
           const stopLng = parseFloat(event.stop_longitude);
-          
+
           // Only add stop marker if it's significantly different from start
           const distance = calculateDistance(startLat, startLng, stopLat, stopLng);
           if (distance > 0.01) { // More than 10 meters apart
@@ -506,14 +504,14 @@ const DeviceDetailMap = ({ deviceId }) => {
         }
       });
     }
-    
+
     // Group events by location with tolerance
     const grouped = {};
     const TOLERANCE = 0.0001; // ~10 meters
-    
+
     allEvents.forEach(event => {
       const key = `${Math.round(event.lat / TOLERANCE) * TOLERANCE},${Math.round(event.lng / TOLERANCE) * TOLERANCE}`;
-      
+
       if (!grouped[key]) {
         grouped[key] = {
           lat: event.lat,
@@ -521,68 +519,68 @@ const DeviceDetailMap = ({ deviceId }) => {
           events: []
         };
       }
-      
+
       grouped[key].events.push(event);
     });
-    
+
     return Object.values(grouped);
   };
 
   // Create popup content for recording events
   const RecordingEventPopup = ({ event }) => (
     <div style={{ minWidth: '250px' }}>
-      <div style={{ 
-        fontWeight: 'bold', 
-        fontSize: '14px', 
+      <div style={{
+        fontWeight: 'bold',
+        fontSize: '14px',
         marginBottom: '8px',
         color: event.isActive ? '#22c55e' : '#ef4444'
       }}>
         <Mic size={16} style={{verticalAlign: 'text-bottom', marginRight: '4px'}}/> Recording {event.isActive ? 'Active' : 'Completed'}
       </div>
-      
-      <div style={{ 
-        fontSize: '12px', 
+
+      <div style={{
+        fontSize: '12px',
         color: '#6b7280',
-        marginBottom: '4px' 
+        marginBottom: '4px'
       }}>
         Started: {formatTimestamp(event.startTime)}
       </div>
-      
+
       {event.stop_timestamp && (
-        <div style={{ 
-          fontSize: '12px', 
+        <div style={{
+          fontSize: '12px',
           color: '#6b7280',
-          marginBottom: '4px' 
+          marginBottom: '4px'
         }}>
           Stopped: {formatTimestamp(event.stop_timestamp)}
         </div>
       )}
-      
+
       {event.duration !== null && event.duration !== undefined && (
-        <div style={{ 
-          fontSize: '12px', 
+        <div style={{
+          fontSize: '12px',
           color: '#6b7280',
-          marginBottom: '4px' 
+          marginBottom: '4px'
         }}>
           Duration: {event.duration < 1 ? `${Math.round(event.duration * 60)} seconds` : `${Math.floor(event.duration)} minutes`}
         </div>
       )}
-      
+
       {event.audio_file_id && (
-        <div style={{ 
-          fontSize: '12px', 
+        <div style={{
+          fontSize: '12px',
           color: '#00d4e8',
-          marginBottom: '4px' 
+          marginBottom: '4px'
         }}>
           <a href={`${API_BASE_URL}/api/uploads/${event.audio_file_id}?t=${Date.now()}`} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center' }}>
             <Play size={12} style={{marginRight: '4px'}}/> Play Audio
           </a>
         </div>
       )}
-      
-      <div style={{ 
-        fontSize: '11px', 
-        color: '#9ca3af' 
+
+      <div style={{
+        fontSize: '11px',
+        color: '#9ca3af'
       }}>
         Location: {event.lat.toFixed(6)}, {event.lng.toFixed(6)}
       </div>
@@ -592,29 +590,29 @@ const DeviceDetailMap = ({ deviceId }) => {
   // Create popup content for multiple events at same location
   const MultiEventPopup = ({ locationGroup }) => (
     <div style={{ minWidth: '280px' }}>
-      <div style={{ 
-        fontWeight: 'bold', 
-        fontSize: '14px', 
+      <div style={{
+        fontWeight: 'bold',
+        fontSize: '14px',
         marginBottom: '8px',
         color: '#6b7280'
       }}>
         <MapPin size={16} style={{verticalAlign: 'text-bottom', marginRight: '4px'}}/> Events at This Location
       </div>
-      
-      <div style={{ 
-        fontSize: '11px', 
+
+      <div style={{
+        fontSize: '11px',
         color: '#9ca3af',
-        marginBottom: '8px' 
+        marginBottom: '8px'
       }}>
-        {locationGroup.lat.toFixed(6)}°N, {locationGroup.lng.toFixed(6)}°E
+        {locationGroup.lat.toFixed(6)}N, {locationGroup.lng.toFixed(6)}E
       </div>
-      
+
       <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
         {locationGroup.events
           .sort((a, b) => new Date(b.timestamp || b.startTime) - new Date(a.timestamp || a.startTime))
           .map((event, index) => (
-            <div key={index} style={{ 
-              marginBottom: '8px', 
+            <div key={index} style={{
+              marginBottom: '8px',
               padding: '6px',
               backgroundColor: '#f9fafb',
               borderRadius: '4px',
@@ -680,8 +678,8 @@ const DeviceDetailMap = ({ deviceId }) => {
 
   // Nigeria center as fallback
   const nigeriaCenter = [9.0765, 7.3986];
-  
-  const mapCenter = locationHistory.length > 0 
+
+  const mapCenter = locationHistory.length > 0
     ? [locationHistory[0].location.lat, locationHistory[0].location.lng]
     : nigeriaCenter;
 
@@ -695,10 +693,10 @@ const DeviceDetailMap = ({ deviceId }) => {
 
   if (loading) {
     return (
-      <div className="device-detail-map-container">
-        <div className="map-loading">
-          <div className="loading-spinner"></div>
-          <span>Loading device location history...</span>
+      <div className="mt-5 bg-surface-raised border border-surface-border rounded-xl overflow-hidden">
+        <div className="flex items-center justify-center gap-3 py-16 px-5 text-content-secondary">
+          <div className="animate-spin w-5 h-5 border-2 border-surface-border border-t-accent rounded-full"></div>
+          <span className="text-sm">Loading device location history...</span>
         </div>
       </div>
     );
@@ -706,61 +704,68 @@ const DeviceDetailMap = ({ deviceId }) => {
 
   if (error) {
     return (
-      <div className="device-detail-map-container">
-        <div className="map-error">
-          <span><AlertTriangle size={18} style={{verticalAlign: 'middle', marginRight: '8px'}}/> {error}</span>
+      <div className="mt-5 bg-surface-raised border border-surface-border rounded-xl overflow-hidden">
+        <div className="flex items-center justify-center py-16 px-5 bg-danger/10 text-danger">
+          <AlertTriangle size={18} className="mr-2" />
+          <span className="text-sm">{error}</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="device-detail-map-container">
-      <div className="map-header">
-        <h3>Device Location & Recording History</h3>
-        <div className="map-controls">
-          <div className="time-range-selector">
-            <button 
-              className={timeRange === '24h' ? 'active' : ''}
+    <div className="mt-5 bg-surface-raised border border-surface-border rounded-xl overflow-hidden">
+      {/* Header with controls */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-5 border-b border-surface-border bg-surface-overlay">
+        <h3 className="text-lg font-semibold text-content">Device Location & Recording History</h3>
+        <div className="flex flex-col gap-3 items-start md:items-end">
+          {/* Time range selector */}
+          <div className="flex gap-1 bg-surface rounded-lg p-1">
+            <button
+              className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${timeRange === '24h' ? 'bg-accent text-white' : 'text-content-secondary hover:text-content hover:bg-surface-hover'}`}
               onClick={() => setTimeRange('24h')}
             >
               24 Hours
             </button>
-            <button 
-              className={timeRange === '7d' ? 'active' : ''}
+            <button
+              className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${timeRange === '7d' ? 'bg-accent text-white' : 'text-content-secondary hover:text-content hover:bg-surface-hover'}`}
               onClick={() => setTimeRange('7d')}
             >
               7 Days
             </button>
-            <button 
-              className={timeRange === '30d' ? 'active' : ''}
+            <button
+              className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${timeRange === '30d' ? 'bg-accent text-white' : 'text-content-secondary hover:text-content hover:bg-surface-hover'}`}
               onClick={() => setTimeRange('30d')}
             >
               30 Days
             </button>
           </div>
-          <div className="filter-controls">
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
-              <input 
-                type="checkbox" 
-                checked={showLocations} 
+          {/* Filter checkboxes */}
+          <div className="flex gap-5 items-center">
+            <label className="flex items-center gap-2 text-sm text-content-secondary cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={showLocations}
                 onChange={(e) => setShowLocations(e.target.checked)}
+                className="cursor-pointer accent-accent"
               />
-              <MapPin size={16} style={{verticalAlign: 'middle'}}/> Locations
+              <MapPin size={16} className="inline-block align-middle" /> Locations
             </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
-              <input 
-                type="checkbox" 
-                checked={showRecordings} 
+            <label className="flex items-center gap-2 text-sm text-content-secondary cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={showRecordings}
                 onChange={(e) => setShowRecordings(e.target.checked)}
+                className="cursor-pointer accent-accent"
               />
-              <Mic size={16} style={{verticalAlign: 'middle'}}/> Recordings
+              <Mic size={16} className="inline-block align-middle" /> Recordings
             </label>
           </div>
         </div>
       </div>
 
-      <div className="map-wrapper">
+      {/* Map */}
+      <div className="relative">
         <MapContainer
           center={mapCenter}
           zoom={mapZoom}
@@ -787,18 +792,18 @@ const DeviceDetailMap = ({ deviceId }) => {
           {/* Grouped event markers */}
           {groupEventsByLocation().map((locationGroup, groupIndex) => {
             const { lat, lng, events } = locationGroup;
-            
+
             // If only one event, show appropriate single marker
             if (events.length === 1) {
               const event = events[0];
-              
+
               if (event.type === 'location') {
-                const locationNumber = locationHistory.findIndex(loc => 
+                const locationNumber = locationHistory.findIndex(loc =>
                   loc.timestamp === event.timestamp
                 ) + 1;
                 const isLatest = event.isLatest;
                 const numberedIcon = createNumberedIcon(locationNumber, isLatest);
-                
+
                 return (
                   <Marker
                     key={`loc-${event.timestamp}-${groupIndex}`}
@@ -807,33 +812,33 @@ const DeviceDetailMap = ({ deviceId }) => {
                   >
                     <Popup>
                       <div style={{ minWidth: '200px' }}>
-                        <div style={{ 
-                          fontWeight: 'bold', 
-                          fontSize: '14px', 
+                        <div style={{
+                          fontWeight: 'bold',
+                          fontSize: '14px',
                           marginBottom: '8px',
                           color: isLatest ? '#00d4e8' : '#00d4e8'
                         }}>
                           Point #{locationNumber} {isLatest ? '(Latest)' : ''}
                         </div>
-                        
-                        <div style={{ 
-                          fontSize: '12px', 
+
+                        <div style={{
+                          fontSize: '12px',
                           color: '#6b7280',
-                          marginBottom: '4px' 
+                          marginBottom: '4px'
                         }}>
                           Time: {formatTimestamp(event.timestamp)}
                         </div>
-                        
-                        <div style={{ 
-                          fontSize: '11px', 
-                          color: '#9ca3af' 
+
+                        <div style={{
+                          fontSize: '11px',
+                          color: '#9ca3af'
                         }}>
                           Location: {lat.toFixed(6)}, {lng.toFixed(6)}
                         </div>
 
                         {event.distanceFromPreviousMeters !== null && event.distanceFromPreviousMeters !== undefined && (
-                          <div style={{ 
-                            fontSize: '11px', 
+                          <div style={{
+                            fontSize: '11px',
                             color: '#6b7280'
                           }}>
                             Distance from Previous: {formatDistance(event.distanceFromPreviousMeters)}
@@ -844,10 +849,10 @@ const DeviceDetailMap = ({ deviceId }) => {
                   </Marker>
                 );
               } else if (event.type === 'recording' || event.type === 'recording_stop') {
-                const icon = event.isActive ? createActiveRecordingIcon() : 
-                           event.type === 'recording_stop' ? createRecordingStopIcon() : 
+                const icon = event.isActive ? createActiveRecordingIcon() :
+                           event.type === 'recording_stop' ? createRecordingStopIcon() :
                            createRecordingStartIcon();
-                
+
                 return (
                   <Marker
                     key={`rec-${event.id}-${event.type}-${groupIndex}`}
@@ -863,7 +868,7 @@ const DeviceDetailMap = ({ deviceId }) => {
             } else {
               // Multiple events at same location - use temporal layered icon
               const layeredIcon = createTemporalLayeredIcon(events);
-              
+
               return (
                 <Marker
                   key={`multi-${lat}-${lng}-${groupIndex}`}
@@ -876,62 +881,64 @@ const DeviceDetailMap = ({ deviceId }) => {
                 </Marker>
               );
             }
-            
+
             return null;
           })}
         </MapContainer>
       </div>
 
-      <div className="map-info">
-        <div className="map-stats">
+      {/* Stats and Legend */}
+      <div className="p-5 border-t border-surface-border bg-surface-overlay/50">
+        {/* Stats */}
+        <div className="flex flex-wrap gap-4 mb-4">
           {locationHistory.length > 0 && (
-            <div className="stat-item">
-              <span className="stat-icon">📍</span>
-              <span className="stat-text">
+            <div className="flex items-center gap-2 px-3 py-2 bg-surface border border-surface-border rounded-lg">
+              <MapPin size={16} className="text-accent" />
+              <span className="text-sm font-medium text-content">
                 {locationHistory.length} location point{locationHistory.length !== 1 ? 's' : ''}
               </span>
             </div>
           )}
           {recordingEvents.length > 0 && (
-            <div className="stat-item">
-              <span className="stat-icon">🎤</span>
-              <span className="stat-text">
+            <div className="flex items-center gap-2 px-3 py-2 bg-surface border border-surface-border rounded-lg">
+              <Mic size={16} className="text-success" />
+              <span className="text-sm font-medium text-content">
                 {recordingEvents.length} recording event{recordingEvents.length !== 1 ? 's' : ''}
               </span>
             </div>
           )}
         </div>
-        
+
         {locationHistory.length > 0 || recordingEvents.length > 0 ? (
-          <div className="map-legend">
-            <p>
+          <div>
+            <p className="text-xs text-content-secondary mb-3">
               Showing data from the last {timeRange === '24h' ? '24 hours' : timeRange === '7d' ? '7 days' : '30 days'}
             </p>
-            <div className="legend-items">
-              <div className="legend-item">
-                <span className="legend-color" style={{ backgroundColor: '#00d4e8' }}></span>
+            <div className="flex flex-wrap gap-4">
+              <div className="flex items-center gap-2 text-xs text-content-secondary">
+                <span className="w-3 h-3 rounded-full border border-white shadow-sm" style={{ backgroundColor: '#00d4e8' }}></span>
                 <span>Latest Location</span>
               </div>
-              <div className="legend-item">
-                <span className="legend-color" style={{ backgroundColor: '#00d4e8' }}></span>
+              <div className="flex items-center gap-2 text-xs text-content-secondary">
+                <span className="w-3 h-3 rounded-full border border-white shadow-sm" style={{ backgroundColor: '#00d4e8' }}></span>
                 <span>Historical Location</span>
               </div>
-              <div className="legend-item">
-                <span className="legend-color" style={{ backgroundColor: '#22c55e' }}></span>
+              <div className="flex items-center gap-2 text-xs text-content-secondary">
+                <span className="w-3 h-3 rounded-full border border-white shadow-sm" style={{ backgroundColor: '#22c55e' }}></span>
                 <span>Recording Event</span>
               </div>
-              <div className="legend-item">
-                <span className="legend-color" style={{ backgroundColor: '#ef4444' }}></span>
+              <div className="flex items-center gap-2 text-xs text-content-secondary">
+                <span className="w-3 h-3 rounded-full border border-white shadow-sm" style={{ backgroundColor: '#ef4444' }}></span>
                 <span>Recording Stop</span>
               </div>
-              <div className="legend-item">
-                <span className="legend-color" style={{ backgroundColor: '#f59e0b' }}></span>
+              <div className="flex items-center gap-2 text-xs text-content-secondary">
+                <span className="w-3 h-3 rounded-full border border-white shadow-sm" style={{ backgroundColor: '#f59e0b' }}></span>
                 <span>Multiple Events</span>
               </div>
             </div>
           </div>
         ) : (
-          <p>No data available for the selected time range and filters.</p>
+          <p className="text-sm text-content-secondary">No data available for the selected time range and filters.</p>
         )}
       </div>
     </div>

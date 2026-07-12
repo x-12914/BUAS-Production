@@ -1,7 +1,7 @@
 /**
  * Analyst Dashboard Component
  * BUAS RBAC Implementation - Segment 7: Dashboard Role Modifications
- * 
+ *
  * Restricted view for Analyst role:
  * - Only shows assigned devices
  * - Cannot control recordings
@@ -10,10 +10,10 @@
  */
 
 import React, { useState } from 'react';
+import { Info } from 'lucide-react';
 import UserList from './UserList';
 import DashboardMap from './DashboardMap';
 import ApiService from '../services/api';
-import './Dashboard.css';
 
 const AnalystDashboard = ({ user, dashboardData, loading, selectedUser, onUserSelect }) => {
   const [activeTab, setActiveTab] = useState('devices');
@@ -23,39 +23,40 @@ const AnalystDashboard = ({ user, dashboardData, loading, selectedUser, onUserSe
   const assignedDevices = dashboardData?.users || [];
 
   return (
-    <div className="analyst-dashboard">
-      {/* Analyst-specific header - removed redundant "Analyst View" text */}
-
+    <div className="space-y-6">
       {/* Tab Navigation - Limited for Analysts */}
-      <div className="dashboard-tabs">
-        <button 
-          className={`tab-button ${activeTab === 'devices' ? 'active' : ''}`}
+      <div className="flex items-center gap-1 p-1 bg-surface-raised rounded-xl border border-surface-border mb-6">
+        <button
+          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+            activeTab === 'devices' ? 'bg-accent text-white' : 'text-content-secondary hover:text-content hover:bg-surface-hover'
+          }`}
           onClick={() => setActiveTab('devices')}
         >
-          📱 My Assigned Devices
+          My Assigned Devices
         </button>
-        <button 
-          className={`tab-button ${activeTab === 'map' ? 'active' : ''}`}
+        <button
+          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+            activeTab === 'map' ? 'bg-accent text-white' : 'text-content-secondary hover:text-content hover:bg-surface-hover'
+          }`}
           onClick={() => setActiveTab('map')}
         >
-          🗺️ Location Map (Assigned)
+          Location Map (Assigned)
         </button>
       </div>
 
       {/* Tab Content */}
       {activeTab === 'devices' && (
-        <div className="analyst-devices">
+        <div className="space-y-4">
           {assignedDevices.length === 0 && !loading ? (
-            <div className="no-assignments">
-              <div className="no-assignments-icon">📝</div>
-              <h3>No Devices Assigned</h3>
-              <p>You currently have no devices assigned to you.</p>
-              <p>Contact your supervisor to request device assignments.</p>
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <h3 className="text-lg font-semibold text-content mb-2">No Devices Assigned</h3>
+              <p className="text-content-secondary text-sm">You currently have no devices assigned to you.</p>
+              <p className="text-content-secondary text-sm">Contact your supervisor to request device assignments.</p>
             </div>
           ) : (
             <>
               {/* Note: No batch recording controls for analysts */}
-              <UserList 
+              <UserList
                 users={assignedDevices}
                 loading={loading}
                 selectedUser={selectedUser}
@@ -72,14 +73,12 @@ const AnalystDashboard = ({ user, dashboardData, loading, selectedUser, onUserSe
       )}
 
       {activeTab === 'map' && (
-        <div className="analyst-map">
-          <div className="map-info">
-            <div className="info-banner">
-              <span className="icon">🔍</span>
-              <span>Showing location data for your assigned devices only</span>
-            </div>
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-info-muted text-info text-sm mb-4">
+            <Info size={16} />
+            <span>Showing location data for your assigned devices only</span>
           </div>
-          <DashboardMap 
+          <DashboardMap
             devices={assignedDevices}
             restrictedView={true}
           />

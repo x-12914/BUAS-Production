@@ -419,26 +419,26 @@ class UserService {
             'super_super_admin': {
                 label: 'Super Super Admin',
                 description: 'Highest privilege level with potential future multi-agency access',
-                color: '#d32f2f',
-                icon: '👑'
+                color: '#f87171',
+                icon: ''
             },
             'super_user': {
                 label: 'Super User',
                 description: 'Agency administrator with full control',
-                color: '#1976d2',
-                icon: '🛡️'
+                color: '#5b7bf5',
+                icon: ''
             },
             'analyst': {
                 label: 'Analyst',
                 description: 'Data analysis and monitoring of assigned devices',
-                color: '#388e3c',
-                icon: '📊'
+                color: '#34d399',
+                icon: ''
             },
             'operator': {
                 label: 'Operator',
                 description: 'Recording control without data access',
-                color: '#f57c00',
-                icon: '🎛️'
+                color: '#fbbf24',
+                icon: ''
             }
         };
     }
@@ -454,7 +454,7 @@ class UserService {
             roleLabel: roleInfo.label || user.role,
             roleDescription: roleInfo.description || '',
             roleColor: roleInfo.color || '#666',
-            roleIcon: roleInfo.icon || '👤',
+            roleIcon: roleInfo.icon || '',
             lastLoginFormatted: user.last_login 
                 ? new Date(user.last_login).toLocaleString()
                 : 'Never',

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Search, X } from 'lucide-react';
 import ApiService from '../services/api';
-import './DeviceSearch.css';
 
 const DeviceSearch = ({ onDevicesSelected }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -117,7 +117,7 @@ const DeviceSearch = ({ onDevicesSelected }) => {
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
-        inputRef.current && 
+        inputRef.current &&
         !inputRef.current.contains(event.target) &&
         suggestionsRef.current &&
         !suggestionsRef.current.contains(event.target)
@@ -131,37 +131,40 @@ const DeviceSearch = ({ onDevicesSelected }) => {
   }, []);
 
   return (
-    <div className="device-search">
-      <div className="search-header">
-        <h3>Device Location Search</h3>
-        <p>Enter device IDs to view their locations on the map</p>
+    <div className="space-y-3">
+      <div>
+        <h3 className="text-sm font-display font-semibold text-content">Device Location Search</h3>
+        <p className="text-xs text-content-muted mt-0.5">Enter device IDs to view their locations on the map</p>
       </div>
 
-      <div className="search-input-container">
-        <input
-          ref={inputRef}
-          type="text"
-          value={searchTerm}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyPress}
-          placeholder="Type device ID (e.g., device123)"
-          className="search-input"
-          disabled={loading}
-        />
-        
+      <div className="relative">
+        <div className="relative">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-content-muted" />
+          <input
+            ref={inputRef}
+            type="text"
+            value={searchTerm}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyPress}
+            placeholder="Type device ID (e.g., device123)"
+            className="w-full pl-9 pr-3 py-2 bg-surface-raised border border-surface-border rounded-lg text-sm text-content placeholder:text-content-muted focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20"
+            disabled={loading}
+          />
+        </div>
+
         {showSuggestions && suggestions.length > 0 && (
-          <div ref={suggestionsRef} className="suggestions-dropdown">
+          <div ref={suggestionsRef} className="absolute z-30 w-full mt-1 bg-surface-overlay border border-surface-border rounded-lg shadow-xl overflow-hidden">
             {suggestions.map((device) => (
               <div
                 key={device.id}
-                className="suggestion-item"
+                className="px-3 py-2 hover:bg-surface-hover cursor-pointer transition-colors"
                 onClick={() => handleSuggestionClick(device)}
               >
-                <div className="suggestion-main">
+                <div className="text-sm text-content">
                   {device.display_name || device.id}
                 </div>
                 {device.display_name && device.display_name !== device.id && (
-                  <div className="suggestion-sub">
+                  <div className="text-xs text-content-muted">
                     ID: {device.id}
                   </div>
                 )}
@@ -172,27 +175,27 @@ const DeviceSearch = ({ onDevicesSelected }) => {
       </div>
 
       {selectedDevices.length > 0 && (
-        <div className="selected-devices">
-          <div className="selected-header">
-            <span>Selected Devices ({selectedDevices.length})</span>
-            <button onClick={clearAll} className="clear-all-btn">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-content-secondary">Selected Devices ({selectedDevices.length})</span>
+            <button onClick={clearAll} className="text-xs font-medium text-danger hover:text-danger/80 transition-colors">
               Clear All
             </button>
           </div>
-          <div className="device-tags">
+          <div className="flex flex-wrap gap-1.5">
             {selectedDevices.map((deviceId) => {
               // Find the device to get its display name
               const device = availableDevices.find(d => d.id === deviceId);
               const displayName = device?.display_name || deviceId;
-              
+
               return (
-                <span key={deviceId} className="device-tag">
+                <span key={deviceId} className="inline-flex items-center gap-1 px-2 py-1 bg-accent/10 border border-accent/20 rounded-md text-xs font-medium text-accent">
                   {displayName}
                   <button
                     onClick={() => removeDevice(deviceId)}
-                    className="remove-device-btn"
+                    className="p-0.5 rounded hover:bg-accent/20 transition-colors"
                   >
-                    ×
+                    <X size={12} />
                   </button>
                 </span>
               );
@@ -202,9 +205,9 @@ const DeviceSearch = ({ onDevicesSelected }) => {
       )}
 
       {loading && (
-        <div className="search-loading">
-          <div className="loading-spinner"></div>
-          <span>Loading device locations...</span>
+        <div className="flex items-center gap-2 py-2">
+          <div className="w-4 h-4 border-2 border-accent/30 border-t-accent rounded-full animate-spin"></div>
+          <span className="text-xs text-content-muted">Loading device locations...</span>
         </div>
       )}
     </div>

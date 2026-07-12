@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { ArrowLeft, AlertTriangle } from 'lucide-react';
 import SmsTable from './SmsTable';
 import ApiService from '../services/api';
-import './DeviceSmsHistory.css';
 
 const DeviceSmsHistory = () => {
   const { deviceId } = useParams();
@@ -42,7 +42,7 @@ const DeviceSmsHistory = () => {
       };
 
       const response = await ApiService.getDeviceSms(deviceId, params);
-      
+
       if (response.sms_messages && response.sms_messages.length > 0) {
         allSmsData = [...allSmsData, ...response.sms_messages];
         totalSummary = response.summary || {};
@@ -120,10 +120,10 @@ const DeviceSmsHistory = () => {
 
   if (loading) {
     return (
-      <div className="device-sms-history-container">
-        <div className="loading-sms">
-          <div className="spinner"></div>
-          <p>Loading SMS messages...</p>
+      <div className="space-y-4">
+        <div className="flex flex-col items-center justify-center py-12 text-content-secondary">
+          <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mb-3"></div>
+          <p className="text-sm">Loading SMS messages...</p>
         </div>
       </div>
     );
@@ -131,12 +131,14 @@ const DeviceSmsHistory = () => {
 
   if (error) {
     return (
-      <div className="device-sms-history-container">
-        <div className="error-state">
-          <h2>❌ Error</h2>
-          <p>{error}</p>
-          <button onClick={() => navigate(`/device/${deviceId}`)} className="btn btn-secondary">
-            ← Back to Device Details
+      <div className="space-y-4">
+        <div className="bg-danger/10 border border-danger/20 rounded-xl p-6 text-center">
+          <h2 className="text-lg font-semibold text-danger flex items-center justify-center gap-2">
+            <AlertTriangle size={20} /> Error
+          </h2>
+          <p className="text-sm text-content-secondary mt-2">{error}</p>
+          <button onClick={() => navigate(`/device/${deviceId}`)} className="mt-4 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-surface-border text-content-secondary hover:text-content hover:bg-surface-hover transition-colors">
+            <ArrowLeft size={16} /> Back to Device Details
           </button>
         </div>
       </div>
@@ -144,41 +146,34 @@ const DeviceSmsHistory = () => {
   }
 
   return (
-    <div className="device-sms-history-container">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="sms-history-header">
-        <button 
+      <div className="space-y-3">
+        <button
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
 
             // Use window.location.href for reliable navigation
             window.location.href = `/device/${deviceId}`;
-          }} 
-          className="back-button"
-          style={{
-            position: 'relative',
-            zIndex: 1000,
-            pointerEvents: 'auto'
           }}
+          className="inline-flex items-center gap-2 text-sm text-content-secondary hover:text-content transition-colors relative z-10"
         >
-          ← Back to Device Details
+          <ArrowLeft size={16} /> Back to Device Details
         </button>
-        <div className="sms-history-title">
-          <h1>📱 Device SMS Messages</h1>
-          <p>Device: {deviceId}</p>
+        <div>
+          <h1 className="text-xl font-display font-semibold text-content">Device SMS Messages</h1>
+          <p className="text-sm text-content-muted mt-1">Device: {deviceId}</p>
           {deviceInfo && (
-            <div className="device-status-info">
-              <span className="sms-count">
-                {summary.total_messages} SMS messages
-              </span>
-            </div>
+            <span className="text-xs text-content-secondary mt-1 inline-block">
+              {summary.total_messages} SMS messages
+            </span>
           )}
         </div>
       </div>
 
       {/* SMS Table */}
-      <div className="sms-table-section">
+      <div>
         <SmsTable
           data={smsData}
           summary={summary}

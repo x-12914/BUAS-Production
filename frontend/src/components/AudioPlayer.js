@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import './AudioPlayer.css';
+import { Play, Pause, Square, RotateCcw, Download, Volume2, X } from 'lucide-react';
 
 const AudioPlayer = ({ audio, onClose }) => {
   const audioRef = useRef(null);
@@ -85,7 +85,7 @@ const AudioPlayer = ({ audio, onClose }) => {
     const x = e.clientX - rect.left;
     const percentage = x / rect.width;
     const newTime = percentage * duration;
-    
+
     audioElement.currentTime = newTime;
     setCurrentTime(newTime);
   };
@@ -93,7 +93,7 @@ const AudioPlayer = ({ audio, onClose }) => {
   const handleVolumeChange = (e) => {
     const newVolume = parseFloat(e.target.value);
     setVolume(newVolume);
-    
+
     const audioElement = audioRef.current;
     if (audioElement) {
       audioElement.volume = newVolume;
@@ -102,7 +102,7 @@ const AudioPlayer = ({ audio, onClose }) => {
 
   const formatTime = (time) => {
     if (isNaN(time)) return '0:00';
-    
+
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
@@ -111,15 +111,23 @@ const AudioPlayer = ({ audio, onClose }) => {
   const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className="audio-player-overlay">
-      <div className="audio-player">
-        <div className="audio-player-header">
-          <div className="audio-info">
-            <h3 className="audio-title">🎵 {audio.filename}</h3>
-            <p className="audio-user">Device: {audio.user}</p>
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-surface-raised border border-surface-border rounded-xl p-6 w-full max-w-md shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+        {/* Header */}
+        <div className="flex justify-between items-start mb-6 gap-3">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-base font-display font-semibold text-content truncate">
+              {audio.filename}
+            </h3>
+            <p className="text-sm text-content-secondary mt-1">
+              Device: {audio.user}
+            </p>
           </div>
-          <button className="close-button" onClick={onClose}>
-            ✕
+          <button
+            className="p-2 rounded-lg border border-surface-border text-content-secondary hover:bg-danger/10 hover:text-danger hover:border-danger/30 transition-colors flex-shrink-0"
+            onClick={onClose}
+          >
+            <X size={16} />
           </button>
         </div>
 
@@ -132,55 +140,54 @@ const AudioPlayer = ({ audio, onClose }) => {
           }}
         />
 
-        <div className="audio-controls">
-          <button 
-            className="play-pause-button"
+        {/* Controls */}
+        <div className="flex items-center gap-3 mb-4">
+          <button
+            className="p-2 rounded-lg bg-accent/10 hover:bg-accent/20 text-accent transition-colors"
             onClick={togglePlayPause}
           >
-            {isPlaying ? '⏸️' : '▶️'}
+            {isPlaying ? <Pause size={20} /> : <Play size={20} />}
           </button>
 
-          <div className="progress-container">
-            <span className="time-display current-time">
+          <div className="flex items-center gap-2 flex-1">
+            <span className="text-xs font-mono text-content-muted min-w-[36px] text-center">
               {formatTime(currentTime)}
             </span>
-            
-            <div 
-              className="progress-bar"
+
+            <div
+              className="flex-1 h-1.5 bg-surface-border rounded-full overflow-hidden cursor-pointer group relative"
               onClick={handleSeek}
             >
-              <div 
-                className="progress-fill"
+              <div
+                className="h-full bg-accent rounded-full transition-[width] duration-100"
                 style={{ width: `${progressPercentage}%` }}
               />
-              <div 
-                className="progress-thumb"
-                style={{ left: `${progressPercentage}%` }}
-              />
             </div>
-            
-            <span className="time-display duration">
+
+            <span className="text-xs font-mono text-content-muted min-w-[36px] text-center">
               {formatTime(duration)}
             </span>
           </div>
-
-          <div className="volume-container">
-            <span className="volume-icon">🔊</span>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.1"
-              value={volume}
-              onChange={handleVolumeChange}
-              className="volume-slider"
-            />
-          </div>
         </div>
 
-        <div className="audio-actions">
-          <button 
-            className="btn btn-secondary"
+        {/* Volume */}
+        <div className="flex items-center gap-2 mb-4">
+          <Volume2 size={14} className="text-content-muted flex-shrink-0" />
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.1"
+            value={volume}
+            onChange={handleVolumeChange}
+            className="w-20 h-1 bg-surface-border rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-accent [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer"
+          />
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-2 justify-center">
+          <button
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-surface-border text-content-secondary hover:bg-surface-hover transition-colors"
             onClick={() => {
               const audioElement = audioRef.current;
               if (audioElement) {
@@ -189,17 +196,17 @@ const AudioPlayer = ({ audio, onClose }) => {
               }
             }}
           >
-            ⏮️ Restart
+            <RotateCcw size={14} /> Restart
           </button>
-          
-          <a 
+
+          <a
             href={audio.url}
             download={audio.filename}
-            className="btn btn-primary"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-accent text-white hover:bg-accent-hover transition-colors"
             target="_blank"
             rel="noopener noreferrer"
           >
-            💾 Download
+            <Download size={14} /> Download
           </a>
         </div>
       </div>

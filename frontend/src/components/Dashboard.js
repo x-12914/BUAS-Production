@@ -12,8 +12,6 @@ import SuperUserDashboard from './SuperUserDashboard';
 import ApiService from '../services/api';
 import authService from '../services/authService';
 import { Pause, Play, Lock, Users, LogOut } from 'lucide-react';
-import './Dashboard.css';
-import './RoleDashboards.css';
 
 const Dashboard = ({ user, onLogout }) => {
   // State Management
@@ -37,7 +35,7 @@ const Dashboard = ({ user, onLogout }) => {
       } catch (healthError) {
         console.warn('Health check failed, but attempting dashboard data fetch...');
       }
-      
+
       const data = await ApiService.getDashboardData();
       setDashboardData(data);
       setConnectionStatus(data.connection_status || 'connected');
@@ -55,15 +53,15 @@ const Dashboard = ({ user, onLogout }) => {
   // Real-time Polling with 2-second intervals
   useEffect(() => {
     let pollInterval;
-    
+
     if (isPolling) {
       // Initial fetch
       fetchDashboardData();
-      
+
       // Set up polling
       pollInterval = setInterval(fetchDashboardData, 2000);
     }
-    
+
     return () => {
       if (pollInterval) {
         clearInterval(pollInterval);
@@ -89,9 +87,9 @@ const Dashboard = ({ user, onLogout }) => {
     const handleAuthChange = (userData) => {
       setCurrentUser(userData);
     };
-    
+
     authService.addAuthListener(handleAuthChange);
-    
+
     return () => {
       authService.removeAuthListener(handleAuthChange);
     };
@@ -131,14 +129,10 @@ const Dashboard = ({ user, onLogout }) => {
     };
   }, [showUserMenu]);
 
-  const getRoleBadgeClass = (role) => {
-    return `role-badge ${role.replace('_', '-')}`;
-  };
-
   // Render role-specific dashboard content
   const renderDashboardContent = () => {
     const role = currentUser?.role;
-    
+
     switch (role) {
       case 'analyst':
         return (
@@ -150,7 +144,7 @@ const Dashboard = ({ user, onLogout }) => {
             onUserSelect={setSelectedUser}
           />
         );
-        
+
       case 'operator':
         return (
           <OperatorDashboard
@@ -162,7 +156,7 @@ const Dashboard = ({ user, onLogout }) => {
             isPolling={isPolling}
           />
         );
-        
+
       case 'super_user':
         return (
           <SuperUserDashboard
@@ -174,35 +168,35 @@ const Dashboard = ({ user, onLogout }) => {
             isPolling={isPolling}
           />
         );
-        
+
       case 'super_super_admin':
       default:
         // Default/Super Super Admin view - full access
         return (
-          <div className="super-admin-content">
+          <div>
             {/* Tab Navigation - Full access for Super Super Admin */}
-            <div className="dashboard-tabs">
-              <button 
-                className={`tab-button ${activeTab === 'devices' ? 'active' : ''}`}
+            <div className="flex items-center gap-2 mb-6">
+              <button
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${activeTab === 'devices' ? 'bg-accent text-white' : 'text-content-secondary hover:text-content hover:bg-surface-hover'}`}
                 onClick={() => setActiveTab('devices')}
               >
                 DEVICE LIST
               </button>
-              <button 
-                className={`tab-button ${activeTab === 'map' ? 'active' : ''}`}
+              <button
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${activeTab === 'map' ? 'bg-accent text-white' : 'text-content-secondary hover:text-content hover:bg-surface-hover'}`}
                 onClick={() => setActiveTab('map')}
               >
                 LOCATION MAP
               </button>
-              <button 
-                className={`tab-button ${activeTab === 'users' ? 'active' : ''}`}
+              <button
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${activeTab === 'users' ? 'bg-accent text-white' : 'text-content-secondary hover:text-content hover:bg-surface-hover'}`}
                 onClick={() => setActiveTab('users')}
               >
                 USER MANAGEMENT
               </button>
               {(currentUser?.role === 'super_user' || currentUser?.role === 'super_super_admin') && (
-                <button 
-                  className={`tab-button ${activeTab === 'audit' ? 'active' : ''}`}
+                <button
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${activeTab === 'audit' ? 'bg-accent text-white' : 'text-content-secondary hover:text-content hover:bg-surface-hover'}`}
                   onClick={() => setActiveTab('audit')}
                 >
                   AUDIT LOGS
@@ -214,12 +208,12 @@ const Dashboard = ({ user, onLogout }) => {
             {activeTab === 'devices' && (
               <>
                 {/* Batch Recording Controls */}
-                <BatchRecordingControls 
+                <BatchRecordingControls
                   devices={dashboardData?.users || []}
                   disabled={loading || !isPolling}
                 />
 
-                <UserList 
+                <UserList
                   users={dashboardData?.users || []}
                   loading={loading}
                   selectedUser={selectedUser}
@@ -246,70 +240,68 @@ const Dashboard = ({ user, onLogout }) => {
 
   if (loading && !dashboardData) {
     return (
-      <div className="dashboard dark-theme">
-        <div className="loading-container">
-          <div className="spinner"></div>
-          <p>Loading BUAS Dashboard...</p>
-        </div>
+      <div className="min-h-screen bg-surface flex flex-col items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-2 border-surface-border border-t-accent rounded-full"></div>
+        <p className="mt-4 text-sm text-content-secondary">Loading BUAS Dashboard...</p>
       </div>
     );
   }
 
   return (
-    <div className="dashboard dark-theme">
+    <div className="min-h-screen bg-surface flex flex-col">
       {/* Dashboard Header */}
-      <header className="dashboard-header">
-        <div className="header-content">
-          <h1>BUAS COMMAND CENTER</h1>
-          <div className="header-right">
-            <div className="dashboard-controls">
-              <button 
-                className={`polling-toggle ${isPolling ? 'active' : ''}`}
+      <header className="sticky top-0 z-50 bg-surface/80 backdrop-blur-[12px] border-b border-surface-border">
+        <div className="max-w-[1600px] mx-auto px-6 py-3 flex items-center justify-between">
+          <h1 className="text-lg font-display font-bold text-white tracking-wide">BUAS</h1>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <button
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${isPolling ? 'bg-accent/10 border-accent/30 text-accent' : 'border-surface-border text-content-secondary hover:bg-surface-hover'}`}
                 onClick={togglePolling}
               >
-                {isPolling ? <Pause size={16} /> : <Play size={16} />} 
+                {isPolling ? <Pause size={14} className="inline mr-1.5" /> : <Play size={14} className="inline mr-1.5" />}
                 {isPolling ? 'Pause Updates' : 'Resume Updates'}
               </button>
-              <div className="polling-indicator">
-                <span className={`indicator-dot ${isPolling ? 'active' : ''}`}></span>
+              <div className="flex items-center gap-2 text-xs text-content-secondary">
+                <span className={`w-2 h-2 rounded-full ${isPolling ? 'bg-success animate-pulse-subtle' : 'bg-content-muted'}`}></span>
                 <span>Live Updates</span>
               </div>
             </div>
-            
+
             {/* User Menu */}
-            <div className="user-menu">
-              <button className="user-menu-toggle" onClick={toggleUserMenu}>
-                <span className="user-info">
-                  <span className="username">{currentUser?.username || 'User'}</span>
-                  <span className={getRoleBadgeClass(currentUser?.role || 'operator')}>
+            <div className="user-menu relative">
+              <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-surface-hover transition-colors" onClick={toggleUserMenu}>
+                <span className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-content">{currentUser?.username || 'User'}</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-accent-muted text-accent">
                     {currentUser?.role?.replace('_', ' ') || 'Loading...'}
                   </span>
                 </span>
-                <span className="menu-arrow">{showUserMenu ? '▲' : '▼'}</span>
+                <span className="text-xs text-content-muted">{showUserMenu ? '▲' : '▼'}</span>
               </button>
-              
+
               {showUserMenu && (
-                <div className="user-menu-dropdown">
-                  <div className="user-menu-header">
-                    <div className="user-details">
-                      <strong>{currentUser?.username || 'User'}</strong>
-                      <small>{currentUser?.agency_name || 'Briech UAS'}</small>
+                <div className="absolute right-0 top-full mt-2 w-56 bg-surface-overlay border border-surface-border rounded-xl shadow-2xl py-2 z-50">
+                  <div className="px-4 py-2.5 border-b border-surface-border">
+                    <div>
+                      <strong className="text-sm text-content">{currentUser?.username || 'User'}</strong>
+                      <small className="block text-xs text-content-muted mt-0.5">{currentUser?.agency_name || 'Briech UAS'}</small>
                     </div>
                   </div>
-                  <button className="user-menu-item" onClick={handleChangePassword}>
+                  <button className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-content-secondary hover:bg-surface-hover hover:text-content transition-colors" onClick={handleChangePassword}>
                     <Lock size={16} /> Change Password
                   </button>
-                  {(currentUser?.role === 'super_super_admin' || 
+                  {(currentUser?.role === 'super_super_admin' ||
                     currentUser?.role === 'super_user') && (
-                    <button className="user-menu-item" onClick={() => {
+                    <button className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-content-secondary hover:bg-surface-hover hover:text-content transition-colors" onClick={() => {
                       setActiveTab('users');
                       setShowUserMenu(false);
                     }}>
                       <Users size={16} /> User Management
                     </button>
                   )}
-                  <hr className="menu-divider" />
-                  <button className="user-menu-item danger" onClick={handleLogout}>
+                  <hr className="my-1 border-surface-border" />
+                  <button className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-danger hover:bg-danger/10 transition-colors" onClick={handleLogout}>
                     <LogOut size={16} /> Logout
                   </button>
                 </div>
@@ -320,7 +312,7 @@ const Dashboard = ({ user, onLogout }) => {
       </header>
 
       {/* Status Bar */}
-      <StatusBar 
+      <StatusBar
         data={dashboardData}
         connectionStatus={connectionStatus}
         lastUpdated={lastUpdated}
@@ -328,26 +320,22 @@ const Dashboard = ({ user, onLogout }) => {
       />
 
       {/* Main Content */}
-      <main className="dashboard-content">
-        <div className="dashboard-main">
-          {/* Connection Status */}
-          <ConnectionStatus 
-            status={connectionStatus}
-            lastUpdated={lastUpdated}
-            isPolling={isPolling}
-          />
+      <main className="flex-1 overflow-auto p-6 max-w-[1600px] mx-auto w-full">
+        {/* Connection Status */}
+        <ConnectionStatus
+          status={connectionStatus}
+          lastUpdated={lastUpdated}
+          isPolling={isPolling}
+        />
 
-          {/* Role-specific Dashboard Content */}
-          {renderDashboardContent()}
-        </div>
+        {/* Role-specific Dashboard Content */}
+        {renderDashboardContent()}
       </main>
 
       {/* Footer */}
-      <footer className="dashboard-footer">
-        <div className="footer-content">
-          <p>BUAS Dashboard v2.3.2 | Last Updated: {lastUpdated?.toLocaleTimeString()}</p>
-          <p>Connected Users: {dashboardData?.total_users || 0}</p>
-        </div>
+      <footer className="border-t border-surface-border py-3 px-6 text-xs text-content-muted flex justify-between">
+        <p>BUAS Dashboard v2.3.2 | Last Updated: {lastUpdated?.toLocaleTimeString()}</p>
+        <p>Connected Users: {dashboardData?.total_users || 0}</p>
       </footer>
     </div>
   );

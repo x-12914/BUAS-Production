@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ApiService from '../services/api';
 import { Hourglass, Square, CircleDashed, AlertCircle, Mic, AlertTriangle } from 'lucide-react';
-import './RecordingControlButton.css';
 
 const RecordingControlButton = ({ deviceId, initialStatus, onStatusChange, disabled = false }) => {
   const [status, setStatus] = useState(initialStatus || 'idle');
@@ -12,7 +11,7 @@ const RecordingControlButton = ({ deviceId, initialStatus, onStatusChange, disab
   // Duration timer for recording state
   useEffect(() => {
     let interval = null;
-    
+
     if (status === 'recording') {
       interval = setInterval(() => {
         setDuration(prev => prev + 1);
@@ -31,10 +30,10 @@ const RecordingControlButton = ({ deviceId, initialStatus, onStatusChange, disab
     // Don't override status while a command is being processed
     // This prevents Dashboard polling from resetting the button during transitions
     if (loading) return;
-    
+
     if (initialStatus && initialStatus !== status) {
       setStatus(initialStatus);
-      
+
       // If transitioning to recording, fetch actual duration
       if (initialStatus === 'recording') {
         fetchRecordingStatus();
@@ -53,17 +52,17 @@ const RecordingControlButton = ({ deviceId, initialStatus, onStatusChange, disab
     try {
       const response = await ApiService.getRecordingStatus(deviceId);
       const recordingStatus = response.recording_status;
-      
+
       setStatus(recordingStatus.recording_state);
-      
+
       if (recordingStatus.recording_state === 'recording' && response.duration_seconds) {
         setDuration(response.duration_seconds);
       }
-      
+
       if (onStatusChange) {
         onStatusChange(deviceId, recordingStatus);
       }
-      
+
     } catch (err) {
       console.error('Failed to fetch recording status:', err);
       setError('Failed to get status');
@@ -82,23 +81,23 @@ const RecordingControlButton = ({ deviceId, initialStatus, onStatusChange, disab
       setStatus(transitionState);
 
       const response = await ApiService.sendRecordingCommand(deviceId, command);
-      
+
       if (response.status === 'success') {
         // Poll recording status every 1 second for up to 10 seconds
         let attempts = 0;
         const maxAttempts = 10; // 10 seconds total
-        
+
         const pollStatus = async () => {
           attempts++;
-          
+
           try {
             const statusResponse = await ApiService.getRecordingStatus(deviceId);
             const recordingStatus = statusResponse.recording_status;
             const currentState = recordingStatus.recording_state;
-            
+
             // Check if state has changed to expected final state
             const expectedState = command === 'start' ? 'recording' : 'idle';
-            
+
             if (currentState === expectedState) {
               // Success! Update to final state
               setStatus(currentState);
@@ -111,7 +110,7 @@ const RecordingControlButton = ({ deviceId, initialStatus, onStatusChange, disab
               setLoading(false);
               return; // Stop polling
             }
-            
+
             // State hasn't changed yet, continue polling if under max attempts
             if (attempts < maxAttempts) {
               setTimeout(pollStatus, 1000); // Check again in 1 second
@@ -120,7 +119,7 @@ const RecordingControlButton = ({ deviceId, initialStatus, onStatusChange, disab
               await fetchRecordingStatus();
               setLoading(false);
             }
-            
+
           } catch (pollError) {
             console.error('Error polling status:', pollError);
             if (attempts < maxAttempts) {
@@ -130,15 +129,15 @@ const RecordingControlButton = ({ deviceId, initialStatus, onStatusChange, disab
             }
           }
         };
-        
+
         // Start polling after brief initial delay
         setTimeout(pollStatus, 1000);
       }
-      
+
     } catch (err) {
       console.error(`Failed to ${command} recording:`, err);
       setError(`Failed to ${command} recording`);
-      
+
       // Revert to previous state on error
       setStatus(command === 'start' ? 'idle' : 'recording');
       setLoading(false);
@@ -149,7 +148,7 @@ const RecordingControlButton = ({ deviceId, initialStatus, onStatusChange, disab
     e?.stopPropagation();
     handleCommand('start');
   };
-  
+
   const handleStop = (e) => {
     e?.stopPropagation();
     handleCommand('stop');
@@ -166,53 +165,53 @@ const RecordingControlButton = ({ deviceId, initialStatus, onStatusChange, disab
       case 'starting':
         return {
           text: 'Starting...',
-          className: 'recording-btn starting',
-          icon: <Hourglass size={16} style={{marginRight: '6px', verticalAlign: 'text-bottom'}} />,
+          className: 'bg-warning/10 text-warning border border-warning/20',
+          icon: <Hourglass size={14} className="mr-1.5" />,
           onClick: null,
           disabled: true
         };
-      
+
       case 'recording':
         return {
           text: `Stop Recording (${formatDuration(duration)})`,
-          className: 'recording-btn recording',
-          icon: <Square size={16} fill="currentColor" style={{marginRight: '6px', verticalAlign: 'text-bottom'}} />,
+          className: 'bg-danger/10 hover:bg-danger/20 text-danger border border-danger/20',
+          icon: <Square size={14} fill="currentColor" className="mr-1.5" />,
           onClick: handleStop,
           disabled: false
         };
-      
+
       case 'stopping':
         return {
           text: 'Stopping...',
-          className: 'recording-btn stopping',
-          icon: <Hourglass size={16} style={{marginRight: '6px', verticalAlign: 'text-bottom'}} />,
+          className: 'bg-warning/10 text-warning border border-warning/20',
+          icon: <Hourglass size={14} className="mr-1.5" />,
           onClick: null,
           disabled: true
         };
-      
+
       case 'offline':
         return {
           text: 'Device Offline',
-          className: 'recording-btn offline',
-          icon: <CircleDashed size={16} style={{marginRight: '6px', verticalAlign: 'text-bottom'}} />,
+          className: 'bg-surface-raised text-content-muted border border-surface-border',
+          icon: <CircleDashed size={14} className="mr-1.5" />,
           onClick: null,
           disabled: true
         };
-      
+
       case 'error':
         return {
           text: 'Error - Try Again',
-          className: 'recording-btn error',
-          icon: <AlertCircle size={16} style={{marginRight: '6px', verticalAlign: 'text-bottom'}} />,
+          className: 'bg-danger/10 hover:bg-danger/20 text-danger border border-danger/20',
+          icon: <AlertCircle size={14} className="mr-1.5" />,
           onClick: handleStart,
           disabled: false
         };
-      
+
       default: // idle
         return {
           text: 'Start Recording',
-          className: 'recording-btn idle',
-          icon: <Mic size={16} style={{marginRight: '6px', verticalAlign: 'text-bottom'}} />,
+          className: 'bg-success/10 hover:bg-success/20 text-success border border-success/20',
+          icon: <Mic size={14} className="mr-1.5" />,
           onClick: handleStart,
           disabled: false
         };
@@ -222,9 +221,9 @@ const RecordingControlButton = ({ deviceId, initialStatus, onStatusChange, disab
   const buttonConfig = getButtonConfig();
 
   return (
-    <div className="recording-control-container">
+    <div className="inline-flex flex-col items-start gap-1">
       <button
-        className={`${buttonConfig.className} ${loading ? 'loading' : ''} ${disabled ? 'disabled' : ''}`}
+        className={`inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${buttonConfig.className} ${loading ? 'animate-pulse' : ''} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         onClick={(e) => {
           e.stopPropagation();
           buttonConfig.onClick?.(e);
@@ -232,24 +231,24 @@ const RecordingControlButton = ({ deviceId, initialStatus, onStatusChange, disab
         disabled={buttonConfig.disabled || loading || disabled}
         title={error || `Current status: ${status}`}
       >
-        <span className="recording-icon">{buttonConfig.icon}</span>
-        <span className="recording-text">{buttonConfig.text}</span>
-        {loading && <div className="button-spinner"></div>}
+        {buttonConfig.icon}
+        <span>{buttonConfig.text}</span>
+        {loading && <span className="ml-1.5 w-3 h-3 border-2 border-current/30 border-t-current rounded-full animate-spin"></span>}
       </button>
-      
+
       {error && (
-        <div className="recording-error">
-          <span className="error-icon"><AlertTriangle size={16} /></span>
-          <span className="error-text">{error}</span>
-          <button 
-            className="error-dismiss"
+        <div className="flex items-center gap-1.5 px-2 py-1 bg-danger/5 border border-danger/10 rounded text-xs text-danger">
+          <AlertTriangle size={12} />
+          <span>{error}</span>
+          <button
+            className="ml-1 p-0.5 rounded hover:bg-danger/10 transition-colors"
             onClick={(e) => {
               e.stopPropagation();
               setError(null);
             }}
             title="Dismiss error"
           >
-            ×
+            &times;
           </button>
         </div>
       )}

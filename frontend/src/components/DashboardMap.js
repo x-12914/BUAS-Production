@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DeviceSearch from './DeviceSearch';
 import MapComponent from './MapComponent';
-import './DashboardMap.css';
 
 const DashboardMap = () => {
   const [searchedDevices, setSearchedDevices] = useState([]);
@@ -18,17 +17,17 @@ const DashboardMap = () => {
   };
 
   return (
-    <div className="dashboard-map">
-      <div className="dashboard-map-header">
-        <h2>Device Location Dashboard</h2>
-        <p>Search for devices to view their current locations and status</p>
+    <div className="px-5 py-5 max-w-[1200px] mx-auto">
+      <div className="mb-6 text-center">
+        <h2 className="text-2xl font-semibold text-content font-display mb-2">Device Location Dashboard</h2>
+        <p className="text-content-secondary">Search for devices to view their current locations and status</p>
       </div>
 
-      <DeviceSearch 
+      <DeviceSearch
         onDevicesSelected={handleDevicesSelected}
       />
 
-      <MapComponent 
+      <MapComponent
         searchedDevices={searchedDevices}
         onDeviceClick={handleDeviceClick}
       />

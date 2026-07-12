@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import LocationTable from './LocationTable';
 import ApiService from '../services/api';
-import { MapPin, AlertTriangle } from 'lucide-react';
-import './DeviceLocationHistory.css';
+import { MapPin, AlertTriangle, ArrowLeft } from 'lucide-react';
 
 const DeviceLocationHistory = () => {
   const { deviceId } = useParams();
@@ -55,10 +54,10 @@ const DeviceLocationHistory = () => {
 
   if (loading) {
     return (
-      <div className="device-location-history-container">
-        <div className="loading-location">
-          <div className="spinner"></div>
-          <p>Loading location history...</p>
+      <div className="space-y-4">
+        <div className="flex flex-col items-center justify-center py-12 text-content-secondary">
+          <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mb-3"></div>
+          <p className="text-sm">Loading location history...</p>
         </div>
       </div>
     );
@@ -66,12 +65,14 @@ const DeviceLocationHistory = () => {
 
   if (error) {
     return (
-      <div className="device-location-history-container">
-        <div className="error-state">
-          <h2><AlertTriangle size={24} style={{verticalAlign: 'text-bottom', marginRight: '8px'}}/> Error</h2>
-          <p>{error}</p>
-          <button onClick={() => navigate(`/device/${deviceId}`)} className="btn btn-secondary">
-            ← Back to Device Details
+      <div className="space-y-4">
+        <div className="bg-danger/10 border border-danger/20 rounded-xl p-6 text-center">
+          <h2 className="text-lg font-semibold text-danger flex items-center justify-center gap-2">
+            <AlertTriangle size={20} /> Error
+          </h2>
+          <p className="text-sm text-content-secondary mt-2">{error}</p>
+          <button onClick={() => navigate(`/device/${deviceId}`)} className="mt-4 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-surface-border text-content-secondary hover:text-content hover:bg-surface-hover transition-colors">
+            <ArrowLeft size={16} /> Back to Device Details
           </button>
         </div>
       </div>
@@ -79,27 +80,24 @@ const DeviceLocationHistory = () => {
   }
 
   return (
-    <div className="device-location-history-container">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="location-history-header">
-        <button onClick={() => navigate(`/device/${deviceId}`)} className="back-button">
-          ← Back to Device Details
+      <div className="space-y-3">
+        <button onClick={() => navigate(`/device/${deviceId}`)} className="inline-flex items-center gap-2 text-sm text-content-secondary hover:text-content transition-colors">
+          <ArrowLeft size={16} /> Back to Device Details
         </button>
-        <div className="location-history-title">
-          <h1><MapPin size={28} style={{verticalAlign: 'text-bottom', marginRight: '8px'}} /> Device Location History</h1>
-          <p>Device: {deviceId}</p>
-          {deviceInfo && (
-            <div className="device-status-info">
-              {/* Status badge removed - not needed */}
-            </div>
-          )}
+        <div>
+          <h1 className="text-xl font-display font-semibold text-content flex items-center gap-2">
+            <MapPin size={22} /> Device Location History
+          </h1>
+          <p className="text-sm text-content-muted mt-1">Device: {deviceId}</p>
         </div>
       </div>
 
       {/* Location Table */}
-      <div className="location-table-section">
-        <LocationTable 
-          data={locationData} 
+      <div>
+        <LocationTable
+          data={locationData}
           deviceId={deviceId}
           onDataChange={handleDataChange}
         />

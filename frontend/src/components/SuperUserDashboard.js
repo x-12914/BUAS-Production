@@ -1,7 +1,7 @@
 /**
  * Super User Dashboard Component
  * BUAS RBAC Implementation - Segment 7: Dashboard Role Modifications
- * 
+ *
  * Enhanced view for Super User role:
  * - Can see all devices in their agency
  * - Full recording control
@@ -11,59 +11,65 @@
  */
 
 import React, { useState } from 'react';
+import { Info } from 'lucide-react';
 import UserList from './UserList';
 import DashboardMap from './DashboardMap';
 import BatchRecordingControls from './BatchRecordingControls';
 import UserManagement from './UserManagement';
 import AuditLogs from './AuditLogs';
-import './Dashboard.css';
 
 const SuperUserDashboard = ({ user, dashboardData, loading, selectedUser, onUserSelect, isPolling }) => {
   const [activeTab, setActiveTab] = useState('devices');
 
   return (
-    <div className="super-user-dashboard">
-      {/* Super User-specific header - removed redundant "Super User View" text */}
-
+    <div className="space-y-6">
       {/* Tab Navigation - Extended for Super Users */}
-      <div className="dashboard-tabs">
-        <button 
-          className={`tab-button ${activeTab === 'devices' ? 'active' : ''}`}
+      <div className="flex items-center gap-1 p-1 bg-surface-raised rounded-xl border border-surface-border mb-6">
+        <button
+          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+            activeTab === 'devices' ? 'bg-accent text-white' : 'text-content-secondary hover:text-content hover:bg-surface-hover'
+          }`}
           onClick={() => setActiveTab('devices')}
         >
-          📱 Device Management
+          Device Management
         </button>
-        <button 
-          className={`tab-button ${activeTab === 'map' ? 'active' : ''}`}
+        <button
+          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+            activeTab === 'map' ? 'bg-accent text-white' : 'text-content-secondary hover:text-content hover:bg-surface-hover'
+          }`}
           onClick={() => setActiveTab('map')}
         >
-          🗺️ Location Map
+          Location Map
         </button>
-        <button 
-          className={`tab-button ${activeTab === 'users' ? 'active' : ''}`}
+        <button
+          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+            activeTab === 'users' ? 'bg-accent text-white' : 'text-content-secondary hover:text-content hover:bg-surface-hover'
+          }`}
           onClick={() => setActiveTab('users')}
         >
-          👥 User Management
+          User Management
         </button>
-        <button 
-          className={`tab-button ${activeTab === 'audit' ? 'active' : ''}`}
+        <button
+          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+            activeTab === 'audit' ? 'bg-accent text-white' : 'text-content-secondary hover:text-content hover:bg-surface-hover'
+          }`}
           onClick={() => setActiveTab('audit')}
         >
-          📋 Audit Logs
+          Audit Logs
         </button>
       </div>
 
       {/* Tab Content */}
       {activeTab === 'devices' && (
-        <div className="super-user-devices">
+        <div className="space-y-4">
           {/* Batch Recording Controls */}
-          <BatchRecordingControls 
+          <BatchRecordingControls
             devices={dashboardData?.users || []}
             disabled={loading || !isPolling}
             superUserMode={true}
           />
 
-          <UserList 
+          <UserList
             users={dashboardData?.users || []}
             loading={loading}
             selectedUser={selectedUser}
@@ -78,8 +84,8 @@ const SuperUserDashboard = ({ user, dashboardData, loading, selectedUser, onUser
       )}
 
       {activeTab === 'map' && (
-        <div className="super-user-map">
-          <DashboardMap 
+        <div className="space-y-4">
+          <DashboardMap
             devices={dashboardData?.users || []}
             superUserMode={true}
           />
@@ -87,14 +93,12 @@ const SuperUserDashboard = ({ user, dashboardData, loading, selectedUser, onUser
       )}
 
       {activeTab === 'users' && (
-        <div className="super-user-management">
-          <div className="management-info">
-            <div className="info-banner">
-              <span className="icon">👥</span>
-              <span>Manage Analysts and Operators in your agency</span>
-            </div>
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-info-muted text-info text-sm mb-4">
+            <Info size={16} />
+            <span>Manage Analysts and Operators in your agency</span>
           </div>
-          <UserManagement 
+          <UserManagement
             restrictedMode={true}  // Cannot create other super users
             allowedRoles={['analyst', 'operator']}
           />
@@ -102,12 +106,10 @@ const SuperUserDashboard = ({ user, dashboardData, loading, selectedUser, onUser
       )}
 
       {activeTab === 'audit' && (
-        <div className="super-user-audit">
-          <div className="audit-info">
-            <div className="info-banner">
-              <span className="icon">📋</span>
-              <span>Security audit logs and compliance monitoring</span>
-            </div>
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-info-muted text-info text-sm mb-4">
+            <Info size={16} />
+            <span>Security audit logs and compliance monitoring</span>
           </div>
           <AuditLogs user={user} />
         </div>

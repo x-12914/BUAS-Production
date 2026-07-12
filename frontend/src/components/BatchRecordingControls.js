@@ -1,11 +1,10 @@
 import React from 'react';
-import './BatchRecordingControls.css';
 
-const BatchRecordingControls = ({ 
-  devices, 
-  disabled = false, 
-  operatorMode = false, 
-  superUserMode = false 
+const BatchRecordingControls = ({
+  devices,
+  disabled = false,
+  operatorMode = false,
+  superUserMode = false
 }) => {
   // Calculate device counts for display
   const getControlCounts = () => {
@@ -39,28 +38,28 @@ const BatchRecordingControls = ({
   const counts = getControlCounts();
 
   return (
-    <div className="batch-recording-controls">
-      <div className="batch-controls-header">
-        <h3>
+    <div>
+      <div className="mb-4">
+        <h3 className="text-sm font-medium text-content mb-3">
           Device Status Overview
         </h3>
-        <div className="device-counts">
-          <span className="count-item">
-            <span className="count-label">Total:</span>
-            <span className="count-value">{counts.total}</span>
-          </span>
-          <span className="count-item">
-            <span className="count-label">Controllable:</span>
-            <span className="count-value">{counts.controllable}</span>
-          </span>
-          <span className="count-item recording">
-            <span className="count-label">Recording:</span>
-            <span className="count-value">{counts.recording}</span>
-          </span>
-          <span className="count-item idle">
-            <span className="count-label">Idle:</span>
-            <span className="count-value">{counts.idle}</span>
-          </span>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="bg-surface-overlay border border-surface-border rounded-lg p-3 text-center">
+            <div className="text-lg font-bold text-content">{counts.total}</div>
+            <div className="text-xs text-content-muted">Total</div>
+          </div>
+          <div className="bg-surface-overlay border border-surface-border rounded-lg p-3 text-center">
+            <div className="text-lg font-bold text-content">{counts.controllable}</div>
+            <div className="text-xs text-content-muted">Controllable</div>
+          </div>
+          <div className="bg-surface-overlay border border-surface-border rounded-lg p-3 text-center">
+            <div className="text-lg font-bold text-success">{counts.recording}</div>
+            <div className="text-xs text-content-muted">Recording</div>
+          </div>
+          <div className="bg-surface-overlay border border-surface-border rounded-lg p-3 text-center">
+            <div className="text-lg font-bold text-content-secondary">{counts.idle}</div>
+            <div className="text-xs text-content-muted">Idle</div>
+          </div>
         </div>
       </div>
 

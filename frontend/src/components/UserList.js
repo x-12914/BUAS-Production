@@ -4,7 +4,6 @@ import RecordingControlButton from './RecordingControlButton';
 import FallbackButton from './FallbackButton';
 import DeviceCardListenControl from './DeviceCardListenControl';
 import { Headphones, Activity, AlertCircle, CircleDashed, Search, Smartphone, MapPin, Battery, Zap, ShieldCheck } from 'lucide-react';
-import './UserList.css';
 
 const UserList = ({
   users = [],
@@ -46,15 +45,15 @@ const UserList = ({
     const status = user.status || 'unknown';
     switch (status) {
       case 'listening':
-        return <span className="status-badge status-listening"><Headphones size={12} style={{marginRight: '4px'}}/> Listening</span>;
+        return <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-success-muted text-success"><Headphones size={12} /> Listening</span>;
       case 'offline':
-        return <span className="status-badge status-offline"><CircleDashed size={12} style={{marginRight: '4px'}}/> Offline</span>;
+        return <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-surface-raised text-content-muted"><CircleDashed size={12} /> Offline</span>;
       case 'lost_while_listening':
-        return <span className="status-badge status-warning"><AlertCircle size={12} style={{marginRight: '4px'}}/> Lost Connection</span>;
+        return <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-warning-muted text-warning"><AlertCircle size={12} /> Lost Connection</span>;
       case 'online':
-        return <span className="status-badge status-online"><Activity size={12} style={{marginRight: '4px'}}/> Online</span>;
+        return <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-success-muted text-success"><Activity size={12} /> Online</span>;
       default:
-        return <span className="status-badge status-unknown">❓ Unknown</span>;
+        return <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-surface-raised text-content-muted">Unknown</span>;
     }
   };
 
@@ -114,13 +113,13 @@ const UserList = ({
     }
 
     if (lastSeenText === 'Never' || lastSeenText === 'Invalid date') {
-      return <span className="last-seen-text">Never</span>;
+      return <span className="text-xs text-content-secondary">Never</span>;
     }
 
     const timezoneLabel = hasNewFormat ? ' (WAT)' : '';
 
     return (
-      <span className="last-seen-text">
+      <span className="text-xs text-content-secondary">
         {lastSeenText}{timezoneLabel}
       </span>
     );
@@ -153,10 +152,10 @@ const UserList = ({
     return platform !== 'ios';
   };
 
-  const getBatteryColorClass = (batteryLevel) => {
-    if (batteryLevel >= 75) return 'battery-high';
-    if (batteryLevel >= 25) return 'battery-medium';
-    return 'battery-low';
+  const getBatteryColor = (batteryLevel) => {
+    if (batteryLevel >= 60) return 'text-success';
+    if (batteryLevel >= 30) return 'text-warning';
+    return 'text-danger';
   };
 
   const handleRecordingStatusChange = (deviceId, recordingStatus) => {
@@ -179,28 +178,23 @@ const UserList = ({
     return state;
   };
 
-  const getDeviceCardClass = (user) => {
-    let baseClass = 'user-card';
+  const getDeviceCardClasses = (user) => {
+    const isSelected = selectedUser && selectedUser.user_id === user.user_id;
+    const isClickable = !roleRestrictions.hideDeviceDetails;
 
-    // Add clickable class if device can be clicked
-    if (!roleRestrictions.hideDeviceDetails) {
-      baseClass += ' clickable-card';
-    }
-
-    // Add selected class if this user is selected
-    if (selectedUser && selectedUser.user_id === user.user_id) {
-      baseClass += ' selected';
-    }
-
-    return baseClass;
+    return `bg-surface-overlay border rounded-xl p-4 transition-all ${
+      isClickable ? 'cursor-pointer hover:border-accent/30 hover:shadow-lg' : ''
+    } ${
+      isSelected ? 'border-accent/50 ring-1 ring-accent/20' : 'border-surface-border'
+    }`;
   };
 
   const renderPlatformBadge = (user) => {
     const platform = (user.platform || 'android').toLowerCase();
     if (platform === 'ios') {
       return (
-        <div className="platform-row">
-          <span className="platform-badge platform-ios"> iPhone</span>
+        <div className="mt-1">
+          <span className="text-xs px-1.5 py-0.5 rounded bg-surface-raised text-content-secondary">iPhone</span>
         </div>
       );
     }
@@ -211,41 +205,39 @@ const UserList = ({
 
   if (loading && users.length === 0) {
     return (
-      <div className="user-list-container">
-        <div className="user-list-header">
-          <h2>Connected Devices</h2>
-        </div>
-        <div className="loading-users">
-          <div className="spinner"></div>
-          <p>Loading users...</p>
+      <div className="space-y-4">
+        <h2 className="text-lg font-display font-semibold text-content">Connected Devices</h2>
+        <div className="text-center py-12 text-content-muted">
+          <div className="animate-spin h-6 w-6 border-2 border-accent border-t-transparent rounded-full mx-auto mb-3"></div>
+          <p className="text-sm">Loading users...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="user-list-container">
-      <div className="user-list-header">
-        <h2>Connected Devices ({filteredUsers.length})</h2>
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <h2 className="text-lg font-display font-semibold text-content">Connected Devices ({filteredUsers.length})</h2>
 
-        <div className="user-list-controls">
+        <div className="flex items-center gap-3">
           {/* Search Input */}
-          <div className="search-container">
+          <div className="relative flex-1 max-w-sm">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-content-muted" />
             <input
               type="text"
               placeholder="Search devices..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="search-input"
+              className="w-full pl-9 pr-4 py-2 bg-surface-raised border border-surface-border rounded-lg text-sm text-content placeholder:text-content-muted focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20"
             />
-            <span className="search-icon"><Search size={16} /></span>
           </div>
 
           {/* Status Filter - Only Primary Statuses */}
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="status-filter"
+            className="px-3 py-2 bg-surface-raised border border-surface-border rounded-lg text-sm text-content-secondary focus:outline-none focus:border-accent/50"
           >
             <option value="all">All Status</option>
             <option value="listening">Listening</option>
@@ -256,10 +248,10 @@ const UserList = ({
       </div>
 
       {/* User Cards */}
-      <div className="user-list">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {filteredUsers.length === 0 ? (
-          <div className="no-users">
-            <p>
+          <div className="col-span-full text-center py-12 text-content-muted">
+            <p className="text-sm">
               {searchTerm || statusFilter !== 'all'
                 ? 'No devices match your search criteria'
                 : 'No devices connected yet'
@@ -267,7 +259,7 @@ const UserList = ({
             </p>
             {searchTerm && (
               <button
-                className="btn btn-secondary"
+                className="mt-3 px-4 py-2 bg-surface-raised border border-surface-border rounded-lg text-sm text-content-secondary hover:border-accent/30 transition-colors"
                 onClick={() => setSearchTerm('')}
               >
                 Clear Search
@@ -278,44 +270,44 @@ const UserList = ({
           filteredUsers.map(user => (
             <div
               key={user.user_id}
-              className={getDeviceCardClass(user)}
+              className={getDeviceCardClasses(user)}
               onClick={() => handleDeviceClick(user)}
             >
-              <div className="user-header">
-                <div className="user-info">
-                  <h3 className="user-id">
-                    <Smartphone size={16} style={{marginRight: '6px', verticalAlign: 'text-bottom'}} /> {user.display_name || user.user_id}
+              <div className="flex items-start justify-between gap-2 mb-3">
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-sm font-medium text-content truncate flex items-center gap-1.5">
+                    <Smartphone size={14} className="shrink-0 text-content-secondary" /> {user.display_name || user.user_id}
                   </h3>
                   {user.android_id && (
-                    <p className="android-id">{getIdentifierLabel(user)}: {user.android_id}</p>
+                    <p className="text-xs text-content-secondary mt-0.5 truncate">{getIdentifierLabel(user)}: {user.android_id}</p>
                   )}
                   {renderPlatformBadge(user)}
-                  <p className="user-location">
-                    <MapPin size={12} style={{marginRight: '4px', verticalAlign: 'text-bottom'}} /> {(user.location?.lat || 0).toFixed(4)}, {(user.location?.lng || 0).toFixed(4)}
+                  <p className="text-xs text-content-secondary mt-1 flex items-center gap-1">
+                    <MapPin size={11} className="shrink-0" /> {(user.location?.lat || 0).toFixed(4)}, {(user.location?.lng || 0).toFixed(4)}
                   </p>
                   {user.battery?.level !== null && user.battery?.level !== undefined && (
-                    <p className="user-battery">
-                      <Battery size={12} style={{marginRight: '4px', verticalAlign: 'text-bottom'}} /> {user.battery.level}%
-                      {user.battery.is_charging && <span className="charging-indicator"><Zap size={10} /></span>}
+                    <p className={`text-xs mt-1 flex items-center gap-1 ${getBatteryColor(user.battery.level)}`}>
+                      <Battery size={11} className="shrink-0" /> {user.battery.level}%
+                      {user.battery.is_charging && <Zap size={10} className="text-warning" />}
                     </p>
                   )}
                 </div>
                 {getStatusBadge(user)}
               </div>
 
-              <div className="user-details">
-                <div className="user-stats">
-                  <div className="stat-item">
-                    <span className="stat-label">Recordings:</span>
-                    <span className="stat-value">{user.uploads?.length || 0}</span>
-                  </div>
-                  <div className="stat-item">
-                    <span className="stat-label">Last Seen:</span>
-                    {getLastSeenWithColor(user)}
+              <div className="border-t border-surface-border pt-3 space-y-3">
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-3">
+                    <span className="text-content-secondary">
+                      Recordings: <span className="text-content font-medium">{user.uploads?.length || 0}</span>
+                    </span>
+                    <span className="text-content-secondary">
+                      Last Seen: {getLastSeenWithColor(user)}
+                    </span>
                   </div>
                 </div>
 
-                <div className="user-actions">
+                <div className="flex items-center gap-2 flex-wrap">
                   {/* Recording Control Button - Role-based visibility */}
                   {shouldShowRecordingControl(user) && (
                     <RecordingControlButton
@@ -341,11 +333,9 @@ const UserList = ({
                     />
                   )}
 
-                  {/* Role-based restrictions notice - removed redundant text */}
-
                   {roleRestrictions.restrictedAccess && (
-                    <div className="role-notice">
-                      <span><ShieldCheck size={14} style={{marginRight: '4px', verticalAlign: 'text-bottom'}} /> Assigned Device</span>
+                    <div className="inline-flex items-center gap-1 text-xs text-accent">
+                      <ShieldCheck size={14} /> Assigned Device
                     </div>
                   )}
                 </div>

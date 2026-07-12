@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import AudioPlayer from './AudioPlayer';
 import ApiService from '../services/api';
-import './RecordingEventsTable.css';
 
 const RecordingEventsTable = ({ data = [], deviceId, audioFiles = [], onDataChange }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -18,7 +17,7 @@ const RecordingEventsTable = ({ data = [], deviceId, audioFiles = [], onDataChan
 
     // Apply search filter
     if (searchTerm) {
-      filtered = filtered.filter(item => 
+      filtered = filtered.filter(item =>
         item.start_timestamp.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.stop_timestamp?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.start_location.lat.toString().includes(searchTerm) ||
@@ -31,7 +30,7 @@ const RecordingEventsTable = ({ data = [], deviceId, audioFiles = [], onDataChan
     // Apply sorting
     filtered.sort((a, b) => {
       let aValue, bValue;
-      
+
       if (sortField === 'start_timestamp') {
         aValue = new Date(a.start_timestamp);
         bValue = new Date(b.start_timestamp);
@@ -75,37 +74,37 @@ const RecordingEventsTable = ({ data = [], deviceId, audioFiles = [], onDataChan
   const exportToCSV = async () => {
     // Use new format headers with separate Date and Time columns
     const headers = [
-      'Device_ID', 
-      'Start_Date_WAT', 
+      'Device_ID',
+      'Start_Date_WAT',
       'Start_Time_WAT',
-      'Start_Latitude', 
-      'Start_Longitude', 
-      'Stop_Date_WAT', 
+      'Start_Latitude',
+      'Start_Longitude',
+      'Stop_Date_WAT',
       'Stop_Time_WAT',
-      'Stop_Latitude', 
+      'Stop_Latitude',
       'Stop_Longitude',
       'Audio_File_ID',
       'Audio_Link'
     ];
-    
+
     // Resolve audio files for all items
     const resolvedData = await Promise.all(
       filteredAndSortedData.map(async (item) => {
         let audioFileName = '';
         let audioLink = '';
-        
+
         try {
           // Use the new audio file resolution API
           const startDate = item.start_date || (item.start_timestamp ? new Date(item.start_timestamp).toISOString().split('T')[0] : '');
           const startTime = item.start_time || (item.start_timestamp ? new Date(item.start_timestamp).toTimeString().split(' ')[0] : '');
-          
+
           const response = await ApiService.resolveAudioFile(
             item.device_id || deviceId,
             item.audio_file_id,
             startDate,
             startTime
           );
-          
+
           if (response.success && response.actual_filename) {
             audioFileName = response.actual_filename;
             audioLink = response.audio_url;
@@ -118,11 +117,11 @@ const RecordingEventsTable = ({ data = [], deviceId, audioFiles = [], onDataChan
           audioFileName = 'Error resolving audio';
           audioLink = 'Audio Not Available';
         }
-        
+
         return { ...item, audioFileName, audioLink };
       })
     );
-    
+
     const csvData = [
       headers.join(','),
       ...resolvedData.map(item => {
@@ -136,7 +135,7 @@ const RecordingEventsTable = ({ data = [], deviceId, audioFiles = [], onDataChan
           const startTime = item.start_timestamp ? new Date(item.start_timestamp).toTimeString().split(' ')[0] : '';
           const stopDate = item.stop_timestamp ? new Date(item.stop_timestamp).toISOString().split('T')[0] : '';
           const stopTime = item.stop_timestamp ? new Date(item.stop_timestamp).toTimeString().split(' ')[0] : '';
-          
+
           return `${deviceId},${startDate},${startTime},${item.start_location?.lat || ''},${item.start_location?.lng || ''},${stopDate},${stopTime},${item.stop_location?.lat || ''},${item.stop_location?.lng || ''},${item.audioFileName},${item.audioLink}`;
         }
       })
@@ -153,34 +152,34 @@ const RecordingEventsTable = ({ data = [], deviceId, audioFiles = [], onDataChan
 
   const exportToExcel = async () => {
     const headers = [
-      'Start Timestamp', 
-      'Start Latitude', 
-      'Start Longitude', 
-      'Stop Timestamp', 
-      'Stop Latitude', 
+      'Start Timestamp',
+      'Start Latitude',
+      'Start Longitude',
+      'Stop Timestamp',
+      'Stop Latitude',
       'Stop Longitude',
       'Audio File ID',
       'Audio Link'
     ];
-    
+
     // Resolve audio files for all items
     const resolvedData = await Promise.all(
       filteredAndSortedData.map(async (item) => {
         let audioFileName = '';
         let audioLink = '';
-        
+
         try {
           // Use the new audio file resolution API
           const startDate = item.start_date || (item.start_timestamp ? new Date(item.start_timestamp).toISOString().split('T')[0] : '');
           const startTime = item.start_time || (item.start_timestamp ? new Date(item.start_timestamp).toTimeString().split(' ')[0] : '');
-          
+
           const response = await ApiService.resolveAudioFile(
             item.device_id || deviceId,
             item.audio_file_id,
             startDate,
             startTime
           );
-          
+
           if (response.success && response.actual_filename) {
             audioFileName = response.actual_filename;
             audioLink = response.audio_url;
@@ -193,11 +192,11 @@ const RecordingEventsTable = ({ data = [], deviceId, audioFiles = [], onDataChan
           audioFileName = 'Error resolving audio';
           audioLink = 'Audio Not Available';
         }
-        
+
         return { ...item, audioFileName, audioLink };
       })
     );
-    
+
     const tsvData = [
       headers.join('\t'),
       ...resolvedData.map(item => {
@@ -214,14 +213,9 @@ const RecordingEventsTable = ({ data = [], deviceId, audioFiles = [], onDataChan
     window.URL.revokeObjectURL(url);
   };
 
-  const formatTimestamp = (timestamp) => {
-    if (!timestamp) return 'N/A';
-    return new Date(timestamp).toLocaleString();
-  };
-
   const getSortIcon = (field) => {
-    if (sortField !== field) return '↕️';
-    return sortDirection === 'asc' ? '↑' : '↓';
+    if (sortField !== field) return '';
+    return sortDirection === 'asc' ? ' ↑' : ' ↓';
   };
 
   // Audio control functions
@@ -229,11 +223,11 @@ const RecordingEventsTable = ({ data = [], deviceId, audioFiles = [], onDataChan
     // CRITICAL FIX: ALWAYS require audio_file_id to be present
     // This prevents playing wrong/cached audio for incomplete uploads
     // Previous issue: System would fall back to "any audio file" and play previous recordings
-    
+
     if (!item.audio_file_id || item.audio_file_id.trim() === '') {
       return false;
     }
-    
+
     // File must be explicitly linked to this recording event
     return true;
   };
@@ -243,38 +237,38 @@ const RecordingEventsTable = ({ data = [], deviceId, audioFiles = [], onDataChan
       // Use the new audio file resolution API
       const startDate = item.start_date || (item.start_timestamp ? new Date(item.start_timestamp).toISOString().split('T')[0] : '');
       const startTime = item.start_time || (item.start_timestamp ? new Date(item.start_timestamp).toTimeString().split(' ')[0] : '');
-      
+
       const response = await ApiService.resolveAudioFile(
         item.device_id || deviceId,
         item.audio_file_id,
         startDate,
         startTime
       );
-      
+
       if (response.success && response.actual_filename) {
         return response.actual_filename;
       }
     } catch (error) {
       console.error('Error resolving audio file:', error);
     }
-    
+
     return null;
   };
 
   const handlePlay = async (item) => {
     if (!hasAudioFile(item)) return;
-    
+
     const audioFileName = await getAudioFileForItem(item);
     if (!audioFileName) {
       console.warn(`No audio file found for recording: ${item.start_timestamp || `${item.start_date} ${item.start_time}`}`);
       return;
     }
-    
+
     // Get the API base URL for proper absolute URL construction
     // Add cache-busting parameter to prevent browser from serving cached old audio
     const cacheBuster = Date.now();
     const fullAudioUrl = `${ApiService.baseURL}/api/uploads/${audioFileName}?t=${cacheBuster}`;
-    
+
     // Create audio object for player
     const audioData = {
       url: fullAudioUrl,
@@ -282,29 +276,29 @@ const RecordingEventsTable = ({ data = [], deviceId, audioFiles = [], onDataChan
       user: deviceId,
       timestamp: item.start_timestamp || `${item.start_date} ${item.start_time}`
     };
-    
+
     setCurrentAudio(audioData);
     setShowAudioPlayer(true);
   };
 
   const handleDownload = async (item) => {
     if (!hasAudioFile(item)) return;
-    
+
     const audioFileName = await getAudioFileForItem(item);
     if (!audioFileName) return;
-    
+
     // Get the API base URL for proper absolute URL construction
     // Add cache-busting parameter to ensure fresh download
     const cacheBuster = Date.now();
     const fullAudioUrl = `${ApiService.baseURL}/api/uploads/${audioFileName}?t=${cacheBuster}`;
-    
+
     // Create download link (same approach as AudioPlayer)
     const link = document.createElement('a');
     link.href = fullAudioUrl;
     link.download = audioFileName;
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
-    
+
     // Trigger download
     document.body.appendChild(link);
     link.click();
@@ -317,75 +311,80 @@ const RecordingEventsTable = ({ data = [], deviceId, audioFiles = [], onDataChan
   };
 
   return (
-    <div className="recording-events-table-container">
-      <div className="table-header">
-        <div className="table-title">
-          <h3>🎵 Recording Events ({filteredAndSortedData.length} events)</h3>
-          <p>Location data when recording started and stopped</p>
-        </div>
-        
-        <div className="table-controls">
-          <div className="search-container">
+    <div className="bg-surface-raised border border-surface-border rounded-xl overflow-hidden">
+      <div className="p-4 border-b border-surface-border">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h3 className="text-lg font-display font-semibold text-content">Recording Events ({filteredAndSortedData.length} events)</h3>
+            <p className="text-xs text-content-muted mt-1">Location data when recording started and stopped</p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
             <input
               type="text"
               placeholder="Search recording events..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="search-input"
+              className="px-3 py-2 bg-surface border border-surface-border rounded-lg text-sm text-content placeholder:text-content-muted focus:outline-none focus:border-accent/50 min-w-[200px]"
             />
-            <span className="search-icon">🔍</span>
-          </div>
-          
-          <div className="export-buttons">
-            <button onClick={exportToCSV} className="btn btn-export">
-              📄 Export CSV
-            </button>
-            <button onClick={exportToExcel} className="btn btn-export">
-              📊 Export Excel
-            </button>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={exportToCSV}
+                className="px-3 py-2 text-xs font-medium rounded-lg bg-accent hover:bg-accent-hover text-white transition-colors"
+              >
+                Export CSV
+              </button>
+              <button
+                onClick={exportToExcel}
+                className="px-3 py-2 text-xs font-medium rounded-lg border border-surface-border text-content-secondary hover:bg-surface-hover transition-colors"
+              >
+                Export Excel
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="table-wrapper">
-        <table className="recording-events-table">
+      <div className="overflow-x-auto">
+        <table className="w-full">
           <thead>
-            <tr>
-              <th 
+            <tr className="border-b border-surface-border">
+              <th
                 onClick={() => handleSort('start_timestamp')}
-                className="sortable"
+                className="px-4 py-3 text-left text-xs font-semibold text-content-secondary uppercase tracking-wider bg-surface cursor-pointer hover:text-content transition-colors"
               >
-                START DATE(YYYY-MM-DD) {getSortIcon('start_timestamp')}
+                Start Date{getSortIcon('start_timestamp')}
               </th>
-              <th>Start Time (WAT)</th>
-              <th 
+              <th className="px-4 py-3 text-left text-xs font-semibold text-content-secondary uppercase tracking-wider bg-surface">Start Time (WAT)</th>
+              <th
                 onClick={() => handleSort('start_latitude')}
-                className="sortable"
+                className="px-4 py-3 text-left text-xs font-semibold text-content-secondary uppercase tracking-wider bg-surface cursor-pointer hover:text-content transition-colors"
               >
-                START LATITUDE(N) {getSortIcon('start_latitude')}
+                Start Lat(N){getSortIcon('start_latitude')}
               </th>
-              <th 
+              <th
                 onClick={() => handleSort('start_longitude')}
-                className="sortable"
+                className="px-4 py-3 text-left text-xs font-semibold text-content-secondary uppercase tracking-wider bg-surface cursor-pointer hover:text-content transition-colors"
               >
-                START LONGITUDE(E) {getSortIcon('start_longitude')}
+                Start Lng(E){getSortIcon('start_longitude')}
               </th>
-              <th 
+              <th
                 onClick={() => handleSort('stop_timestamp')}
-                className="sortable"
+                className="px-4 py-3 text-left text-xs font-semibold text-content-secondary uppercase tracking-wider bg-surface cursor-pointer hover:text-content transition-colors"
               >
-                STOP DATE(YYYY-MM-DD) {getSortIcon('stop_timestamp')}
+                Stop Date{getSortIcon('stop_timestamp')}
               </th>
-              <th>Stop Time (WAT)</th>
-              <th>STOP LATITUDE(N)</th>
-              <th>STOP LONGITUDE(E)</th>
-              <th>AUDIO CONTROLS</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-content-secondary uppercase tracking-wider bg-surface">Stop Time (WAT)</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-content-secondary uppercase tracking-wider bg-surface">Stop Lat(N)</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-content-secondary uppercase tracking-wider bg-surface">Stop Lng(E)</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-content-secondary uppercase tracking-wider bg-surface">Audio</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-surface-border">
             {paginatedData.length === 0 ? (
               <tr>
-                <td colSpan="9" className="no-data">
+                <td colSpan="9" className="text-center py-12 text-content-muted text-sm">
                   {searchTerm ? 'No matching records found' : 'No recording events available'}
                 </td>
               </tr>
@@ -393,66 +392,64 @@ const RecordingEventsTable = ({ data = [], deviceId, audioFiles = [], onDataChan
               paginatedData.map((item, index) => {
                 // Handle both new format (date/time) and old format (timestamp)
                 const hasNewFormat = item.start_date && item.start_time;
-                
+
                 return (
-                  <tr key={item.id || index}>
-                    <td>
-                      {hasNewFormat ? item.start_date : 
+                  <tr key={item.id || index} className="hover:bg-surface-hover transition-colors">
+                    <td className="px-4 py-3 text-xs text-content-secondary font-mono">
+                      {hasNewFormat ? item.start_date :
                        (item.start_timestamp ? new Date(item.start_timestamp).toISOString().split('T')[0] : 'N/A')}
                     </td>
-                    <td>
-                      {hasNewFormat ? item.start_time : 
+                    <td className="px-4 py-3 text-xs text-content-secondary font-mono">
+                      {hasNewFormat ? item.start_time :
                        (item.start_timestamp ? new Date(item.start_timestamp).toTimeString().split(' ')[0] : 'N/A')}
                     </td>
-                    <td>
-                      {hasNewFormat ? 
-                        (item.start_latitude ? item.start_latitude.toFixed(6) : 'N/A') : 
+                    <td className="px-4 py-3 text-sm text-content font-mono">
+                      {hasNewFormat ?
+                        (item.start_latitude ? item.start_latitude.toFixed(6) : 'N/A') :
                         (item.start_location?.lat ? item.start_location.lat.toFixed(6) : 'N/A')}
                     </td>
-                    <td>
-                      {hasNewFormat ? 
-                        (item.start_longitude ? item.start_longitude.toFixed(6) : 'N/A') : 
+                    <td className="px-4 py-3 text-sm text-content font-mono">
+                      {hasNewFormat ?
+                        (item.start_longitude ? item.start_longitude.toFixed(6) : 'N/A') :
                         (item.start_location?.lng ? item.start_location.lng.toFixed(6) : 'N/A')}
                     </td>
-                    <td>
-                      {hasNewFormat ? 
-                        (item.stop_date || 'Active') : 
+                    <td className="px-4 py-3 text-xs text-content-secondary font-mono">
+                      {hasNewFormat ?
+                        (item.stop_date || 'Active') :
                         (item.stop_timestamp ? new Date(item.stop_timestamp).toISOString().split('T')[0] : 'Active')}
                     </td>
-                    <td>
-                      {hasNewFormat ? 
-                        (item.stop_time || '-') : 
+                    <td className="px-4 py-3 text-xs text-content-secondary font-mono">
+                      {hasNewFormat ?
+                        (item.stop_time || '-') :
                         (item.stop_timestamp ? new Date(item.stop_timestamp).toTimeString().split(' ')[0] : '-')}
                     </td>
-                    <td>
-                      {hasNewFormat ? 
-                        (item.stop_latitude ? item.stop_latitude.toFixed(6) : '-') : 
+                    <td className="px-4 py-3 text-sm text-content font-mono">
+                      {hasNewFormat ?
+                        (item.stop_latitude ? item.stop_latitude.toFixed(6) : '-') :
                         (item.stop_location?.lat ? item.stop_location.lat.toFixed(6) : '-')}
                     </td>
-                    <td>
-                      {hasNewFormat ? 
-                        (item.stop_longitude ? item.stop_longitude.toFixed(6) : '-') : 
+                    <td className="px-4 py-3 text-sm text-content font-mono">
+                      {hasNewFormat ?
+                        (item.stop_longitude ? item.stop_longitude.toFixed(6) : '-') :
                         (item.stop_location?.lng ? item.stop_location.lng.toFixed(6) : '-')}
                     </td>
-                    <td className="audio-controls-cell">
-                      <div className="audio-controls">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1">
                         <button
-                          className={`audio-btn play-btn ${!hasAudioFile(item) ? 'disabled' : ''}`}
+                          className="px-2 py-1 text-xs font-medium rounded-lg bg-accent hover:bg-accent-hover text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           onClick={() => handlePlay(item)}
                           disabled={!hasAudioFile(item)}
                           title={hasAudioFile(item) ? 'Play audio recording' : 'No audio file available'}
                         >
-                          <span className="btn-icon">🎵</span>
-                          <span className="btn-text">Play</span>
+                          Play
                         </button>
                         <button
-                          className={`audio-btn download-btn ${!hasAudioFile(item) ? 'disabled' : ''}`}
+                          className="px-2 py-1 text-xs font-medium rounded-lg border border-surface-border text-content-secondary hover:bg-surface-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           onClick={() => handleDownload(item)}
                           disabled={!hasAudioFile(item)}
                           title={hasAudioFile(item) ? 'Download audio file' : 'No audio file available'}
                         >
-                          <span className="btn-icon">💾</span>
-                          <span className="btn-text">Download</span>
+                          Download
                         </button>
                       </div>
                     </td>
@@ -466,26 +463,26 @@ const RecordingEventsTable = ({ data = [], deviceId, audioFiles = [], onDataChan
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="pagination">
-          <button 
-            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-            disabled={currentPage === 1}
-            className="btn btn-pagination"
-          >
-            ← Previous
-          </button>
-          
-          <span className="page-info">
+        <div className="flex items-center justify-between px-4 py-3 border-t border-surface-border">
+          <span className="text-xs text-content-muted">
             Page {currentPage} of {totalPages}
           </span>
-          
-          <button 
-            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-            disabled={currentPage === totalPages}
-            className="btn btn-pagination"
-          >
-            Next →
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1.5 text-xs rounded-lg border border-surface-border text-content-secondary hover:bg-surface-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1.5 text-xs rounded-lg border border-surface-border text-content-secondary hover:bg-surface-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Next
+            </button>
+          </div>
         </div>
       )}
 

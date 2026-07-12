@@ -13,7 +13,6 @@ import PasswordChange from './components/PasswordChange';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import authService from './services/authService';
-import './App.css';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -77,17 +76,17 @@ function App() {
 
   if (isLoading) {
     return (
-      <div className="App dark-theme">
-        <div className="auth-loading">
-          <div className="loading-spinner"></div>
-          <p>Loading...</p>
+      <div className="min-h-screen bg-surface flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin w-8 h-8 border-2 border-surface-border border-t-accent rounded-full"></div>
+          <p className="text-sm text-content-secondary">Loading...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="App dark-theme">
+    <div className="min-h-screen bg-surface">
       <ErrorBoundary>
         <Router>
           <Routes>

@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import LiveAudioPlayer from './LiveAudioPlayer';
 import { Headphones } from 'lucide-react';
-import './DeviceCardListenControl.css';
 
 let activeListenSession = null;
 
@@ -168,22 +167,26 @@ const DeviceCardListenControl = ({ deviceId, deviceName, disabled = false }) => 
   }, [isOpen, deviceId, updatePositions, closePopover]);
 
   return (
-    <div className="listen-live-control" ref={containerRef} onClick={(event) => event.stopPropagation()}>
+    <div className="relative inline-flex" ref={containerRef} onClick={(event) => event.stopPropagation()}>
       <button
         type="button"
-        className={`listen-live-btn ${isListening ? 'hidden' : ''} ${isBusy ? 'busy' : ''}`}
+        className={`inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+          isListening
+            ? 'opacity-0 pointer-events-none'
+            : 'bg-accent/10 hover:bg-accent/20 text-accent border border-accent/20'
+        } ${isBusy ? 'animate-pulse' : ''} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         onClick={handleToggle}
         disabled={disabled || isOpen}
         title={disabled ? 'Action disabled while dashboard is loading' : buttonLabel}
       >
-        <span className="listen-live-icon"><Headphones size={16} /></span>
-        <span className="listen-live-text">{buttonLabel}</span>
-        {isBusy && <span className="listen-live-spinner" aria-hidden="true"></span>}
+        <Headphones size={14} className="mr-1.5" />
+        <span>{buttonLabel}</span>
+        {isBusy && <span className="ml-1.5 w-3 h-3 border-2 border-accent/30 border-t-accent rounded-full animate-spin" aria-hidden="true"></span>}
       </button>
 
       {isOpen && (
         <div
-          className="listen-live-popover floating"
+          className="absolute z-[2000] bg-surface-overlay border border-surface-border rounded-xl shadow-2xl overflow-hidden"
           role="dialog"
           style={{ top: popoverStyles.top, width: popoverStyles.width, left: popoverStyles.left }}
           onClick={(event) => event.stopPropagation()}

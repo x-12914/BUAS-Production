@@ -7,8 +7,7 @@ import PhoneNumberModal from './PhoneNumberModal';
 import LiveStreamControls from './LiveStreamControls';
 import ApiService from '../services/api';
 import authService from '../services/authService';
-import { Smartphone, PenLine, Download, Info, Battery, BatteryCharging, BatteryWarning, Cpu, MapPin, Contact, FileAudio, MessageSquare, PhoneCall, AlertTriangle, Zap } from 'lucide-react';
-import './DeviceDetail.css';
+import { Smartphone, PenLine, Download, Info, Battery, BatteryCharging, BatteryWarning, Cpu, MapPin, Contact, FileAudio, MessageSquare, PhoneCall, AlertTriangle, Zap, ArrowLeft, X } from 'lucide-react';
 
 const DeviceDetail = ({ user }) => {
   const { deviceId } = useParams();
@@ -324,16 +323,16 @@ const DeviceDetail = ({ user }) => {
 
     if (currentPhoneNumbers.length === 0) {
       return (
-        <div className="phone-input-container">
+        <div className="flex items-center gap-2">
           <input
             type="text"
             placeholder="Enter phone number(s)"
-            className="phone-input-field"
+            className="flex-1 px-3 py-1.5 text-sm bg-surface-overlay border border-surface-border rounded-lg text-content-muted cursor-pointer"
             readOnly
             onClick={() => setShowPhoneModal(true)}
           />
           <button
-            className="phone-edit-btn"
+            className="p-1.5 rounded-lg border border-surface-border text-content-secondary hover:bg-surface-hover hover:text-content transition-colors"
             onClick={() => setShowPhoneModal(true)}
             title="Add phone numbers"
           >
@@ -344,12 +343,12 @@ const DeviceDetail = ({ user }) => {
     }
 
     return (
-      <div className="phone-display-container">
-        <span className="phone-display">
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-medium text-content">
           {currentPhoneNumbers.join(', ')}
         </span>
         <button
-          className="phone-edit-btn"
+          className="p-1.5 rounded-lg border border-surface-border text-content-secondary hover:bg-surface-hover hover:text-content transition-colors"
           onClick={() => setShowPhoneModal(true)}
           title="Edit phone numbers"
         >
@@ -359,26 +358,24 @@ const DeviceDetail = ({ user }) => {
     );
   };
 
-  const getBatteryClass = (batteryLevel) => {
-    if (batteryLevel >= 60) return 'battery-high';
-    if (batteryLevel >= 30) return 'battery-medium';
-    return 'battery-low';
+  const getBatteryColorClass = (batteryLevel) => {
+    if (batteryLevel >= 60) return 'text-success';
+    if (batteryLevel >= 30) return 'text-warning';
+    return 'text-danger';
   };
 
   const getBatteryIcon = (batteryLevel, isCharging) => {
     if (isCharging) return <BatteryCharging size={14} />;
-    if (batteryLevel >= 75) return <Battery size={14} />;
     if (batteryLevel >= 50) return <Battery size={14} />;
-    if (batteryLevel >= 25) return <Battery size={14} />;
     return <BatteryWarning size={14} />;
   };
 
   if (loading) {
     return (
-      <div className="device-detail-container">
-        <div className="loading-device">
-          <div className="spinner"></div>
-          <p>Loading device details...</p>
+      <div className="space-y-6 p-6">
+        <div className="flex flex-col items-center justify-center py-20 gap-4">
+          <div className="w-8 h-8 border-2 border-surface-border border-t-accent rounded-full animate-spin" />
+          <p className="text-sm text-content-secondary">Loading device details...</p>
         </div>
       </div>
     );
@@ -386,12 +383,18 @@ const DeviceDetail = ({ user }) => {
 
   if (error) {
     return (
-      <div className="device-detail-container">
-        <div className="error-state">
-          <h2><AlertTriangle size={24} className="inline-icon" /> Error</h2>
-          <p>{error}</p>
-          <button onClick={() => navigate('/')} className="btn btn-secondary">
-            ← Back to Dashboard
+      <div className="space-y-6 p-6">
+        <div className="bg-surface-raised border border-danger/30 rounded-xl p-6 text-center space-y-4">
+          <div className="flex items-center justify-center gap-2 text-danger">
+            <AlertTriangle size={24} />
+            <h2 className="text-lg font-display font-semibold">Error</h2>
+          </div>
+          <p className="text-sm text-content-secondary">{error}</p>
+          <button
+            onClick={() => navigate('/')}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-surface-border text-content-secondary hover:bg-surface-hover transition-colors"
+          >
+            <ArrowLeft size={16} /> Back to Dashboard
           </button>
         </div>
       </div>
@@ -399,47 +402,50 @@ const DeviceDetail = ({ user }) => {
   }
 
   return (
-    <div className="device-detail-container">
-      {/* Header */}
-      <div className="device-header">
-        <button onClick={() => navigate('/')} className="back-button">
-          ← Back to Dashboard
-        </button>
-        <div className="device-title">
-          <h1><Smartphone size={28} className="title-icon" /> {deviceInfo?.display_name || deviceId}</h1>
+    <div className="space-y-6 p-6">
+      {/* Back button */}
+      <button
+        onClick={() => navigate('/')}
+        className="inline-flex items-center gap-2 text-sm text-content-secondary hover:text-content transition-colors"
+      >
+        <ArrowLeft size={16} /> Back to Dashboard
+      </button>
+
+      {/* Device Header Card */}
+      <div className="bg-surface-raised border border-surface-border rounded-xl p-6">
+        <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex items-center gap-3">
+            <Smartphone size={24} className="text-accent" />
+            <h1 className="text-xl font-display font-semibold text-content">
+              {deviceInfo?.display_name || deviceId}
+            </h1>
+          </div>
+
           {isIOS && (
-            <div className="device-platform-badge ios">
-               iPhone
-            </div>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-success-muted text-success font-medium uppercase tracking-wider">
+              iPhone
+            </span>
           )}
 
           {/* Battery Indicator */}
           {deviceExtendedInfo?.battery?.level !== null && deviceExtendedInfo?.battery?.level !== undefined && (
             <div
-              className={`battery-indicator ${deviceExtendedInfo.battery.is_charging ? 'battery-charging' : ''} ${deviceExtendedInfo.battery.level < 15 ? 'battery-critical' : ''}`}
-              title={`Battery: ${deviceExtendedInfo.battery.level}%
-${deviceExtendedInfo.battery.is_charging ? `Charging via ${deviceExtendedInfo.battery.charging_method || 'Unknown'}` : 'Not charging'}
-Health: ${deviceExtendedInfo.battery.health || 'Unknown'}
-${deviceExtendedInfo.battery.temperature ? `Temperature: ${deviceExtendedInfo.battery.temperature}°C` : ''}
-${deviceExtendedInfo.battery.voltage ? `Voltage: ${deviceExtendedInfo.battery.voltage}mV` : ''}
-${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedInfo.battery.last_updated).toLocaleString()}` : ''}`}
+              className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-surface-overlay border border-surface-border text-xs font-mono ${getBatteryColorClass(deviceExtendedInfo.battery.level)}`}
+              title={`Battery: ${deviceExtendedInfo.battery.level}%\n${deviceExtendedInfo.battery.is_charging ? `Charging via ${deviceExtendedInfo.battery.charging_method || 'Unknown'}` : 'Not charging'}\nHealth: ${deviceExtendedInfo.battery.health || 'Unknown'}${deviceExtendedInfo.battery.temperature ? `\nTemperature: ${deviceExtendedInfo.battery.temperature} C` : ''}${deviceExtendedInfo.battery.voltage ? `\nVoltage: ${deviceExtendedInfo.battery.voltage}mV` : ''}${deviceExtendedInfo.battery.last_updated ? `\nUpdated: ${new Date(deviceExtendedInfo.battery.last_updated).toLocaleString()}` : ''}`}
             >
-              <span className={`battery-level ${getBatteryClass(deviceExtendedInfo.battery.level)}`}>
-                {getBatteryIcon(deviceExtendedInfo.battery.level, deviceExtendedInfo.battery.is_charging)}
-                {deviceExtendedInfo.battery.level}%
-              </span>
+              {getBatteryIcon(deviceExtendedInfo.battery.level, deviceExtendedInfo.battery.is_charging)}
+              <span>{deviceExtendedInfo.battery.level}%</span>
               {deviceExtendedInfo.battery.is_charging && (
-                <span className="charging-indicator" title={`Charging via ${deviceExtendedInfo.battery.charging_method || 'Unknown'}`}>
-                  <Zap size={10} />
-                </span>
+                <Zap size={10} className="text-warning" />
               )}
             </div>
           )}
 
-          <div className="device-title-actions">
+          {/* Title Actions */}
+          <div className="flex items-center gap-2 ml-auto">
             {canRenameDevice() && (
               <button
-                className="btn btn-sm btn-secondary rename-btn"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-surface-border text-content-secondary hover:bg-surface-hover transition-colors"
                 onClick={() => {
                   setNewDisplayName(deviceInfo?.display_name || '');
                   setShowRenameModal(true);
@@ -453,7 +459,7 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
 
             {canExportDevice() && (
               <button
-                className="btn btn-sm btn-primary export-btn"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-accent text-white hover:bg-accent-hover transition-colors"
                 onClick={() => {
                   setShowExportModal(true);
                   setExportError('');
@@ -469,24 +475,26 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
 
       {/* Rename Device Modal */}
       {showRenameModal && (
-        <div className="modal-overlay">
-          <div className="modal-content rename-modal">
-            <div className="modal-header">
-              <h3>Rename Device</h3>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-surface-raised border border-surface-border rounded-xl w-full max-w-md shadow-2xl">
+            <div className="flex items-center justify-between p-4 border-b border-surface-border">
+              <h3 className="text-base font-display font-semibold text-content">Rename Device</h3>
               <button
-                className="close-btn"
+                className="p-1.5 rounded-lg text-content-secondary hover:bg-surface-hover hover:text-content transition-colors"
                 onClick={() => {
                   setShowRenameModal(false);
                   setRenameError('');
                 }}
               >
-                ×
+                <X size={16} />
               </button>
             </div>
 
-            <div className="modal-body">
-              <div className="form-group">
-                <label htmlFor="displayName">Display Name:</label>
+            <div className="p-4 space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="displayName" className="text-xs text-content-muted uppercase tracking-wider font-medium">
+                  Display Name
+                </label>
                 <input
                   id="displayName"
                   type="text"
@@ -495,22 +503,23 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
                   placeholder="Enter device display name"
                   maxLength={100}
                   disabled={renameLoading}
+                  className="w-full px-3 py-2 text-sm bg-surface-overlay border border-surface-border rounded-lg text-content placeholder:text-content-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent disabled:opacity-50"
                 />
-                <small className="help-text">
+                <p className="text-xs text-content-muted">
                   This name will be displayed instead of the device ID. Original device ID: {deviceId}
-                </small>
+                </p>
               </div>
 
               {renameError && (
-                <div className="error-message">
+                <div className="px-3 py-2 text-xs text-danger bg-danger-muted rounded-lg">
                   {renameError}
                 </div>
               )}
             </div>
 
-            <div className="modal-footer">
+            <div className="flex items-center justify-end gap-2 p-4 border-t border-surface-border">
               <button
-                className="btn btn-secondary"
+                className="px-3 py-1.5 text-xs font-medium rounded-lg border border-surface-border text-content-secondary hover:bg-surface-hover transition-colors"
                 onClick={() => {
                   setShowRenameModal(false);
                   setRenameError('');
@@ -520,14 +529,14 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
                 Cancel
               </button>
               <button
-                className="btn btn-warning"
+                className="px-3 py-1.5 text-xs font-medium rounded-lg bg-warning/10 text-warning border border-warning/30 hover:bg-warning/20 transition-colors disabled:opacity-50"
                 onClick={handleResetDeviceName}
                 disabled={renameLoading}
               >
                 {renameLoading ? 'Resetting...' : 'Reset to Original'}
               </button>
               <button
-                className="btn btn-primary"
+                className="px-3 py-1.5 text-xs font-medium rounded-lg bg-accent text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
                 onClick={handleRenameDevice}
                 disabled={renameLoading || !newDisplayName.trim()}
               >
@@ -540,30 +549,34 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
 
       {/* Export Device Data Modal */}
       {showExportModal && (
-        <div className="modal-overlay">
-          <div className="modal-content export-modal">
-            <div className="modal-header">
-              <h3><Download size={20} className="inline-icon" /> Export Device Data</h3>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-surface-raised border border-surface-border rounded-xl w-full max-w-md shadow-2xl">
+            <div className="flex items-center justify-between p-4 border-b border-surface-border">
+              <h3 className="flex items-center gap-2 text-base font-display font-semibold text-content">
+                <Download size={18} /> Export Device Data
+              </h3>
               <button
-                className="close-btn"
+                className="p-1.5 rounded-lg text-content-secondary hover:bg-surface-hover hover:text-content transition-colors"
                 onClick={() => {
                   setShowExportModal(false);
                   setExportError('');
                 }}
               >
-                ×
+                <X size={16} />
               </button>
             </div>
 
-            <div className="modal-body">
-              <div className="export-info">
-                <p><strong>Device:</strong> {deviceInfo?.display_name || deviceId}</p>
-                <p><strong>Export Format:</strong> Excel (.xlsx)</p>
-                <p><strong>Data Included:</strong> {isIOS ? 'Locations, Recordings (iOS: other tabs included for structure only)' : 'Locations, Recordings, Contacts, SMS, Call Logs'}</p>
+            <div className="p-4 space-y-4">
+              <div className="space-y-1 text-sm text-content-secondary">
+                <p><span className="font-medium text-content">Device:</span> {deviceInfo?.display_name || deviceId}</p>
+                <p><span className="font-medium text-content">Format:</span> Excel (.xlsx)</p>
+                <p><span className="font-medium text-content">Data:</span> {isIOS ? 'Locations, Recordings (iOS: other tabs included for structure only)' : 'Locations, Recordings, Contacts, SMS, Call Logs'}</p>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="startDate">Start Date (Optional):</label>
+              <div className="space-y-2">
+                <label htmlFor="startDate" className="text-xs text-content-muted uppercase tracking-wider font-medium">
+                  Start Date (Optional)
+                </label>
                 <input
                   id="startDate"
                   type="date"
@@ -571,11 +584,14 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
                   onChange={(e) => setExportStartDate(e.target.value)}
                   disabled={exportLoading}
                   max={exportEndDate || new Date().toISOString().split('T')[0]}
+                  className="w-full px-3 py-2 text-sm bg-surface-overlay border border-surface-border rounded-lg text-content focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent disabled:opacity-50"
                 />
               </div>
 
-              <div className="form-group">
-                <label htmlFor="endDate">End Date (Optional):</label>
+              <div className="space-y-2">
+                <label htmlFor="endDate" className="text-xs text-content-muted uppercase tracking-wider font-medium">
+                  End Date (Optional)
+                </label>
                 <input
                   id="endDate"
                   type="date"
@@ -584,25 +600,24 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
                   disabled={exportLoading}
                   min={exportStartDate}
                   max={new Date().toISOString().split('T')[0]}
+                  className="w-full px-3 py-2 text-sm bg-surface-overlay border border-surface-border rounded-lg text-content focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent disabled:opacity-50"
                 />
               </div>
 
-              <div className="help-text">
-                <small>
-                  Leave dates empty to export all historical data. Export includes all device data across multiple Excel tabs.
-                </small>
-              </div>
+              <p className="text-xs text-content-muted">
+                Leave dates empty to export all historical data. Export includes all device data across multiple Excel tabs.
+              </p>
 
               {exportError && (
-                <div className="error-message">
+                <div className="px-3 py-2 text-xs text-danger bg-danger-muted rounded-lg">
                   {exportError}
                 </div>
               )}
             </div>
 
-            <div className="modal-footer">
+            <div className="flex items-center justify-end gap-2 p-4 border-t border-surface-border">
               <button
-                className="btn btn-secondary"
+                className="px-3 py-1.5 text-xs font-medium rounded-lg border border-surface-border text-content-secondary hover:bg-surface-hover transition-colors"
                 onClick={() => {
                   setShowExportModal(false);
                   setExportError('');
@@ -612,139 +627,137 @@ ${deviceExtendedInfo.battery.last_updated ? `Updated: ${new Date(deviceExtendedI
                 Cancel
               </button>
               <button
-                className="btn btn-primary"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-accent text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
                 onClick={handleExportDevice}
                 disabled={exportLoading}
               >
-                {exportLoading ? <><Download size={14} /> Exporting...</> : <><Download size={14} /> Export Excel File</>}
+                <Download size={14} /> {exportLoading ? 'Exporting...' : 'Export Excel File'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Device Info Summary */}
-      <div className="device-summary">
-        <div className="summary-card">
-          <h3><Cpu size={20} className="inline-icon" /> Device Summary</h3>
+      {/* Device Summary Section */}
+      <div className="bg-surface-raised border border-surface-border rounded-xl p-6 space-y-4">
+        <h3 className="flex items-center gap-2 text-base font-display font-semibold text-content">
+          <Cpu size={18} className="text-accent" /> Device Summary
+        </h3>
 
-          {/* Show info message if no device data */}
-          {(!deviceExtendedInfo.android_id &&
-            (!deviceExtendedInfo.phone_numbers || deviceExtendedInfo.phone_numbers.length === 0) &&
-            (!deviceExtendedInfo.contacts || deviceExtendedInfo.contacts.length === 0)) && (
-              <div className="device-info-notice">
-                <p><Info size={16} className="inline-icon" /> <strong>Device Information Not Available</strong></p>
-                <p>This device hasn't synced its information yet. Device details (Android ID, phone numbers, contacts) will appear here once the device uploads its data.</p>
+        {/* Info notice if no device data */}
+        {(!deviceExtendedInfo.android_id &&
+          (!deviceExtendedInfo.phone_numbers || deviceExtendedInfo.phone_numbers.length === 0) &&
+          (!deviceExtendedInfo.contacts || deviceExtendedInfo.contacts.length === 0)) && (
+            <div className="flex items-start gap-3 p-3 bg-info-muted rounded-lg border border-info/20">
+              <Info size={16} className="text-info mt-0.5 flex-shrink-0" />
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-content">Device Information Not Available</p>
+                <p className="text-xs text-content-secondary">This device hasn't synced its information yet. Device details (Android ID, phone numbers, contacts) will appear here once the device uploads its data.</p>
               </div>
-            )}
+            </div>
+          )}
 
-          {/* Row 1: Data Display */}
-          <div className="summary-row summary-data-row">
-            <div className="summary-item">
-              <span className="item-label">Current Location:</span>
-              <span className="item-value">
-                {deviceInfo?.location?.lat && deviceInfo?.location?.lng
-                  ? `${deviceInfo.location.lat.toFixed(4)}, ${deviceInfo.location.lng.toFixed(4)}`
-                  : 'Location not available'
-                }
-              </span>
-            </div>
-            <div className="summary-item">
-              <span className="item-label">Total Recordings:</span>
-              <span className="item-value">{recordingEvents.length}</span>
-            </div>
-            <div className="summary-item">
-              <span className="item-label">Last Seen:</span>
-              <span className="item-value">{deviceInfo?.last_seen || 'Never'}</span>
-            </div>
-            <div className="summary-item">
-              <span className="item-label">{identifierLabel}:</span>
-              <span className="item-value">{deviceExtendedInfo.android_id || 'Not available - Device not synced'}</span>
+        {/* Info Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="space-y-1 p-3 bg-surface-overlay rounded-lg border border-surface-border">
+            <span className="text-xs text-content-muted uppercase tracking-wider">Current Location</span>
+            <p className="text-sm font-medium text-content">
+              {deviceInfo?.location?.lat && deviceInfo?.location?.lng
+                ? `${deviceInfo.location.lat.toFixed(4)}, ${deviceInfo.location.lng.toFixed(4)}`
+                : 'Location not available'
+              }
+            </p>
+          </div>
+          <div className="space-y-1 p-3 bg-surface-overlay rounded-lg border border-surface-border">
+            <span className="text-xs text-content-muted uppercase tracking-wider">Total Recordings</span>
+            <p className="text-sm font-medium text-content">{recordingEvents.length}</p>
+          </div>
+          <div className="space-y-1 p-3 bg-surface-overlay rounded-lg border border-surface-border">
+            <span className="text-xs text-content-muted uppercase tracking-wider">Last Seen</span>
+            <p className="text-sm font-medium text-content">{deviceInfo?.last_seen || 'Never'}</p>
+          </div>
+          <div className="space-y-1 p-3 bg-surface-overlay rounded-lg border border-surface-border">
+            <span className="text-xs text-content-muted uppercase tracking-wider">{identifierLabel}</span>
+            <p className="text-sm font-medium text-content break-all">{deviceExtendedInfo.android_id || 'Not available - Device not synced'}</p>
+          </div>
+        </div>
+
+        {/* Action Buttons Row */}
+        <div className="space-y-3">
+          {/* Recording Control */}
+          <div className="space-y-1">
+            <span className="text-xs text-content-muted uppercase tracking-wider">Recording Control</span>
+            <div className="flex items-center gap-2">
+              <RecordingControlButton
+                deviceId={deviceId}
+                initialStatus={getRecordingState()}
+                onStatusChange={handleRecordingStatusChange}
+                disabled={loading}
+              />
+              <FallbackButton
+                deviceId={deviceId}
+                disabled={loading}
+              />
             </div>
           </div>
 
-          {/* Row 2: Action Buttons */}
-          <div className="summary-row summary-actions-row">
-            <div className="summary-item">
-              <span className="item-label">Recording Control:</span>
-              <div className="item-value">
-                <RecordingControlButton
-                  deviceId={deviceId}
-                  initialStatus={getRecordingState()}
-                  onStatusChange={handleRecordingStatusChange}
-                  disabled={loading}
-                />
-                <FallbackButton
-                  deviceId={deviceId}
-                  disabled={loading}
-                />
-              </div>
-            </div>
-            {!isIOS && (
-              <div className="summary-item">
-                <span className="item-label">Phone Numbers:</span>
-                <div className="item-value">
-                  {renderPhoneNumbers()}
-                </div>
-              </div>
-            )}
-            {!isIOS && (
-              <div className="summary-item">
-                <button
-                  className="summary-btn btn-contacts"
-                  onClick={handleViewContacts}
-                  title={deviceExtendedInfo.contacts?.length === 0 ? "No contacts available - Device needs to sync" : ""}
-                >
-                  <Contact size={16} /> View Contacts ({deviceExtendedInfo.contacts?.length || 0})
-                  {deviceExtendedInfo.contacts?.length === 0 && <span className="sync-indicator"> - Not synced</span>}
-                </button>
-              </div>
-            )}
-            <div className="summary-item">
-              <button
-                className="summary-btn btn-location-table"
-                onClick={handleViewLocationTable}
-              >
-                <MapPin size={16} /> Location Table
-              </button>
-            </div>
-            <div className="summary-item">
-              <button
-                className="summary-btn btn-audio-table"
-                onClick={handleViewAudioTable}
-              >
-                <FileAudio size={16} /> Audio Recordings
-              </button>
-            </div>
-            {!isIOS && (
-              <div className="summary-item">
-                <button
-                  className="summary-btn btn-sms-table"
-                  onClick={handleViewSmsTable}
-                >
-                  <MessageSquare size={16} /> SMS Messages
-                </button>
-              </div>
-            )}
-            {!isIOS && (
-              <div className="summary-item">
-                <button
-                  className="summary-btn btn-call-logs-table"
-                  onClick={handleViewCallLogsTable}
-                >
-                  <PhoneCall size={16} /> Call Logs
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Live Audio Streaming Controls */}
+          {/* Phone Numbers */}
           {!isIOS && (
-            <div className="device-controls-section">
-              <LiveStreamControls deviceId={deviceId} deviceInfo={deviceInfo} />
+            <div className="space-y-1">
+              <span className="text-xs text-content-muted uppercase tracking-wider">Phone Numbers</span>
+              {renderPhoneNumbers()}
             </div>
           )}
         </div>
+
+        {/* Navigation Buttons */}
+        <div className="flex flex-wrap gap-2 pt-2">
+          {!isIOS && (
+            <button
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-success/30 bg-success-muted text-success hover:bg-success/20 transition-colors"
+              onClick={handleViewContacts}
+              title={deviceExtendedInfo.contacts?.length === 0 ? "No contacts available - Device needs to sync" : ""}
+            >
+              <Contact size={14} /> View Contacts ({deviceExtendedInfo.contacts?.length || 0})
+              {deviceExtendedInfo.contacts?.length === 0 && <span className="text-content-muted"> - Not synced</span>}
+            </button>
+          )}
+          <button
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-info/30 bg-info-muted text-info hover:bg-info/20 transition-colors"
+            onClick={handleViewLocationTable}
+          >
+            <MapPin size={14} /> Location Table
+          </button>
+          <button
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-warning/30 bg-warning-muted text-warning hover:bg-warning/20 transition-colors"
+            onClick={handleViewAudioTable}
+          >
+            <FileAudio size={14} /> Audio Recordings
+          </button>
+          {!isIOS && (
+            <button
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-surface-border text-content-secondary hover:bg-surface-hover transition-colors"
+              onClick={handleViewSmsTable}
+            >
+              <MessageSquare size={14} /> SMS Messages
+            </button>
+          )}
+          {!isIOS && (
+            <button
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-danger/30 bg-danger-muted text-danger hover:bg-danger/20 transition-colors"
+              onClick={handleViewCallLogsTable}
+            >
+              <PhoneCall size={14} /> Call Logs
+            </button>
+          )}
+        </div>
+
+        {/* Live Audio Streaming Controls */}
+        {!isIOS && (
+          <div className="pt-2 border-t border-surface-border">
+            <LiveStreamControls deviceId={deviceId} deviceInfo={deviceInfo} />
+          </div>
+        )}
       </div>
 
       {/* Device Location Map */}

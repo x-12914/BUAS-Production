@@ -1,21 +1,64 @@
-/* Leaflet CSS Import */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @import url('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
 
-body {
-  margin: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@layer base {
+  body {
+    @apply bg-surface text-content font-sans antialiased m-0;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+
+  code {
+    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+  }
+
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-surface-raised;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-surface-border rounded;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-content-muted;
+  }
 }
 
-h1, h2, h3, h4, h5, h6, .brand-font {
-  font-family: 'Outfit', sans-serif;
-}
+@layer components {
+  .leaflet-popup-content-wrapper {
+    @apply rounded-lg shadow-lg bg-surface-overlay border border-surface-border;
+    color: #e4e4e8;
+  }
+  .leaflet-popup-content {
+    @apply m-3 font-sans text-sm;
+    color: #e4e4e8;
+  }
+  .leaflet-popup-tip {
+    background: #1c1c24;
+  }
+  .custom-marker {
+    background: transparent !important;
+    border: none !important;
+  }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  .data-table {
+    @apply w-full border-collapse;
+  }
+  .data-table th {
+    @apply px-4 py-3 text-left text-xs font-semibold text-content-secondary uppercase tracking-wider bg-surface-raised border-b border-surface-border;
+  }
+  .data-table td {
+    @apply px-4 py-3 text-sm border-b border-surface-border text-content;
+  }
+  .data-table tbody tr:hover td {
+    @apply bg-surface-hover;
+  }
 }

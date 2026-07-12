@@ -74,51 +74,28 @@ const DeviceMarker = ({ device, formatTimestamp, getTimestampStatus, onDeviceCli
       }}
     >
       <Popup>
-        <div style={{ minWidth: '200px' }}>
-          <div style={{ 
-            fontWeight: 'bold', 
-            fontSize: '14px', 
-            marginBottom: '8px',
-            color: '#1f2937'
-          }}>
+        <div className="space-y-1" style={{ minWidth: '200px' }}>
+          <div className="text-sm font-bold text-content">
             {device.deviceId}
           </div>
-          
-          <div style={{ 
-            fontSize: '12px', 
-            color: '#6b7280',
-            marginBottom: '4px' 
-          }}>
+
+          <div className="text-xs text-content-secondary">
             Last seen: {timestampDisplay}
           </div>
-          
-          <div style={{ 
-            fontSize: '11px', 
-            color: '#9ca3af' 
-          }}>
+
+          <div className="text-[11px] text-content-muted">
             Location: {device.location.lat.toFixed(6)}, {device.location.lng.toFixed(6)}
           </div>
-          
-          <div style={{
-            marginTop: '8px',
-            padding: '4px 8px',
-            borderRadius: '4px',
-            fontSize: '11px',
-            fontWeight: '500',
-            backgroundColor: markerColor,
-            color: 'white',
-            textAlign: 'center'
-          }}>
+
+          <div
+            className="mt-2 px-2 py-1 rounded text-[11px] font-medium text-white text-center"
+            style={{ backgroundColor: markerColor }}
+          >
             {status.toUpperCase()}
           </div>
 
           {device.error && (
-            <div style={{
-              marginTop: '4px',
-              fontSize: '10px',
-              color: '#ef4444',
-              fontStyle: 'italic'
-            }}>
+            <div className="mt-1 text-[10px] text-danger italic">
               Warning: {device.error}
             </div>
           )}

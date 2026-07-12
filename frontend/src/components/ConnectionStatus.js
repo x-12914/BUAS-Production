@@ -1,83 +1,37 @@
 import React from 'react';
-import { Activity, CircleDashed, AlertCircle, HelpCircle, RefreshCw } from 'lucide-react';
-import './ConnectionStatus.css';
+import { CircleDashed, AlertCircle, RefreshCw } from 'lucide-react';
 
 const ConnectionStatus = ({ status, lastUpdated, isPolling }) => {
-  const getStatusDetails = (status) => {
-    switch (status) {
-      case 'connected':
-        return {
-          icon: <Activity size={24} />,
-          title: 'Connected',
-          description: 'Real-time updates active',
-          className: 'connected'
-        };
-      case 'connecting':
-        return {
-          icon: <CircleDashed size={24} />,
-          title: 'Connecting',
-          description: 'Establishing connection...',
-          className: 'connecting'
-        };
-      case 'error':
-        return {
-          icon: <AlertCircle size={24} />,
-          title: 'Connection Error',
-          description: 'Unable to reach server',
-          className: 'error'
-        };
-      default:
-        return {
-          icon: <HelpCircle size={24} />,
-          title: 'Unknown',
-          description: 'Status unknown',
-          className: 'unknown'
-        };
-    }
-  };
+  // Only show when NOT connected
+  if (status === 'connected') {
+    return null;
+  }
 
-  const statusDetails = getStatusDetails(status);
-
-  return (
-    <div className={`connection-status ${statusDetails.className}`}>
-      <div className="connection-header">
-        <div className="connection-indicator">
-          <span className="connection-icon">{statusDetails.icon}</span>
-          <div className="connection-info">
-            <h3 className="connection-title">{statusDetails.title}</h3>
-            <p className="connection-description">{statusDetails.description}</p>
-          </div>
-        </div>
-        
-        <div className="connection-details">
-          {lastUpdated && (
-            <div className="last-updated">
-              <span className="label">Last Updated:</span>
-              <span className="value">{lastUpdated.toLocaleTimeString()}</span>
-            </div>
-          )}
-          
-          <div className="polling-status">
-            <span className="label">Auto-refresh:</span>
-            <span className={`value ${isPolling ? 'active' : 'inactive'}`}>
-              {isPolling ? 'ON' : 'OFF'}
-            </span>
-          </div>
-        </div>
+  if (status === 'connecting') {
+    return (
+      <div className="bg-accent/10 border border-accent/20 rounded-lg p-3 flex items-center gap-2 text-sm text-accent mb-4">
+        <CircleDashed size={16} className="animate-spin" />
+        <span>Connecting to server...</span>
       </div>
-      
-      {status === 'error' && (
-        <div className="error-actions">
-          <button 
-            className="btn btn-secondary"
-            onClick={() => window.location.reload()}
-          >
-            <RefreshCw size={14} style={{marginRight: '6px', verticalAlign: 'middle'}} /> Retry Connection
-          </button>
-        </div>
-      )}
-    </div>
-  );
+    );
+  }
+
+  if (status === 'error') {
+    return (
+      <div className="bg-danger/10 border border-danger/20 rounded-lg p-3 flex items-center gap-2 text-sm text-danger mb-4">
+        <AlertCircle size={16} />
+        <span>Connection error - unable to reach server</span>
+        <button
+          className="ml-auto flex items-center gap-1 px-2 py-1 rounded text-xs border border-danger/30 hover:bg-danger/20 transition-colors"
+          onClick={() => window.location.reload()}
+        >
+          <RefreshCw size={12} /> Retry
+        </button>
+      </div>
+    );
+  }
+
+  return null;
 };
 
 export default ConnectionStatus;

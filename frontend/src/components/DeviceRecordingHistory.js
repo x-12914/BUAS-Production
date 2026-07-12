@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { ArrowLeft, AlertTriangle, Mic } from 'lucide-react';
 import RecordingEventsTable from './RecordingEventsTable';
 import ApiService from '../services/api';
-import './DeviceRecordingHistory.css';
 
 const DeviceRecordingHistory = () => {
   const { deviceId } = useParams();
@@ -22,8 +22,8 @@ const DeviceRecordingHistory = () => {
             console.error('getDeviceRecordingEvents failed:', err);
             throw new Error(`Recording events API failed: ${err.message}`);
           }),
-          location.state?.deviceInfo ? 
-            Promise.resolve({ data: location.state.deviceInfo }) : 
+          location.state?.deviceInfo ?
+            Promise.resolve({ data: location.state.deviceInfo }) :
             ApiService.getDeviceDetails(deviceId).catch(err => {
               console.error('getDeviceDetails failed:', err);
               throw new Error(`Device details API failed: ${err.message}`);
@@ -69,10 +69,10 @@ const DeviceRecordingHistory = () => {
 
   if (loading) {
     return (
-      <div className="device-recording-history-container">
-        <div className="loading-recording">
-          <div className="spinner"></div>
-          <p>Loading recording events...</p>
+      <div className="space-y-4">
+        <div className="flex flex-col items-center justify-center py-12 text-content-secondary">
+          <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mb-3"></div>
+          <p className="text-sm">Loading recording events...</p>
         </div>
       </div>
     );
@@ -80,12 +80,14 @@ const DeviceRecordingHistory = () => {
 
   if (error) {
     return (
-      <div className="device-recording-history-container">
-        <div className="error-state">
-          <h2>❌ Error</h2>
-          <p>{error}</p>
-          <button onClick={() => navigate(`/device/${deviceId}`)} className="btn btn-secondary">
-            ← Back to Device Details
+      <div className="space-y-4">
+        <div className="bg-danger/10 border border-danger/20 rounded-xl p-6 text-center">
+          <h2 className="text-lg font-semibold text-danger flex items-center justify-center gap-2">
+            <AlertTriangle size={20} /> Error
+          </h2>
+          <p className="text-sm text-content-secondary mt-2">{error}</p>
+          <button onClick={() => navigate(`/device/${deviceId}`)} className="mt-4 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-surface-border text-content-secondary hover:text-content hover:bg-surface-hover transition-colors">
+            <ArrowLeft size={16} /> Back to Device Details
           </button>
         </div>
       </div>
@@ -93,39 +95,39 @@ const DeviceRecordingHistory = () => {
   }
 
   return (
-    <div className="device-recording-history-container">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="recording-history-header">
-        <button onClick={() => navigate(`/device/${deviceId}`)} className="back-button">
-          ← Back to Device Details
+      <div className="space-y-3">
+        <button onClick={() => navigate(`/device/${deviceId}`)} className="inline-flex items-center gap-2 text-sm text-content-secondary hover:text-content transition-colors">
+          <ArrowLeft size={16} /> Back to Device Details
         </button>
-        <div className="recording-history-title">
-          <h1>🎵 Device Recording Events</h1>
-          <p>Device: {deviceId}</p>
+        <div>
+          <h1 className="text-xl font-display font-semibold text-content flex items-center gap-2">
+            <Mic size={22} /> Device Recording Events
+          </h1>
+          <p className="text-sm text-content-muted mt-1">Device: {deviceId}</p>
           {deviceInfo && (
-            <div className="device-status-info">
-              <span className="recording-count">
-                {recordingEvents.length} recording events
-              </span>
-            </div>
+            <span className="text-xs text-content-secondary mt-1 inline-block">
+              {recordingEvents.length} recording events
+            </span>
           )}
         </div>
       </div>
 
       {/* Recording Events Table */}
-      <div className="recording-table-section">
+      <div>
         {Array.isArray(recordingEvents) && recordingEvents.length > 0 ? (
-          <RecordingEventsTable 
-            data={recordingEvents} 
+          <RecordingEventsTable
+            data={recordingEvents}
             deviceId={deviceId}
             audioFiles={audioFiles}
             onDataChange={handleDataChange}
           />
         ) : (
-          <div style={{ padding: '40px', textAlign: 'center', color: '#aaa' }}>
-            <h3>No recording events found</h3>
-            <p>This device has no recording events in its history.</p>
-            <button onClick={() => window.location.reload()} className="btn btn-secondary">
+          <div className="bg-surface-raised border border-surface-border rounded-xl p-10 text-center">
+            <h3 className="text-sm font-medium text-content-secondary">No recording events found</h3>
+            <p className="text-xs text-content-muted mt-1">This device has no recording events in its history.</p>
+            <button onClick={() => window.location.reload()} className="mt-4 px-4 py-2 text-xs font-medium rounded-lg border border-surface-border text-content-secondary hover:text-content hover:bg-surface-hover transition-colors">
               Refresh Data
             </button>
           </div>
