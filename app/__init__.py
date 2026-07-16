@@ -71,9 +71,11 @@ def create_app():
              "https://buas.eibstratoc.com",       # NEW DOMAIN HTTPS
              "http://41.242.54.78",               # OLD IP
              "https://41.242.54.78",              # OLD IP HTTPS
-             "http://41.242.54.76",               # CURRENT VPS IP
-             "https://41.242.54.76",              # CURRENT VPS IP HTTPS
-             "http://41.242.54.76:4000",          # CURRENT VPS IP (frontend dev port)
+             "http://41.242.54.76",               # OLD IP
+             "https://41.242.54.76",              # OLD IP HTTPS
+             "http://41.242.60.236",              # CURRENT VPS IP
+             "https://41.242.60.236",             # CURRENT VPS IP HTTPS
+             "http://41.242.60.236:4000",         # CURRENT VPS IP (frontend dev port)
          ],
          allow_headers=[
              "Content-Type", 
@@ -149,7 +151,9 @@ def create_app():
             "http://41.242.54.76",
             "https://41.242.54.76",
             "http://41.242.54.78",
-            "https://41.242.54.78"
+            "https://41.242.54.78",
+            "http://41.242.60.236",
+            "https://41.242.60.236"
         ],
         async_mode='eventlet',
         logger=True,
