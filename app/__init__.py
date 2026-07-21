@@ -156,8 +156,8 @@ def create_app():
             "https://41.242.60.236"
         ],
         async_mode='eventlet',
-        logger=True,
-        engineio_logger=True,
+        logger=False,
+        engineio_logger=False,
         ping_timeout=60,
         ping_interval=25,
         # REMOVED: manage_session=False
