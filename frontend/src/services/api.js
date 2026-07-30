@@ -264,14 +264,12 @@ class ApiService {
     if (params.status) queryParams.append('status', params.status);
     
     const query = queryParams.toString();
-    return this.request(`/upload/sms${query ? '?' + query : ''}`);
+    return this.request(`/api/sms${query ? '?' + query : ''}`);
   }
 
-  // Call logs endpoints - using unified endpoint
+  // Call logs endpoints - using authenticated device API endpoint
   async getDeviceCallLogs(deviceId, params = {}) {
     const queryParams = new URLSearchParams();
-    // Add device_id as a query parameter for the unified endpoint
-    queryParams.append('device_id', deviceId);
     if (params.page) queryParams.append('page', params.page);
     if (params.per_page) queryParams.append('per_page', params.per_page);
     if (params.date_from) queryParams.append('date_from', params.date_from);
@@ -281,7 +279,7 @@ class ApiService {
     if (params.min_duration) queryParams.append('min_duration', params.min_duration);
     
     const query = queryParams.toString();
-    return this.request(`/upload/call${query ? '?' + query : ''}`);
+    return this.request(`/api/device/${deviceId}/call_logs${query ? '?' + query : ''}`);
   }
 
   // Device data export

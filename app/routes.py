@@ -1409,7 +1409,7 @@ def handle_sms_retrieval():
         return jsonify({'error': f'Failed to load SMS messages: {str(e)}'}), 500
 
 
-@routes.route('/api/sms', methods=['POST'])
+@routes.route('/api/sms', methods=['POST', 'GET'])
 @routes.route('/upload/sms', methods=['POST', 'GET'])  # Android compatibility endpoint
 def upload_sms():
     """Upload SMS messages from Android device (received messages only) or retrieve SMS data"""
