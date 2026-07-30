@@ -36,6 +36,14 @@ class ApiService {
     try {
       const response = await fetch(url, config);
       
+      // Handle 401 Unauthorized — session expired or invalidated, redirect to login
+      if (response.status === 401) {
+        if (!window.location.pathname.startsWith('/login')) {
+          window.location.href = '/login';
+        }
+        throw new Error('Session expired. Please log in again.');
+      }
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
