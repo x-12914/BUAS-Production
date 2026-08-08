@@ -365,9 +365,6 @@ def send_recording_command(device_id):
         # Phase 4: Resolve Android ID to device_id
         actual_device_id = resolve_to_device_id(device_id)
         
-        auth = request.authorization
-        if not auth or not check_auth(auth.username, auth.password):
-            return authenticate()
 
         data = request.get_json()
         command = data.get('command', '').lower().strip()
@@ -452,9 +449,6 @@ def get_recording_status(device_id):
         # Phase 4: Resolve Android ID to device_id
         actual_device_id = resolve_to_device_id(device_id)
         
-        auth = request.authorization
-        if not auth or not check_auth(auth.username, auth.password):
-            return authenticate()
 
         recording_status = get_device_recording_status(actual_device_id)
         
@@ -488,9 +482,6 @@ def send_batch_recording_command():
     """Send recording command to multiple devices"""
     """Send recording command to multiple devices"""
     try:
-        auth = request.authorization
-        if not auth or not check_auth(auth.username, auth.password):
-            return authenticate()
 
         data = request.get_json()
         device_ids = data.get('device_ids', [])
@@ -653,9 +644,6 @@ def send_camera_command(device_id):
         from .device_utils import resolve_to_device_id
         actual_device_id = resolve_to_device_id(device_id)
         
-        auth = request.authorization
-        if not auth or not check_auth(auth.username, auth.password):
-            return authenticate()
 
         data = request.get_json()
         command = data.get('command', '').lower().strip()
@@ -986,6 +974,7 @@ def upload_audio(device_id):
 
 
 @routes.route('/api/upload/device-info/<device_id>', methods=['POST'])
+@routes.route('/api/upload/device-summary/<device_id>', methods=['POST'])
 def upload_device_info(device_id):
     """
     Upload comprehensive device information including:
@@ -2444,9 +2433,6 @@ def latest_audio(device_id):
     # Phase 4: Resolve Android ID to device_id
     actual_device_id = resolve_to_device_id(device_id)
     
-    auth = request.authorization
-    if not auth or not check_auth(auth.username, auth.password):
-        return authenticate()
 
     latest = (
         Upload.query
@@ -4111,9 +4097,6 @@ def export_device_locations(device_id):
         return jsonify({'error': 'Access denied to this device'}), 403
     """Export device location data with separate date/time columns in Nigerian timezone"""
     try:
-        auth = request.authorization
-        if not auth or not check_auth(auth.username, auth.password):
-            return authenticate()
 
         # Get optional query parameters
         days = request.args.get('days', 30, type=int)
@@ -4210,9 +4193,6 @@ def export_recording_events(device_id):
         return jsonify({'error': 'Access denied to this device'}), 403
     """Export recording events data with separate date/time columns in Nigerian timezone"""
     try:
-        auth = request.authorization
-        if not auth or not check_auth(auth.username, auth.password):
-            return authenticate()
 
         # Get optional query parameters
         days = request.args.get('days', 30, type=int)
