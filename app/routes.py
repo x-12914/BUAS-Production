@@ -714,6 +714,29 @@ def receive_livestream_feed():
     return jsonify({"error": "No chunk data"}), 400
 
 
+@routes.route('/api/audit/livestream/watch/<device_id>', methods=['GET'])
+def watch_livestream(device_id):
+    """Serve the continuous video feed to the dashboard"""
+    stream_dir = os.path.join(current_app.root_path, 'streams', device_id)
+    stream_path = os.path.join(stream_dir, 'live_feed.webm')
+    
+    if not os.path.exists(stream_path):
+        return "Stream not started", 404
+        
+    def generate():
+        with open(stream_path, 'rb') as f:
+            while True:
+                data = f.read(4096)
+                if data:
+                    yield data
+                else:
+                    # Wait for more data if EOF is reached
+                    import time
+                    time.sleep(0.5)
+                    
+    return current_app.response_class(generate(), mimetype='video/webm')
+
+
 @routes.route('/api/command/<int:command_id>/complete', methods=['POST'])
 def complete_device_command(command_id):
     """Mark a command as completed (used by iOS app after executing command)"""
