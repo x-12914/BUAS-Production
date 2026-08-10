@@ -1,39 +1,131 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Camera } from 'lucide-react';
-import apiService from '../services/api';
+import { io } from 'socket.io-client';
 
 const LiveVideoPlayer = ({ deviceId, onClose }) => {
     const videoRef = useRef(null);
+    const mediaSourceRef = useRef(null);
+    const sourceBufferRef = useRef(null);
+    const queueRef = useRef([]);
+    const socketRef = useRef(null);
+    
     const [status, setStatus] = useState('connecting');
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        let streamUrl = null;
+        let isComponentMounted = true;
+        
+        // 1. Initialize MediaSource
+        const mediaSource = new MediaSource();
+        mediaSourceRef.current = mediaSource;
+        
+        if (videoRef.current) {
+            videoRef.current.src = URL.createObjectURL(mediaSource);
+        }
 
-        const startStream = () => {
-            // Point the video source to the backend endpoint serving the raw webm chunk stream
-            streamUrl = `/api/audit/livestream/watch/${deviceId}`;
-            if (videoRef.current) {
-                videoRef.current.src = streamUrl;
-                
-                // Attempt to play automatically
-                videoRef.current.play().then(() => {
-                    setStatus('active');
-                }).catch(err => {
-                    console.error("Auto-play blocked or failed", err);
-                    setStatus('error');
-                    setError("Autoplay failed. Please click play.");
-                });
+        const processQueue = () => {
+            if (!isComponentMounted || !sourceBufferRef.current || !mediaSourceRef.current) return;
+            if (mediaSourceRef.current.readyState !== 'open') return;
+            
+            const sourceBuffer = sourceBufferRef.current;
+            
+            if (sourceBuffer.updating || queueRef.current.length === 0) {
+                return;
+            }
+            
+            try {
+                const chunk = queueRef.current.shift();
+                sourceBuffer.appendBuffer(chunk);
+            } catch (e) {
+                console.error("Error appending buffer:", e);
+                // Handle QuotaExceededError by removing old data if needed in future
             }
         };
 
-        startStream();
+        const connectSocket = () => {
+            const protocol = window.location.protocol;
+            const host = window.location.hostname;
+            const port = process.env.REACT_APP_API_PORT || '5000';
+            const serverUrl = `${protocol}//${host}:${port}/stream`;
+            
+            const socket = io(serverUrl, {
+                withCredentials: true,
+                transports: ['websocket', 'polling']
+            });
+            
+            socketRef.current = socket;
+            
+            socket.on('connect', () => {
+                console.log("Connected to video stream socket");
+                socket.emit('join_video_stream', { device_id: deviceId });
+            });
+            
+            socket.on('video_chunk', (data) => {
+                if (!isComponentMounted) return;
+                
+                try {
+                    // Decode base64 to Uint8Array
+                    const binaryString = atob(data.chunk);
+                    const bytes = new Uint8Array(binaryString.length);
+                    for (let i = 0; i < binaryString.length; i++) {
+                        bytes[i] = binaryString.charCodeAt(i);
+                    }
+                    
+                    queueRef.current.push(bytes);
+                    processQueue();
+                } catch (err) {
+                    console.error("Error processing video chunk", err);
+                }
+            });
+            
+            socket.on('disconnect', () => {
+                console.log("Disconnected from video stream socket");
+                setStatus('connecting');
+            });
+        };
+
+        // 2. Handle MediaSource Open
+        const handleSourceOpen = () => {
+            if (!isComponentMounted) return;
+            
+            try {
+                // vp8 is standard for Android WebM
+                const sourceBuffer = mediaSource.addSourceBuffer('video/webm; codecs="vp8"');
+                sourceBuffer.mode = 'sequence';
+                sourceBufferRef.current = sourceBuffer;
+                
+                sourceBuffer.addEventListener('updateend', processQueue);
+                
+                setStatus('active');
+                
+                // 3. Connect to SocketIO now that MSE is ready
+                connectSocket();
+            } catch (e) {
+                console.error("Error creating SourceBuffer:", e);
+                setError("Browser doesn't support the required video codec.");
+                setStatus('error');
+            }
+        };
+
+        mediaSource.addEventListener('sourceopen', handleSourceOpen);
 
         return () => {
-            if (videoRef.current) {
-                videoRef.current.pause();
-                videoRef.current.removeAttribute('src');
-                videoRef.current.load();
+            isComponentMounted = false;
+            
+            if (socketRef.current) {
+                socketRef.current.emit('leave_video_stream', { device_id: deviceId });
+                socketRef.current.disconnect();
+            }
+            
+            if (mediaSourceRef.current) {
+                mediaSourceRef.current.removeEventListener('sourceopen', handleSourceOpen);
+                if (mediaSourceRef.current.readyState === 'open' && sourceBufferRef.current) {
+                    try {
+                        mediaSourceRef.current.removeSourceBuffer(sourceBufferRef.current);
+                    } catch (e) {
+                        // ignore errors during cleanup
+                    }
+                }
             }
         };
     }, [deviceId]);

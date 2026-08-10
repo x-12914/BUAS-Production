@@ -46,6 +46,9 @@ redis_subscribers = {}  # {device_id: greenlet} - Track active Redis subscriber 
 stream_stats = {}  # {device_id: {'bytes': 0, 'chunks': 0, 'last_flush': datetime}} - In-memory stats
 stream_seq_state = {}  # {device_id: {'last_seq': int|None, 'chunk_count': int}}
 
+# Video streaming
+video_init_segments = {}  # {device_id: base64_chunk}
+
 # Background stats flush greenlet
 stats_flush_greenlet = None
 _flask_app = None  # Store Flask app reference for background tasks
@@ -964,6 +967,48 @@ def handle_leave_stream(data):
         
     except Exception as e:
         logger.error(f"Error leaving stream: {e}", exc_info=True)
+
+@socketio.on('join_video_stream', namespace='/stream')
+def handle_join_video_stream(data):
+    """User joins a video stream"""
+    if not current_user.is_authenticated:
+        return
+        
+    device_id = data.get('device_id')
+    if not device_id:
+        return
+        
+    try:
+        from .device_utils import resolve_to_device_id
+        actual_device_id = resolve_to_device_id(device_id)
+        
+        join_room(f'video_listeners_{actual_device_id}', namespace='/stream')
+        
+        # If we have a cached init segment, send it immediately
+        if actual_device_id in video_init_segments:
+            emit('video_chunk', {'chunk': video_init_segments[actual_device_id]}, namespace='/stream')
+            
+        logger.info(f"User {current_user.username} joined video stream for {actual_device_id}")
+    except Exception as e:
+        logger.error(f"Error joining video stream: {e}", exc_info=True)
+
+@socketio.on('leave_video_stream', namespace='/stream')
+def handle_leave_video_stream(data):
+    """User leaves a video stream"""
+    if not current_user.is_authenticated:
+        return
+        
+    device_id = data.get('device_id')
+    if not device_id:
+        return
+        
+    try:
+        from .device_utils import resolve_to_device_id
+        actual_device_id = resolve_to_device_id(device_id)
+        leave_room(f'video_listeners_{actual_device_id}', namespace='/stream')
+        logger.info(f"User {current_user.username} left video stream for {actual_device_id}")
+    except Exception as e:
+        logger.error(f"Error leaving video stream: {e}", exc_info=True)
 
 
 def start_redis_subscriber(device_id):
