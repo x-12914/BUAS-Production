@@ -43,10 +43,11 @@ const LiveVideoPlayer = ({ deviceId, onClose }) => {
         };
 
         const connectSocket = () => {
-            const protocol = window.location.protocol;
-            const host = window.location.hostname;
-            const port = process.env.REACT_APP_API_PORT || '5000';
-            const serverUrl = `${protocol}//${host}:${port}/stream`;
+            // In production, we route through Nginx (which handles port 80/443), so we don't hardcode 5000
+            const isProd = process.env.NODE_ENV === 'production';
+            const serverUrl = isProd 
+                ? `${window.location.origin}/stream` 
+                : `${window.location.protocol}//${window.location.hostname}:5000/stream`;
             
             const socket = io(serverUrl, {
                 withCredentials: true,
