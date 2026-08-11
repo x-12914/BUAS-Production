@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import LiveAudioPlayer from './LiveAudioPlayer';
 import LiveVideoPlayer from './LiveVideoPlayer';
-import { Headphones, Radio, Video, VideoOff } from 'lucide-react';
+import LiveScreenPlayer from './LiveScreenPlayer';
+import { Headphones, Radio, Video, VideoOff, Monitor, MonitorOff } from 'lucide-react';
 import apiService from '../services/api';
 
 const LiveStreamControls = ({ deviceId, deviceInfo }) => {
@@ -10,6 +11,9 @@ const LiveStreamControls = ({ deviceId, deviceInfo }) => {
   const [isCameraStreaming, setIsCameraStreaming] = useState(false);
   const [cameraCommandStatus, setCameraCommandStatus] = useState(null);
   const [cameraFacing, setCameraFacing] = useState('back');
+  
+  const [isScreenStreaming, setIsScreenStreaming] = useState(false);
+  const [screenCommandStatus, setScreenCommandStatus] = useState(null);
 
   const handleStartListening = () => {
     setIsStreaming(true);
@@ -53,6 +57,40 @@ const LiveStreamControls = ({ deviceId, deviceInfo }) => {
       } catch (err) {
           console.error("Failed to stop camera", err);
           setCameraCommandStatus('failed');
+      }
+  };
+
+  const handleStartScreen = async () => {
+    try {
+        setScreenCommandStatus('sending start...');
+        const response = await apiService.request(`/api/device/${deviceId}/camera/command`, {
+            method: 'POST',
+            body: JSON.stringify({ command: 'start_screen' })
+        });
+        if (response.status === 'success') {
+            setIsScreenStreaming(true);
+            setScreenCommandStatus('recording active');
+        }
+    } catch (err) {
+        console.error("Failed to start screen share", err);
+        setScreenCommandStatus('failed');
+    }
+  };
+
+  const handleStopScreen = async () => {
+      try {
+          setScreenCommandStatus('sending stop...');
+          const response = await apiService.request(`/api/device/${deviceId}/camera/command`, {
+              method: 'POST',
+              body: JSON.stringify({ command: 'stop_screen' })
+          });
+          if (response.status === 'success') {
+              setIsScreenStreaming(false);
+              setScreenCommandStatus(null);
+          }
+      } catch (err) {
+          console.error("Failed to stop screen share", err);
+          setScreenCommandStatus('failed');
       }
   };
 
@@ -110,6 +148,33 @@ const LiveStreamControls = ({ deviceId, deviceInfo }) => {
                     </p>
                 )}
             </div>
+
+            <div className="flex items-center gap-3">
+                {!isScreenStreaming ? (
+                    <button
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-teal-500/10 text-teal-500 border border-teal-500/20 hover:bg-teal-500/20 transition-colors"
+                        onClick={handleStartScreen}
+                        title="Start live screen share from this device"
+                    >
+                        <Monitor size={14} />
+                        <span>Share Screen</span>
+                    </button>
+                ) : (
+                    <button
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-danger/10 text-danger border border-danger/20 hover:bg-danger/20 transition-colors"
+                        onClick={handleStopScreen}
+                        title="Stop live screen share"
+                    >
+                        <MonitorOff size={14} />
+                        <span>Stop Screen</span>
+                    </button>
+                )}
+                {screenCommandStatus && (
+                    <p className="text-xs text-teal-400/80 italic">
+                        {screenCommandStatus}
+                    </p>
+                )}
+            </div>
         </div>
       ) : (
         <LiveAudioPlayer
@@ -126,14 +191,25 @@ const LiveStreamControls = ({ deviceId, deviceInfo }) => {
           />
       )}
 
-      {(isStreaming || isCameraStreaming) && (
+      {isScreenStreaming && (
+          <LiveScreenPlayer
+              deviceId={deviceId}
+              onClose={handleStopScreen}
+          />
+      )}
+
+      {(isStreaming || isCameraStreaming || isScreenStreaming) && (
         <div className="flex items-center gap-2 mt-2">
           <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-bold rounded bg-danger/10 text-danger">
             <Radio size={12} className="animate-pulse" /> LIVE
           </span>
           <span className="text-xs text-content-muted">
-             {isStreaming && isCameraStreaming ? "Audio & Video streaming active" : 
-              isStreaming ? "Audio streaming active" : "Video streaming active"}
+             {isStreaming && isCameraStreaming && isScreenStreaming ? "Audio, Video & Screen streaming active" : 
+              (isStreaming && isCameraStreaming) ? "Audio & Video streaming active" : 
+              (isStreaming && isScreenStreaming) ? "Audio & Screen streaming active" : 
+              (isCameraStreaming && isScreenStreaming) ? "Video & Screen streaming active" : 
+              isStreaming ? "Audio streaming active" : 
+              isScreenStreaming ? "Screen streaming active" : "Video streaming active"}
           </span>
         </div>
       )}

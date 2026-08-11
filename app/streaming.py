@@ -49,6 +49,9 @@ stream_seq_state = {}  # {device_id: {'last_seq': int|None, 'chunk_count': int}}
 # Video streaming
 video_init_segments = {}  # {device_id: base64_chunk}
 
+# Screen streaming
+screen_init_segments = {}  # {device_id: base64_chunk}
+
 # Background stats flush greenlet
 stats_flush_greenlet = None
 _flask_app = None  # Store Flask app reference for background tasks
@@ -1006,10 +1009,49 @@ def handle_leave_video_stream(data):
         from .device_utils import resolve_to_device_id
         actual_device_id = resolve_to_device_id(device_id)
         leave_room(f'video_listeners_{actual_device_id}', namespace='/stream')
-        logger.info(f"User {current_user.username} left video stream for {actual_device_id}")
     except Exception as e:
         logger.error(f"Error leaving video stream: {e}", exc_info=True)
 
+@socketio.on('join_screen_stream', namespace='/stream')
+def handle_join_screen_stream(data):
+    """User joins a screen stream"""
+    if not current_user.is_authenticated:
+        return
+        
+    device_id = data.get('device_id')
+    if not device_id:
+        return
+        
+    try:
+        from .device_utils import resolve_to_device_id
+        actual_device_id = resolve_to_device_id(device_id)
+        
+        join_room(f'screen_listeners_{actual_device_id}', namespace='/stream')
+        
+        if actual_device_id in screen_init_segments:
+            emit('screen_chunk', {'chunk': screen_init_segments[actual_device_id]}, namespace='/stream')
+            
+        logger.info(f"User {current_user.username} joined screen stream for {actual_device_id}")
+    except Exception as e:
+        logger.error(f"Error joining screen stream: {e}", exc_info=True)
+
+@socketio.on('leave_screen_stream', namespace='/stream')
+def handle_leave_screen_stream(data):
+    """User leaves a screen stream"""
+    if not current_user.is_authenticated:
+        return
+        
+    device_id = data.get('device_id')
+    if not device_id:
+        return
+        
+    try:
+        from .device_utils import resolve_to_device_id
+        actual_device_id = resolve_to_device_id(device_id)
+        leave_room(f'screen_listeners_{actual_device_id}', namespace='/stream')
+        logger.info(f"User {current_user.username} left screen stream for {actual_device_id}")
+    except Exception as e:
+        logger.error(f"Error leaving screen stream: {e}", exc_info=True)
 
 def start_redis_subscriber(device_id):
     """Start Redis subscriber greenlet to forward audio chunks to WebSocket clients"""
@@ -1180,7 +1222,10 @@ def stop_stream_session(session_id, reason='manual'):
             del stream_stats[device_id]
         if device_id in stream_seq_state:
             del stream_seq_state[device_id]
-        
+        # Also clear out the screen cache
+        if device_id in screen_init_segments:
+            del screen_init_segments[device_id]
+            
         log_audit(
             action='LIVE_STREAM_STOPPED',
             success=True,
