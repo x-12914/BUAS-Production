@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { X, Camera, Maximize } from 'lucide-react';
 import { io } from 'socket.io-client';
 
-const LiveVideoPlayer = ({ deviceId, onClose }) => {
+const LiveVideoPlayer = ({ deviceId, onClose, cameraFacing = 'back' }) => {
     const videoRef = useRef(null);
     const mediaSourceRef = useRef(null);
     const sourceBufferRef = useRef(null);
@@ -186,10 +186,15 @@ const LiveVideoPlayer = ({ deviceId, onClose }) => {
                 <video 
                     ref={videoRef}
                     className="w-full h-full object-contain"
-                    style={{ transform: 'rotate(90deg)' }}
-                    controls
+                    style={{
+                        transform: cameraFacing === 'front' ? 'rotate(-90deg) scaleX(-1)' : 'rotate(-90deg)',
+                        transformOrigin: 'center center',
+                        width: '100%',
+                        height: '100%'
+                    }}
                     autoPlay
-                    muted={false}
+                    playsInline
+                    muted
                     onPlaying={() => setStatus('active')}
                     onError={(e) => {
                         console.error("Video error:", e);

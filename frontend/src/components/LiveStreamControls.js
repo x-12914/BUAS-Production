@@ -24,7 +24,7 @@ const LiveStreamControls = ({ deviceId, deviceInfo }) => {
   const handleStartCamera = async () => {
     try {
         setCameraCommandStatus('sending start...');
-        const command = cameraFacing === 'front' ? 'start_camera_front' : 'start_camera_back';
+        const command = cameraFacing === 'front' ? 'start_camera_front' : 'start_camera';
         const response = await apiService.request(`/api/device/${deviceId}/camera/command`, {
             method: 'POST',
             body: JSON.stringify({ command })
@@ -88,10 +88,10 @@ const LiveStreamControls = ({ deviceId, deviceInfo }) => {
                         <select
                             value={cameraFacing}
                             onChange={(e) => setCameraFacing(e.target.value)}
-                            className="bg-layer border border-border/50 text-content text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-accent"
+                            className="bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 hover:bg-indigo-500/20 text-xs font-medium rounded-lg px-2 py-1.5 focus:outline-none focus:border-indigo-500/50 transition-colors"
                         >
-                            <option value="back">Back</option>
-                            <option value="front">Front</option>
+                            <option value="back" className="bg-[#121212] text-indigo-500">Back Camera</option>
+                            <option value="front" className="bg-[#121212] text-indigo-500">Front Camera</option>
                         </select>
                     </div>
                 ) : (
@@ -122,6 +122,7 @@ const LiveStreamControls = ({ deviceId, deviceInfo }) => {
           <LiveVideoPlayer
               deviceId={deviceId}
               onClose={handleStopCamera}
+              cameraFacing={cameraFacing}
           />
       )}
 
