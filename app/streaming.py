@@ -1017,23 +1017,30 @@ def handle_join_screen_stream(data):
     """User joins a screen stream"""
     if not current_user.is_authenticated:
         return
-        
+
     device_id = data.get('device_id')
     if not device_id:
         return
-        
+
     try:
         from .device_utils import resolve_to_device_id
         actual_device_id = resolve_to_device_id(device_id)
-        
+
         join_room(f'screen_listeners_{actual_device_id}', namespace='/stream')
-        
+
+        # Replay the cached init segment so the new joiner can initialize
+        # its MSE SourceBuffer correctly before subsequent chunks arrive.
         if actual_device_id in screen_init_segments:
-            emit('screen_chunk', {'chunk': screen_init_segments[actual_device_id]}, namespace='/stream')
-            
+            emit('screen_chunk', {
+                'chunk': screen_init_segments[actual_device_id],
+                'is_first': True
+            }, namespace='/stream')
+            logger.debug(f"Replayed init segment to new screen listener for {actual_device_id}")
+
         logger.info(f"User {current_user.username} joined screen stream for {actual_device_id}")
     except Exception as e:
         logger.error(f"Error joining screen stream: {e}", exc_info=True)
+
 
 @socketio.on('leave_screen_stream', namespace='/stream')
 def handle_leave_screen_stream(data):

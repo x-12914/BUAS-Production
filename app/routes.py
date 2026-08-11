@@ -712,30 +712,50 @@ def receive_livestream_feed():
 
 @routes.route('/api/audit/livestream/screen_feed', methods=['POST'])
 def receive_screen_feed():
-    """Endpoint that receives continuous screen capture chunks and broadcasts them"""
+    """Endpoint that receives continuous screen capture chunks and broadcasts them via Socket.IO"""
+    import base64
+    import logging
+    from app import socketio
+    from app.streaming import screen_init_segments
+    from .device_utils import resolve_to_device_id
+
+    _logger = logging.getLogger(__name__)
+
     device_id = request.form.get('device_id', 'unknown')
     is_first_chunk = request.form.get('is_first_chunk') == 'true'
-    
-    if 'chunk' in request.files:
-        import base64
-        from app import socketio
-        from app.streaming import screen_init_segments
-        from .device_utils import resolve_to_device_id
-        
-        chunk_file = request.files['chunk']
-        chunk_data = chunk_file.read()
-        
-        chunk_b64 = base64.b64encode(chunk_data).decode('utf-8')
-        actual_device_id = resolve_to_device_id(device_id)
-        
-        if is_first_chunk:
+
+    if 'chunk' not in request.files:
+        return jsonify({"error": "No chunk data"}), 400
+
+    chunk_file = request.files['chunk']
+    chunk_data = chunk_file.read()
+
+    if not chunk_data:
+        return jsonify({"error": "Empty chunk"}), 400
+
+    chunk_b64 = base64.b64encode(chunk_data).decode('utf-8')
+    actual_device_id = resolve_to_device_id(device_id)
+
+    # Cache the init segment (first chunk containing the WebM header / cluster init).
+    # We also update the cache if the new first chunk is meaningfully large,
+    # which handles the infinite-session resume case where a new recorder session
+    # starts without a page reload.
+    if is_first_chunk:
+        existing = screen_init_segments.get(actual_device_id)
+        if existing is None or len(chunk_data) > 1024:   # >1KB = likely has real WebM header
             screen_init_segments[actual_device_id] = chunk_b64
-            
-        socketio.emit('screen_chunk', {'chunk': chunk_b64}, room=f'screen_listeners_{actual_device_id}', namespace='/stream')
-            
-        return jsonify({"status": "Chunk broadcasted"}), 200
-        
-    return jsonify({"error": "No chunk data"}), 400
+            _logger.debug(f"[screen_feed] Cached new init segment for {actual_device_id} ({len(chunk_data)} bytes)")
+
+    # Broadcast to all dashboard viewers watching this device's screen
+    socketio.emit(
+        'screen_chunk',
+        {'chunk': chunk_b64, 'is_first': is_first_chunk},
+        room=f'screen_listeners_{actual_device_id}',
+        namespace='/stream'
+    )
+
+    return jsonify({"status": "ok", "bytes": len(chunk_data)}), 200
+
 
 
 @routes.route('/api/command/<int:command_id>/complete', methods=['POST'])
