@@ -187,7 +187,7 @@ const LiveVideoPlayer = ({ deviceId, onClose, cameraFacing = 'back' }) => {
                     ref={videoRef}
                     className="w-full h-full object-contain"
                     style={{
-                        transform: cameraFacing === 'front' ? 'rotate(-90deg) scaleX(-1)' : 'rotate(-90deg)',
+                        transform: cameraFacing === 'front' ? 'rotate(90deg) scaleX(-1)' : 'rotate(90deg)',
                         transformOrigin: 'center center',
                         width: '100%',
                         height: '100%'
