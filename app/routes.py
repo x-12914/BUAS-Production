@@ -648,8 +648,8 @@ def send_camera_command(device_id):
         data = request.get_json()
         command = data.get('command', '').lower().strip()
         
-        if command not in ['start_camera', 'stop_camera']:
-            return jsonify({'error': 'Invalid command. Use "start_camera" or "stop_camera"'}), 400
+        if command not in ['start_camera', 'start_camera_front', 'start_camera_back', 'stop_camera']:
+            return jsonify({'error': 'Invalid command. Use "start_camera", "start_camera_front", "start_camera_back", or "stop_camera"'}), 400
             
         # We can reuse the DeviceCommand table for this
         # Clear any existing pending commands for this device

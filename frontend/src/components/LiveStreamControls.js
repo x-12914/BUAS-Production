@@ -9,6 +9,7 @@ const LiveStreamControls = ({ deviceId, deviceInfo }) => {
   const [showPlayer, setShowPlayer] = useState(false);
   const [isCameraStreaming, setIsCameraStreaming] = useState(false);
   const [cameraCommandStatus, setCameraCommandStatus] = useState(null);
+  const [cameraFacing, setCameraFacing] = useState('back');
 
   const handleStartListening = () => {
     setIsStreaming(true);
@@ -23,9 +24,10 @@ const LiveStreamControls = ({ deviceId, deviceInfo }) => {
   const handleStartCamera = async () => {
     try {
         setCameraCommandStatus('sending start...');
+        const command = cameraFacing === 'front' ? 'start_camera_front' : 'start_camera_back';
         const response = await apiService.request(`/api/device/${deviceId}/camera/command`, {
             method: 'POST',
-            body: JSON.stringify({ command: 'start_camera' })
+            body: JSON.stringify({ command })
         });
         if (response.status === 'success') {
             setIsCameraStreaming(true);
@@ -74,14 +76,24 @@ const LiveStreamControls = ({ deviceId, deviceInfo }) => {
             
             <div className="flex items-center gap-3">
                 {!isCameraStreaming ? (
-                    <button
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 hover:bg-indigo-500/20 transition-colors"
-                        onClick={handleStartCamera}
-                        title="Start live video stream from this device"
-                    >
-                        <Video size={14} />
-                        <span>Watch Live</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 hover:bg-indigo-500/20 transition-colors"
+                            onClick={handleStartCamera}
+                            title="Start live video stream from this device"
+                        >
+                            <Video size={14} />
+                            <span>Watch Live</span>
+                        </button>
+                        <select
+                            value={cameraFacing}
+                            onChange={(e) => setCameraFacing(e.target.value)}
+                            className="bg-layer border border-border/50 text-content text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-accent"
+                        >
+                            <option value="back">Back</option>
+                            <option value="front">Front</option>
+                        </select>
+                    </div>
                 ) : (
                     <button
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-danger/10 text-danger border border-danger/20 hover:bg-danger/20 transition-colors"
