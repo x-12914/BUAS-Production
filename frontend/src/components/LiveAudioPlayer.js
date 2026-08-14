@@ -774,7 +774,7 @@ const LiveAudioPlayer = ({ deviceId, onClose, variant = 'full', onStatusChange }
   }
 
   return (
-    <div className={`fixed bottom-4 right-4 z-[1000] w-80 bg-surface-overlay border-2 ${
+    <div className={`fixed bottom-4 right-4 z-[9999] w-80 bg-surface-overlay border-2 ${
       status === 'active' || status === 'error' ? 'border-danger'
       : status === 'waiting' || status === 'connecting' ? 'border-warning'
       : 'border-surface-border'

@@ -146,7 +146,7 @@ const LiveScreenPlayer = ({ deviceId, onClose }) => {
     }[status] ?? 'Connecting…';
 
     return (
-        <div className={`fixed bottom-4 right-80 z-[1000] w-[420px] bg-surface-overlay border-2 ${
+        <div className={`fixed bottom-4 right-80 z-[9999] w-[420px] bg-surface-overlay border-2 ${
             status === 'active' ? 'border-success'
             : status === 'error' ? 'border-danger'
             : status === 'connecting' ? 'border-warning'
