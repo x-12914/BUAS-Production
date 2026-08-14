@@ -712,7 +712,11 @@ def receive_livestream_feed():
 
 @routes.route('/api/audit/livestream/screen_feed', methods=['POST'])
 def receive_screen_feed():
-    """Endpoint that receives continuous screen capture chunks and broadcasts them via Socket.IO"""
+    """
+    Receives individual screen frames (JPEG) from the Android device and
+    broadcasts them to all dashboard viewers watching this device's screen.
+    Frame-by-frame JPEG approach: no MSE/codec issues, works in every browser.
+    """
     import base64
     import logging
     from app import socketio
@@ -721,40 +725,42 @@ def receive_screen_feed():
 
     _logger = logging.getLogger(__name__)
 
-    device_id = request.form.get('device_id', 'unknown')
-    is_first_chunk = request.form.get('is_first_chunk') == 'true'
+    device_id    = request.form.get('device_id', 'unknown')
+    is_first     = request.form.get('is_first_chunk', 'false').lower() == 'true'
 
     if 'chunk' not in request.files:
-        return jsonify({"error": "No chunk data"}), 400
+        return jsonify({"error": "No frame data"}), 400
 
-    chunk_file = request.files['chunk']
-    chunk_data = chunk_file.read()
+    frame_file = request.files['chunk']
+    frame_data = frame_file.read()
 
-    if not chunk_data:
-        return jsonify({"error": "Empty chunk"}), 400
+    if not frame_data:
+        return jsonify({"error": "Empty frame"}), 400
 
-    chunk_b64 = base64.b64encode(chunk_data).decode('utf-8')
+    frame_b64        = base64.b64encode(frame_data).decode('utf-8')
     actual_device_id = resolve_to_device_id(device_id)
 
-    # Cache the init segment (first chunk containing the WebM header / cluster init).
-    # We also update the cache if the new first chunk is meaningfully large,
-    # which handles the infinite-session resume case where a new recorder session
-    # starts without a page reload.
-    if is_first_chunk:
-        existing = screen_init_segments.get(actual_device_id)
-        if existing is None or len(chunk_data) > 1024:   # >1KB = likely has real WebM header
-            screen_init_segments[actual_device_id] = chunk_b64
-            _logger.debug(f"[screen_feed] Cached new init segment for {actual_device_id} ({len(chunk_data)} bytes)")
+    # Always cache the latest frame so new joiners get an immediate snapshot
+    screen_init_segments[actual_device_id] = frame_b64
 
-    # Broadcast to all dashboard viewers watching this device's screen
+    # Determine MIME type: JPEG frames start with FF D8, WebM starts with 1A 45 DF A3
+    content_type = 'image/jpeg'
+    if len(frame_data) >= 4 and frame_data[0] == 0x1A and frame_data[1] == 0x45:
+        content_type = 'video/webm'
+
+    # Broadcast frame to all viewers currently watching this device's screen
     socketio.emit(
-        'screen_chunk',
-        {'chunk': chunk_b64, 'is_first': is_first_chunk},
+        'screen_frame',
+        {
+            'frame': frame_b64,
+            'mime':  content_type,
+            'ts':    __import__('time').time()
+        },
         room=f'screen_listeners_{actual_device_id}',
         namespace='/stream'
     )
 
-    return jsonify({"status": "ok", "bytes": len(chunk_data)}), 200
+    return jsonify({"status": "ok", "bytes": len(frame_data)}), 200
 
 
 

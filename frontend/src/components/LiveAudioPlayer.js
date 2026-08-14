@@ -774,7 +774,11 @@ const LiveAudioPlayer = ({ deviceId, onClose, variant = 'full', onStatusChange }
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 w-80 bg-surface-overlay border border-surface-border rounded-xl shadow-2xl overflow-hidden">
+    <div className={`fixed bottom-4 right-4 z-[1000] w-80 bg-surface-overlay border-2 ${
+      status === 'active' || status === 'error' ? 'border-danger'
+      : status === 'waiting' || status === 'connecting' ? 'border-warning'
+      : 'border-surface-border'
+    } rounded-xl shadow-2xl overflow-hidden`}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-surface-border">
         <div className="flex items-center gap-2">

@@ -1014,7 +1014,7 @@ def handle_leave_video_stream(data):
 
 @socketio.on('join_screen_stream', namespace='/stream')
 def handle_join_screen_stream(data):
-    """User joins a screen stream"""
+    """User joins a screen stream — immediately receives the last cached frame as a snapshot"""
     if not current_user.is_authenticated:
         return
 
@@ -1028,14 +1028,15 @@ def handle_join_screen_stream(data):
 
         join_room(f'screen_listeners_{actual_device_id}', namespace='/stream')
 
-        # Replay the cached init segment so the new joiner can initialize
-        # its MSE SourceBuffer correctly before subsequent chunks arrive.
+        # Send the most recent cached frame immediately so the dashboard
+        # shows something right away instead of staying black
         if actual_device_id in screen_init_segments:
-            emit('screen_chunk', {
-                'chunk': screen_init_segments[actual_device_id],
-                'is_first': True
+            emit('screen_frame', {
+                'frame': screen_init_segments[actual_device_id],
+                'mime':  'image/jpeg',
+                'ts':    0
             }, namespace='/stream')
-            logger.debug(f"Replayed init segment to new screen listener for {actual_device_id}")
+            logger.debug(f"Sent snapshot frame to new screen viewer for {actual_device_id}")
 
         logger.info(f"User {current_user.username} joined screen stream for {actual_device_id}")
     except Exception as e:
